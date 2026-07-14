@@ -1,0 +1,271 @@
+// Laing Learning — data model (PRD §12)
+// SQLite for the MVP; swap `provider` to "postgresql" later without touching app code.
+
+generator client {
+  provider = "prisma-client-js"
+  // native = local dev; rhel = Vercel's serverless runtime
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Org / Class / Roster
+// ---------------------------------------------------------------------------
+
+model Org {
+  id          String   @id @default(cuid())
+  name        String
+  // "community" | "corporate" — drives defaults (PRD §1)
+  context     String   @default("community")
+  classes     Class[]
+  modules     Module[]
+  instructors Instructor[]
+  createdAt   DateTime @default(now())
+}
+
+model Instructor {
+  id          String   @id @default(cuid())
+  displayName String
+  email       String   @unique
+  // PIN sign-in (plaintext for MVP, same caveat as Learner.pin)
+  pin         String
+  org         Org      @relation(fields: [orgId], references: [id])
+  orgId       String
+  createdAt   DateTime @default(now())
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  org         Org      @relation(fields: [orgId], references: [id])
+  orgId       String
+  name        String
+  classCode   String   @unique
+  // Age band: EARLY | YOUTH | TEEN | ADULT (PRD §3)
+  band        String   @default("YOUTH")
+  // Minimum auth tier: 0 open, 1 PIN, 2 account (PRD §11)
+  minAuthTier Int      @default(0)
+  roster      RosterEntry[]
+  modules     ClassModule[]
+  createdAt   DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Modules / Criteria (authored at Org level, assigned to classes)
+// ---------------------------------------------------------------------------
+
+model Module {
+  id          String   @id @default(cuid())
+  org         Org      @relation(fields: [orgId], references: [id])
+  orgId       String
+  title       String
+  summary     String
+  version     Int      @default(1)
+  // Ordered content blocks: [{type:"text"|"heading"|"video"|"prompt", ...}]
+  contentJson String   @default("[]")
+  // Completion badge for this module (PRD §9)
+  badgeName        String
+  badgeIcon        String  @default("🏅")
+  badgeDescription String  @default("")
+  criteria    Criterion[]
+  classes     ClassModule[]
+  progress    ModuleProgress[]
+  createdAt   DateTime @default(now())
+}
+
+model ClassModule {
+  id       String @id @default(cuid())
+  class    Class  @relation(fields: [classId], references: [id])
+  classId  String
+  module   Module @relation(fields: [moduleId], references: [id])
+  moduleId String
+  order    Int    @default(0)
+
+  @@unique([classId, moduleId])
+}
+
+model Criterion {
+  id          String  @id @default(cuid())
+  module      Module  @relation(fields: [moduleId], references: [id])
+  moduleId    String
+  label       String
+  description String  @default("")
+  // AUTO | RUBRIC | HYBRID (PRD §9)
+  checkType   String  @default("AUTO")
+  required    Boolean @default(true)
+  order       Int     @default(0)
+  // For AUTO checks: which evidence type satisfies it, if any
+  requiresEvidenceType String?
+  statuses    CriterionStatus[]
+}
+
+// ---------------------------------------------------------------------------
+// Learner / Sprite (Sprite persists across all classes — PRD §8)
+// ---------------------------------------------------------------------------
+
+model Learner {
+  id          String   @id @default(cuid())
+  displayName String
+  band        String   @default("YOUTH")
+  // Tier-1 PIN (plaintext for MVP; hash before production)
+  pin         String?
+  sprite      Sprite?
+  roster      RosterEntry[]
+  submissions Submission[]
+  evidence    Evidence[]
+  progress    ModuleProgress[]
+  criterionStatuses CriterionStatus[]
+  threads     DiscussionThread[]
+  projects    Project[]
+  spriteLogs  SpriteInteraction[]
+  createdAt   DateTime @default(now())
+}
+
+model Sprite {
+  id          String  @id @default(cuid())
+  learner     Learner @relation(fields: [learnerId], references: [id])
+  learnerId   String  @unique
+  name        String  @default("Sprite")
+  personality String  @default("friendly")
+  color       String  @default("#7c5cff")
+  avatar      String  @default("✨")
+  createdAt   DateTime @default(now())
+}
+
+model RosterEntry {
+  id        String  @id @default(cuid())
+  class     Class   @relation(fields: [classId], references: [id])
+  classId   String
+  learner   Learner @relation(fields: [learnerId], references: [id])
+  learnerId String
+
+  @@unique([classId, learnerId])
+}
+
+// ---------------------------------------------------------------------------
+// Progress / Submissions / Evidence / Criteria status
+// ---------------------------------------------------------------------------
+
+model ModuleProgress {
+  id          String   @id @default(cuid())
+  learner     Learner  @relation(fields: [learnerId], references: [id])
+  learnerId   String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  moduleId    String
+  // NOT_STARTED | IN_PROGRESS | COMPLETED
+  status      String   @default("IN_PROGRESS")
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  timeOnTaskSeconds Int @default(0)
+
+  @@unique([learnerId, moduleId])
+}
+
+model Submission {
+  id         String   @id @default(cuid())
+  learner    Learner  @relation(fields: [learnerId], references: [id])
+  learnerId  String
+  moduleId   String
+  criterionId String?
+  content    String
+  createdAt  DateTime @default(now())
+  feedback   AutoFeedback?
+}
+
+model Evidence {
+  id          String   @id @default(cuid())
+  learner     Learner  @relation(fields: [learnerId], references: [id])
+  learnerId   String
+  moduleId    String
+  criterionId String?
+  // TEXT | AUDIO | PHOTO | FILE
+  type        String
+  text        String?  // typed text, or transcript for AUDIO
+  url         String?  // stored file path for PHOTO/AUDIO/FILE
+  caption     String?
+  createdAt   DateTime @default(now())
+}
+
+model CriterionStatus {
+  id          String   @id @default(cuid())
+  learner     Learner  @relation(fields: [learnerId], references: [id])
+  learnerId   String
+  criterion   Criterion @relation(fields: [criterionId], references: [id])
+  criterionId String
+  // NOT_STARTED | IN_PROGRESS | MET
+  status      String   @default("NOT_STARTED")
+  // system | instructor
+  decidedBy   String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([learnerId, criterionId])
+}
+
+// ---------------------------------------------------------------------------
+// Auto-feedback -> discussion (PRD §9)
+// ---------------------------------------------------------------------------
+
+model AutoFeedback {
+  id           String   @id @default(cuid())
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  submissionId String   @unique
+  summary      String
+  metJson      String   @default("[]")
+  missingJson  String   @default("[]")
+  nextSteps    String   @default("")
+  createdAt    DateTime @default(now())
+}
+
+model DiscussionThread {
+  id         String   @id @default(cuid())
+  learner    Learner  @relation(fields: [learnerId], references: [id])
+  learnerId  String
+  moduleId   String
+  // Optional seed context (e.g. the feedback that opened it)
+  seed       String?
+  resolved   Boolean  @default(false)
+  messages   Message[]
+  createdAt  DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  thread     DiscussionThread @relation(fields: [threadId], references: [id])
+  threadId   String
+  // LEARNER | INSTRUCTOR | SPRITE
+  authorRole String
+  body       String
+  createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Sprite interaction logs (analytics — PRD §8, §13) / Project (PRD §10)
+// ---------------------------------------------------------------------------
+
+model SpriteInteraction {
+  id         String   @id @default(cuid())
+  learner    Learner  @relation(fields: [learnerId], references: [id])
+  learnerId  String
+  moduleId   String
+  userMessage String
+  spriteReply String
+  // Heuristic flag: did the learner appear to be fishing for the answer?
+  answerSeeking Boolean @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  learner     Learner  @relation(fields: [learnerId], references: [id])
+  learnerId   String
+  moduleId    String
+  summary     String
+  // Snapshot of evidence ids included, as JSON array
+  evidenceJson String  @default("[]")
+  createdAt   DateTime @default(now())
+
+  @@unique([learnerId, moduleId])
+}

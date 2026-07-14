@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0A0B0E; }
+  a { color: #B6F24D; text-decoration: none; }
+  a:hover { color: #cbf87a; }
+  ::selection { background: rgba(182,242,77,0.25); }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#0A0B0E; color:#E7E9EE; font-family:'Plus Jakarta Sans',sans-serif; -webkit-font-smoothing:antialiased; padding:0;">
+  <div style="max-width:1080px; margin:0 auto; padding:40px 32px 72px;">
+
+    <!-- Header -->
+    <header style="display:flex; align-items:center; justify-content:space-between; padding-bottom:36px; border-bottom:1px solid rgba(255,255,255,0.07);">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="width:34px; height:34px; border-radius:9px; background:#B6F24D; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7l8-4 8 4-8 4-8-4z" fill="#0A0B0E"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4" stroke="#0A0B0E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:12px;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px; letter-spacing:-0.01em;">Maker Lab</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6B7280; letter-spacing:0.04em; text-transform:uppercase;">Ages 9–12</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:20px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#1c2129,#252c37); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12px; color:#B6F24D;">A</div>
+          <span style="font-size:13.5px; color:#B4BAC4; font-weight:500;">Ada</span>
+        </div>
+        <button style="background:none; border:none; color:#6B7280; font-family:'Plus Jakarta Sans',sans-serif; font-size:13.5px; cursor:pointer; padding:6px 0; font-weight:500;" style-hover="color:#E7E9EE;">Sign out</button>
+      </div>
+    </header>
+
+    <!-- Greeting + stats -->
+    <section style="display:flex; align-items:flex-end; justify-content:space-between; gap:32px; flex-wrap:wrap; margin:44px 0 40px;">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#B6F24D; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:12px;">Dashboard</div>
+        <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; line-height:1.05; letter-spacing:-0.02em; margin:0; color:#F4F6F9;">Welcome back, Ada</h1>
+        <p style="margin:12px 0 0; font-size:14.5px; color:#8A909B; max-width:420px;">You're 2 modules into this term. Keep the streak going.</p>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <sc-for list="{{ stats }}" as="s" hint-placeholder-count="3">
+          <div style="min-width:118px; padding:16px 18px; border:1px solid rgba(255,255,255,0.08); border-radius:14px; background:#101216;">
+            <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:26px; line-height:1; color:{{ s.color }};">{{ s.value }}</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6B7280; letter-spacing:0.06em; text-transform:uppercase; margin-top:8px;">{{ s.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- Sprite card -->
+    <section style="margin-bottom:52px;">
+      <div style="display:flex; align-items:center; gap:24px; padding:22px 24px; border:1px solid rgba(255,255,255,0.08); border-radius:18px; background:#101216;" style-hover="border-color:rgba(182,242,77,0.3);">
+        <div style="width:64px; height:64px; border-radius:15px; background:#0F1712; border:1px solid rgba(182,242,77,0.25); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <svg width="34" height="34" viewBox="0 0 32 32" fill="none"><rect x="6" y="9" width="20" height="16" rx="4" fill="#B6F24D"/><circle cx="12" cy="16" r="1.9" fill="#0A0B0E"/><circle cx="20" cy="16" r="1.9" fill="#0A0B0E"/><path d="M13 20.5c1.8 1.4 4.2 1.4 6 0" stroke="#0A0B0E" stroke-width="1.6" stroke-linecap="round"/><path d="M9 9l-2-4M23 9l2-4" stroke="#B6F24D" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; color:#F4F6F9;">Pixel</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#B6F24D; background:rgba(182,242,77,0.1); border:1px solid rgba(182,242,77,0.2); padding:2px 7px; border-radius:5px; letter-spacing:0.04em;">YOUR SPRITE</span>
+          </div>
+          <p style="margin:6px 0 0; font-size:13.5px; color:#8A909B;">Give your companion a new look, voice, and color.</p>
+        </div>
+        <button style="display:flex; align-items:center; gap:8px; padding:11px 18px; background:#B6F24D; color:#0A0B0E; border:none; border-radius:10px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:13.5px; cursor:pointer; flex-shrink:0;" style-hover="background:#c8f96f;">
+          Customize
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#0A0B0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Badges -->
+    <section style="margin-bottom:52px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px;">
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px; letter-spacing:-0.01em; margin:0; color:#F4F6F9;">Badges</h2>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6B7280;">1 / 8 earned</span>
+      </div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <sc-for list="{{ badges }}" as="b" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; gap:11px; padding:11px 16px 11px 12px; border-radius:12px; border:1px solid {{ b.border }}; background:{{ b.bg }};">
+            <div style="width:30px; height:30px; border-radius:8px; background:{{ b.iconBg }}; display:flex; align-items:center; justify-content:center; color:{{ b.iconColor }};">{{ b.icon }}</div>
+            <span style="font-size:13.5px; font-weight:600; color:{{ b.textColor }};">{{ b.name }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- Modules -->
+    <section>
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px;">
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px; letter-spacing:-0.01em; margin:0; color:#F4F6F9;">Modules</h2>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6B7280;">This term</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <sc-for list="{{ modules }}" as="m" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; gap:22px; padding:20px 22px; border:1px solid rgba(255,255,255,0.08); border-radius:16px; background:#101216;" style-hover="border-color:rgba(255,255,255,0.16); background:#12151A;">
+            <div style="width:44px; height:44px; border-radius:11px; background:#181B21; border:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color:#9AA2AE; flex-shrink:0;">{{ m.icon }}</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px; color:#F4F6F9; letter-spacing:-0.01em;">{{ m.title }}</div>
+              <p style="margin:5px 0 12px; font-size:13px; color:#8A909B; line-height:1.45; max-width:520px;">{{ m.desc }}</p>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="flex:1; max-width:260px; height:4px; border-radius:99px; background:rgba(255,255,255,0.08); overflow:hidden;">
+                  <div style="height:100%; border-radius:99px; background:{{ m.barColor }}; width:{{ m.pctCss }};"></div>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6B7280;">{{ m.pctLabel }}</span>
+              </div>
+            </div>
+            <div style="padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600; letter-spacing:0.01em; background:{{ m.pillBg }}; color:{{ m.pillColor }}; border:1px solid {{ m.pillBorder }}; white-space:nowrap; flex-shrink:0;">{{ m.status }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  icon(name, size = 20) {
+    const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' };
+    const s = (d, extra = {}) => React.createElement('path', { d, stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', ...extra });
+    const paths = {
+      leaf: [s('M4 20c0-8 6-14 16-14 0 10-6 14-16 14z'), s('M4 20c4-6 8-8 12-9')],
+      bridge: [s('M3 17v-3M21 17v-3'), s('M3 14c4-5 14-5 18 0'), s('M8 17V9M16 17V9'), s('M2 17h20')],
+      animal: [React.createElement('circle', { cx: 12, cy: 13, r: 5, stroke: 'currentColor', strokeWidth: 1.7 }), s('M7 9L5 5M17 9l2-4'), s('M10 13h.01M14 13h.01')],
+      game: [React.createElement('rect', { x: 3, y: 8, width: 18, height: 10, rx: 4, stroke: 'currentColor', strokeWidth: 1.7 }), s('M7 12h3M8.5 10.5v3'), React.createElement('circle', { cx: 16, cy: 12, r: 1, fill: 'currentColor' }), React.createElement('circle', { cx: 18, cy: 14, r: 1, fill: 'currentColor' })],
+      journal: [s('M6 4h9a3 3 0 013 3v13H8a2 2 0 01-2-2V4z'), s('M6 4a2 2 0 00-2 2v11a2 2 0 012-2'), s('M10 9h6M10 12h4')],
+    };
+    return React.createElement('svg', p, ...(paths[name] || []));
+  }
+
+  renderVals() {
+    const withIcons = (arr) => arr.map(o => ({ ...o, icon: this.icon(o.iconName, o.iconSize || 20) }));
+
+    const modules = [
+      { title: 'Build a Paper Bridge', iconName: 'bridge', desc: 'Design and build a bridge out of paper that can hold a small weight. Photograph it and explain what makes it strong.', pct: 60, pctCss: '60%', pctLabel: '60%', status: 'In progress', barColor: '#6EA8FF', pillBg: 'rgba(110,168,255,0.1)', pillColor: '#8FBEFF', pillBorder: 'rgba(110,168,255,0.25)' },
+      { title: 'My Favorite Animal Report', iconName: 'animal', desc: 'Research an animal you love and put together a short report with a drawing or photo.', pct: 100, pctCss: '100%', pctLabel: '100%', status: 'Done', barColor: '#B6F24D', pillBg: 'rgba(182,242,77,0.12)', pillColor: '#B6F24D', pillBorder: 'rgba(182,242,77,0.28)' },
+      { title: 'Design a Board Game', iconName: 'game', desc: 'Invent the rules for a game, build the board, and test it with a friend or family member.', pct: 0, pctCss: '0%', pctLabel: '0%', status: 'Not started', barColor: '#3A3F49', pillBg: 'transparent', pillColor: '#8A909B', pillBorder: 'rgba(255,255,255,0.14)' },
+      { title: 'Weather Watcher Journal', iconName: 'journal', desc: 'Track the weather for a week and chart what you notice about temperature and clouds.', pct: 25, pctCss: '25%', pctLabel: '25%', status: 'In progress', barColor: '#6EA8FF', pillBg: 'rgba(110,168,255,0.1)', pillColor: '#8FBEFF', pillBorder: 'rgba(110,168,255,0.25)' },
+    ];
+
+    const badges = [
+      { name: 'Nature Reporter', iconName: 'leaf', border: 'rgba(182,242,77,0.28)', bg: 'rgba(182,242,77,0.06)', iconBg: 'rgba(182,242,77,0.14)', iconColor: '#B6F24D', textColor: '#F4F6F9' },
+      { name: 'Bridge Builder', iconName: 'bridge', locked: true, border: 'rgba(255,255,255,0.07)', bg: '#0F1115', iconBg: '#181B21', iconColor: '#4A505B', textColor: '#5A616C' },
+      { name: 'Game Maker', iconName: 'game', locked: true, border: 'rgba(255,255,255,0.07)', bg: '#0F1115', iconBg: '#181B21', iconColor: '#4A505B', textColor: '#5A616C' },
+    ];
+
+    const stats = [
+      { value: '2', label: 'In progress', color: '#8FBEFF' },
+      { value: '1', label: 'Completed', color: '#B6F24D' },
+      { value: '1', label: 'Badges', color: '#F4F6F9' },
+    ];
+
+    return {
+      modules: withIcons(modules),
+      badges: withIcons(badges.map(b => ({ ...b, iconSize: 17 }))),
+      stats,
+    };
+  }
+}
+</script>
+</body>
+</html>

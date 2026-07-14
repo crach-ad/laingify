@@ -1,0 +1,63 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/session";
+import { transcribeAudio } from "@/lib/gemini";
+import { recomputeEvidenceCriteria, evaluateModule, assembleProjectIfComplete } from "@/lib/completion";
+
+// Evidence capture (PRD §10): typed text, photo, or audio.
+// Photos/audio arrive as data URLs and are stored inline for the MVP — a real
+// deployment would put them in object storage and keep only the URL here.
+// Audio is transcribed via Gemini so it can also satisfy text-based criteria.
+export async function POST(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+
+  const body = await req.json();
+  const moduleId = String(body.moduleId || "");
+  if (!moduleId) return NextResponse.json({ error: "Missing module." }, { status: 400 });
+
+  const type = String(body.type || "TEXT").toUpperCase();
+  if (!["TEXT", "AUDIO", "PHOTO", "FILE"].includes(type)) {
+    return NextResponse.json({ error: "Unknown evidence type." }, { status: 400 });
+  }
+
+  const criterionId = body.criterionId ? String(body.criterionId) : null;
+  const caption = body.caption ? String(body.caption).slice(0, 280) : null;
+  let text: string | null = body.text ? String(body.text) : null;
+  const url: string | null = body.dataUrl ? String(body.dataUrl) : null;
+  let aiUsed = false;
+
+  // Transcribe audio so it can be read and assessed like text.
+  if (type === "AUDIO" && body.dataBase64 && body.mimeType) {
+    const { transcript, aiUsed: used } = await transcribeAudio(
+      String(body.dataBase64),
+      String(body.mimeType),
+    );
+    if (transcript) text = transcript;
+    aiUsed = used;
+  }
+
+  if (type === "TEXT" && !text?.trim()) {
+    return NextResponse.json({ error: "Empty text evidence." }, { status: 400 });
+  }
+  if ((type === "PHOTO" || type === "FILE") && !url) {
+    return NextResponse.json({ error: "Missing file." }, { status: 400 });
+  }
+
+  await prisma.evidence.create({
+    data: { learnerId: session.learnerId, moduleId, criterionId, type, text, url, caption },
+  });
+
+  // Evidence-backed criteria are recomputed, then we try to finish the module.
+  await recomputeEvidenceCriteria(session.learnerId, moduleId);
+  const result = await assembleProjectIfComplete(session.learnerId, moduleId);
+  const { criteria, complete } = await evaluateModule(session.learnerId, moduleId);
+
+  return NextResponse.json({
+    ok: true,
+    aiUsed,
+    criteria,
+    complete,
+    project: result.complete ? result.project : null,
+  });
+}
