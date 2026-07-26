@@ -1,5 +1,6 @@
 // Laing Learning — data model (PRD §12)
-// SQLite for the MVP; swap `provider` to "postgresql" later without touching app code.
+// Postgres on Supabase. DATABASE_URL goes through the transaction pooler
+// (serverless-safe); DIRECT_URL is the session pooler for migrations/seed.
 
 generator client {
   provider = "prisma-client-js"
@@ -8,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
