@@ -86,7 +86,7 @@ export default function JoinPage() {
               autoFocus
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. SPARK01"
+              placeholder="e.g. HAPPY"
               className="field px-4 py-3 text-lg uppercase tracking-[0.2em]"
             />
           </label>

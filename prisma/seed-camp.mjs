@@ -245,7 +245,7 @@ async function main() {
     data: {
       orgId: camp.id,
       name: "Winners Camp",
-      classCode: "CAMP01",
+      classCode: "HAPPY",
       band: "TEEN", // ages 11–14
       minAuthTier: 0, // click your name — no PIN
       modules: {
@@ -289,7 +289,7 @@ async function main() {
   }
 
   console.log("Winners Camp seeded.");
-  console.log(`  Class code: CAMP01 — ${CAMPERS.length} campers, click-name access (no PIN), ages 11–14`);
+  console.log(`  Class code: HAPPY — ${CAMPERS.length} campers, click-name access (no PIN), ages 11–14`);
   console.log('  Module 1 (Day 1): Name Tag Keychain — Lightbot ✓ + build ✓ + voice note + wrap-up');
   console.log('  Module 2 (Day 2): Fidget Clicker — build ✓ + bracket-bet voice note + game asset ✓ + wrap-up');
   console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
