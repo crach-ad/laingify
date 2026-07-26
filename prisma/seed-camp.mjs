@@ -37,99 +37,92 @@ async function main() {
   });
 
   // ==========================================================================
-  // MODULE 1 · DAY 1 — Name tag keychain
-  // Coding intro (Lightbot) → Tinkercad basics → the first printed object.
+  // MODULE 1 · DAY 1 — Name tag keychain (Tinkercad only)
+  // Step-by-step build instructions with screenshot uploads and short audio
+  // questions for reinforcement and student perspective. The Lightbot coding
+  // block runs separately in the room and never gates this module.
   // ==========================================================================
   const module1 = await prisma.module.create({
     data: {
       orgId: camp.id,
       title: "Winners Camp, Module 1 — Name Tag Keychain",
       summary:
-        "Day 1: crack coding puzzles in Lightbot, learn Tinkercad, and design a personalized name tag keychain that prints tonight.",
+        "Day 1 build: design a personalized name tag keychain in Tinkercad, step by step. It prints tonight — you hold it tomorrow.",
       badgeName: "Keychain Creator",
       badgeIcon: "🔑",
-      badgeDescription:
-        "Solved coding challenges and designed a personalized, printable name tag keychain in Tinkercad.",
+      badgeDescription: "Designed a personalized, printable name tag keychain in Tinkercad.",
       contentJson: JSON.stringify([
-        block("heading", { text: "Welcome to Winners Camp!" }),
+        block("heading", { text: "Let's build your keychain" }),
         block("text", {
-          text: "Over two days you'll code, design in 3D, and walk away with two printed objects you made yourself. Today: think like a programmer, then design like an engineer. Your keychain prints overnight — you'll hold it tomorrow morning.",
+          text: "You've already warmed up your coding brain this morning — now you become a designer. 3D printing turns a drawing on screen into a real object: the printer melts plastic and stacks it layer by layer, bottom to top. By the end of this hour your design goes in the print queue, prints overnight, and lands in your hand tomorrow morning.",
         }),
 
-        block("heading", { text: "Part 1 — Think in code" }),
+        block("heading", { text: "Step 1 — The tag body" }),
         block("text", {
-          text: "Code is instructions a computer follows exactly — no guessing, no 'you know what I mean.' In Lightbot, you ARE the compiler: plan the robot's moves, run them, watch where your plan breaks, fix it. That loop — plan, run, debug — is how all software gets built.",
-        }),
-        block("text", {
-          text: "Work through the Lightbot challenges. When you get stuck, that's the good part: read what the robot actually did (not what you wanted), find the first wrong move, and change only that. Spot a repeating pattern? That's what functions are for.",
+          text: "Log in to Tinkercad and start a new design. Drag a box onto the workplane and set it to exactly 60 × 22 × 3 mm in the shape panel — type the numbers, don't eyeball them. Then round it off: use the rounded-box shape, or soften the corners with four cylinders (3 mm corner radius).",
         }),
         block("checkpoint", {
           capture: "photo",
-          criterionLabel: "Lightbot victory screenshot",
-          text: "Beat a level that took you more than one try, then screenshot it (or snap a photo of your screen). That level is proof you debugged like a programmer.",
+          criterionLabel: "Tag body screenshot",
+          text: "Screenshot your rounded tag body with the shape panel visible, so you can see your exact measurements.",
         }),
 
-        block("heading", { text: "Part 2 — From code to objects" }),
+        block("heading", { text: "Step 2 — Your name, raised" }),
         block("text", {
-          text: "3D printing turns a drawing on screen into a real thing: the printer melts plastic and stacks it layer by layer, bottom to top. Engineers print car parts, doctors print bone models, and after a storm, a printer can make the small parts shops have run out of. Today, it makes your keychain.",
-        }),
-
-        block("heading", { text: "Part 3 — Build your keychain" }),
-        block("text", {
-          text: "Log in to Tinkercad and start a new design. Step 1: drag a box onto the workplane and set it to exactly 60 × 22 × 3 mm in the shape panel. Step 2: round it off — use the rounded-box shape, or soften the corners with four cylinders (3 mm corner radius).",
-        }),
-        block("text", {
-          text: "Step 3: add the text tool, type YOUR name, and raise it 1 mm above the face — then center it perfectly with Align. Step 4: the keyring hole — a 4 mm cylinder switched to Hole, placed 6 mm from the short edge. Group everything. One solid piece, ready to print.",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Keychain build screenshot",
-          text: "Screenshot your keychain in Tinkercad — name raised, hole placed. It doesn't need to be perfect yet: show your progress!",
-        }),
-        block("text", {
-          text: "Make it yours: stretch the letters, add a shape you love, try a pattern along the edge. Two rules of print-ready design: keep everything at least 2 mm thick, and keep the bottom flat — it prints flat, 0.2 mm layers, 15% infill, no supports. Done? Export as STL and drop it in the class print queue folder — the printer is the bottleneck, so export as soon as you're happy.",
+          text: "Add the text tool, type YOUR name, and raise it 1 mm above the face of the tag. Then use Align to center it perfectly — select both shapes first, then click the little dots. Dragging by eye is never quite centered; Align always is.",
         }),
         block("checkpoint", {
           capture: "audio",
-          criterionLabel: "Voice note: my design choices",
-          text: "Press record and answer out loud: How did you personalize your keychain? And what was the trickiest part of Lightbot or Tinkercad today — how did you crack it?",
+          criterionLabel: "Voice note: why raise the name?",
+          text: "Quick thinking question — press record and answer: Why do we raise the name 1 mm above the tag instead of leaving it flat? What would the printer do if the letters had zero height?",
+        }),
+
+        block("heading", { text: "Step 3 — Hole, group, make it yours" }),
+        block("text", {
+          text: "The keyring hole: add a 4 mm cylinder, switch it to Hole, and place it 6 mm from the short edge. Group everything — now it's one solid piece. Then personalize: stretch the letters, add a shape you love, try a pattern along the edge. Two rules of print-ready design: keep everything at least 2 mm thick, and keep the bottom flat. It prints flat — 0.2 mm layers, 15% infill, no supports.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Finished keychain screenshot",
+          text: "Screenshot your finished keychain — raised name, keyring hole, and your personal touches all visible. Then export it as an STL and drop it in the class print queue folder: the printer is the bottleneck, so export as soon as you're happy!",
         }),
 
         block("heading", { text: "Almost done!" }),
         block("prompt", {
-          text: "Last step: a short written wrap-up of Day 1. Then your portfolio builds itself from everything you captured today — and tomorrow you'll design something with moving parts.",
+          text: "Last step: a short written wrap-up — how you made the keychain yours, and what was trickiest. Then your portfolio builds itself from everything you captured today.",
         }),
       ]),
       criteria: {
         create: [
           {
-            label: "Lightbot victory screenshot",
-            description: "A screenshot or photo of a completed Lightbot challenge.",
+            label: "Tag body screenshot",
+            description: "The rounded 60 × 22 × 3 mm tag body, with the shape panel visible.",
             checkType: "AUTO",
             requiresEvidenceType: "PHOTO",
             required: true,
             order: 0,
           },
           {
-            label: "Keychain build screenshot",
+            label: "Voice note: why raise the name?",
             description:
-              "Tinkercad keychain in progress: 60 × 22 × 3 mm body, raised name, 4 mm keyring hole.",
+              "Reinforcement question: why the name is raised 1 mm rather than flat.",
             checkType: "AUTO",
-            requiresEvidenceType: "PHOTO",
+            requiresEvidenceType: "AUDIO",
             required: true,
             order: 1,
           },
           {
-            label: "Voice note: my design choices",
-            description: "A recorded reflection: how they personalized the tag and what was tricky.",
+            label: "Finished keychain screenshot",
+            description:
+              "The completed keychain: raised name, 4 mm keyring hole, personalization.",
             checkType: "AUTO",
-            requiresEvidenceType: "AUDIO",
+            requiresEvidenceType: "PHOTO",
             required: true,
             order: 2,
           },
           {
             label: "Written wrap-up",
-            description: "A short written reflection on Day 1.",
+            description: "A short written reflection on the build (perspective).",
             checkType: "AUTO",
             required: true,
             order: 3,
@@ -140,101 +133,115 @@ async function main() {
   });
 
   // ==========================================================================
-  // MODULE 2 · DAY 2 — Fidget clicker, structure, and game design
-  // A build that either works or doesn't, the hurricane-resilience session,
-  // and the first game asset.
+  // MODULE 2 · DAY 2 — Fidget clicker (Tinkercad only)
+  // Step-by-step build with screenshot uploads and reinforcement/perspective
+  // audio questions. The structural-analysis discussion feeds one audio
+  // question here; the Canva game-design block runs separately in the room.
   // ==========================================================================
   const module2 = await prisma.module.create({
     data: {
       orgId: camp.id,
       title: "Winners Camp, Module 2 — Fidget Clicker",
       summary:
-        "Day 2: design a two-part fidget clicker with real moving parts, learn why printed parts break (and what that means in hurricane season), then create your first game asset.",
+        "Day 2 build: a two-part fidget clicker with real moving parts — housing, spring arm, and a button with 0.4 mm clearance. It either clicks or it doesn't.",
       badgeName: "Clicker Engineer",
       badgeIcon: "🛠️",
       badgeDescription:
-        "Designed a two-part toy with working clearance, explained structural strength, and created a game asset.",
+        "Designed a two-part fidget clicker with a flexing spring arm and working clearance in Tinkercad.",
       contentJson: JSON.stringify([
         block("heading", { text: "Day 2 — Print reveal!" }),
         block("text", {
-          text: "This morning you're holding yesterday's keychain — made by you, printed overnight. Look closely at yours and a neighbor's: can you see the layer lines? Any rough spots or stringy bits? That's print quality, and today you'll learn what causes it. Today's build is harder: a toy with MOVING parts. It will either click… or it won't. That's engineering.",
+          text: "This morning you're holding yesterday's keychain — made by you, printed overnight. Look closely at yours and a neighbor's: can you see the layer lines? Any rough spots? That's print quality, and it'll matter today. This build is harder: a toy with MOVING parts. It will either click… or it won't. That's engineering.",
         }),
 
-        block("heading", { text: "Part 1 — Build the fidget clicker" }),
+        block("heading", { text: "Step 1 — The housing" }),
         block("text", {
-          text: "The clicker is two parts: a housing with a springy arm, and a button that snaps in. Step 1: build the housing — a 40 mm disc, 10 mm tall, then hollow it with a 36 mm hole cylinder so the walls are 2 mm. Step 2: cut a slot for the spring arm, and keep the arm exactly 2 mm thick — thick enough to survive, thin enough to flex. That flex IS the click.",
-        }),
-        block("text", {
-          text: "Step 3: model the button — a 14 mm cap on a stem, and make the stem 0.4 mm narrower than its slot. That tiny gap is called CLEARANCE. Too tight and it jams; too loose and it rattles. 0.4 mm is the sweet spot for our printers. Step 4: test-fit visually from the front view before you group anything. Step 5: export both parts as one STL, labeled with your name.",
+          text: "The clicker is two parts: a housing with a springy arm, and a button that snaps in. Start with the housing: a 40 mm disc, 10 mm tall. Then hollow it out with a 36 mm hole cylinder — line it up with Align before you group, so the walls come out an even 2 mm all the way around.",
         }),
         block("checkpoint", {
           capture: "photo",
-          criterionLabel: "Clicker build screenshot",
+          criterionLabel: "Housing screenshot",
+          text: "Screenshot your hollowed housing. Tip: switch to the top view — you should see a clean 2 mm ring.",
+        }),
+
+        block("heading", { text: "Step 2 — The spring arm" }),
+        block("text", {
+          text: "Cut a slot into the housing for the spring arm, and keep the arm exactly 2 mm thick. That number is the whole game: thick enough to survive being pressed a thousand times, thin enough to flex. That flex IS the click.",
+        }),
+        block("checkpoint", {
+          capture: "audio",
+          criterionLabel: "Voice note: the 2 mm arm",
+          text: "Quick thinking question — press record and answer: The spring arm is exactly 2 mm. What do you think happens if you make it much thicker? What if it's much thinner?",
+        }),
+
+        block("heading", { text: "Step 3 — The button and the gap" }),
+        block("text", {
+          text: "Model the button: a 14 mm cap on a stem, with the stem 0.4 mm narrower than its slot. That tiny gap is called CLEARANCE — too tight and it jams, too loose and it rattles. 0.4 mm is the sweet spot for our printers. Test-fit visually from the front view BEFORE you group anything. Then export both parts as one STL, labeled with your name, and into the print queue it goes — both parts print flat, 0.2 mm layers, supports off.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Finished clicker screenshot",
           text: "Screenshot your clicker from the front view showing both parts and the gap between them. If a neighbor can spot your clearance, you've modeled it right.",
         }),
 
-        block("heading", { text: "Part 2 — Why parts break" }),
+        block("heading", { text: "One more question" }),
         block("text", {
-          text: "Here's the framing question: after a storm, the shops are closed and the ferry hasn't run — what could you print to hold a building together? To answer it, you need to know why printed parts fail. Three big ideas: (1) Force travels through a part along a LOAD PATH — thicken that route, the rest can stay light. (2) Printed parts are strong ACROSS layers but weak BETWEEN them — a bracket loaded along its layer lines peels apart like string cheese. (3) Past about 45°, plastic has nothing to sit on — add supports (temporary scaffolding that marks the surface) or just reorient the part.",
-        }),
-        block("text", {
-          text: "Bonus tricks engineers use: extra wall perimeters buy far more strength than extra infill for the same plastic. And a rectangle folds where a triangle doesn't — one small corner gusset can double a bracket's stiffness. In The Bahamas, hurricane resilience is mostly about CONNECTIONS, not walls: roofs lift off when the fasteners between roof, wall, and foundation give way. Hurricane straps, gusset plates, shutter brackets — that's exactly the family of shapes you've been modelling, and exactly what runs out of stock before a storm. (Honest limits: PLA creeps in island heat, so printed parts are prototypes and spares — not certified structural fasteners. But shutter clips, cable clamps, and replacement latches when supply lines are down? Printing wins.)",
+          text: "You've now designed for strength (the arm), for movement (the clearance), and yesterday for printing flat. In the structure session we asked: after a storm, the shops are closed and the ferry hasn't run — what could you print to hold a building together?",
         }),
         block("checkpoint", {
           capture: "audio",
           criterionLabel: "Voice note: the bracket bet",
-          text: "We tested three printed brackets: flat, upright with supports, and flat with a gusset. Record your answer: Which broke first and WHY? And name one thing you'd print for your house before hurricane season.",
-        }),
-
-        block("heading", { text: "Part 3 — Enter the game" }),
-        block("text", {
-          text: "Coding, design, structure — now they meet game development. Every game is built from ASSETS: characters, obstacles, backgrounds, power-ups. Open Canva and create one asset for our shared game library. Make it bold and simple — it needs to read clearly at small size. Export it with a transparent background if you can.",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Game asset screenshot",
-          text: "Screenshot or export your Canva game asset and upload it. It joins the class library — someone's game will use YOUR art.",
+          text: "From the bracket test: which bracket broke first, and WHY? And name one thing you'd print for your house before hurricane season.",
         }),
 
         block("heading", { text: "You made it!" }),
         block("prompt", {
-          text: "Final step of camp: a written wrap-up of your two days. Then download your portfolio — two builds, your voice, your art, all in one timeline.",
+          text: "Final step of camp: a written wrap-up of your two days. Then download your portfolio — two builds, your voice, all in one timeline.",
         }),
       ]),
       criteria: {
         create: [
           {
-            label: "Clicker build screenshot",
-            description:
-              "Tinkercad clicker: 40 mm housing with 2 mm walls, button with 0.4 mm clearance, front-view test fit.",
+            label: "Housing screenshot",
+            description: "The hollowed 40 mm housing with even 2 mm walls.",
             checkType: "AUTO",
             requiresEvidenceType: "PHOTO",
             required: true,
             order: 0,
           },
           {
-            label: "Voice note: the bracket bet",
+            label: "Voice note: the 2 mm arm",
             description:
-              "A recorded explanation of which bracket failed first and why (layer direction / load path), plus a hurricane-season print idea.",
+              "Reinforcement question: what happens if the spring arm is thicker or thinner than 2 mm.",
             checkType: "AUTO",
             requiresEvidenceType: "AUDIO",
             required: true,
             order: 1,
           },
           {
-            label: "Game asset screenshot",
-            description: "The Canva game asset contributed to the shared class library.",
+            label: "Finished clicker screenshot",
+            description:
+              "Front view showing both parts and the 0.4 mm clearance gap.",
             checkType: "AUTO",
             requiresEvidenceType: "PHOTO",
             required: true,
             order: 2,
           },
           {
+            label: "Voice note: the bracket bet",
+            description:
+              "Perspective question from the structure session: which bracket failed first and why, plus a hurricane-season print idea.",
+            checkType: "AUTO",
+            requiresEvidenceType: "AUDIO",
+            required: true,
+            order: 3,
+          },
+          {
             label: "Written wrap-up",
             description: "A short written reflection on the two days of camp.",
             checkType: "AUTO",
             required: true,
-            order: 3,
+            order: 4,
           },
         ],
       },
@@ -290,8 +297,9 @@ async function main() {
 
   console.log("Winners Camp seeded.");
   console.log(`  Class code: HAPPY — ${CAMPERS.length} campers, click-name access (no PIN), ages 11–14`);
-  console.log('  Module 1 (Day 1): Name Tag Keychain — Lightbot ✓ + build ✓ + voice note + wrap-up');
-  console.log('  Module 2 (Day 2): Fidget Clicker — build ✓ + bracket-bet voice note + game asset ✓ + wrap-up');
+  console.log('  Module 1 (Day 1): Name Tag Keychain — 2 build screenshots + 1 audio question + wrap-up');
+  console.log('  Module 2 (Day 2): Fidget Clicker — 2 build screenshots + 2 audio questions + wrap-up');
+  console.log('  (Lightbot and Canva run separately in the room — modules never gate on them.)');
   console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
   if (CAMPERS[0].startsWith("Camper ")) {
     console.log("  ⚠️  Roster is placeholder names — edit CAMPERS in prisma/seed-camp.mjs and re-run.");
