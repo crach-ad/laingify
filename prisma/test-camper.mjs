@@ -207,23 +207,20 @@ async function main() {
   await completeModule(learner, m2, {
     start: today,
     byLabel: {
-      "Housing screenshot": { photo: housing, caption: "Top view — you can see the even 2 mm ring" },
-      "Voice note: the 2 mm arm": {
+      "Back Plate screenshot": { photo: housing, caption: "Back Plate — 50 × 50 × 4, sides maxed, renamed" },
+      "Front Frame ring screenshot": { photo: housing, caption: "Top view — the 42 mm opening is dead center" },
+      "Voice note: the clearance question": {
         audio: wav,
         transcript:
-          "If the arm is way thicker it won't bend at all — you'd push and nothing happens. If it's too thin it would snap after a few clicks. Two millimeters is right in the middle: bendy but strong.",
+          "If the button and the opening were both 42 the button would jam — plastic prints a tiny bit fat. Making the button 41 leaves half a millimeter all the way around so it can move freely. That gap is called clearance.",
       },
-      "Finished clicker screenshot": { photo: clicker, caption: "Front view — the 0.4 mm gap is just visible" },
-      "Voice note: the bracket bet": {
-        audio: wav,
-        transcript:
-          "The upright bracket broke first because the weight pulled along the layer lines and it peeled apart like string cheese. Before hurricane season I would print shutter clips for my grandma's windows.",
-      },
+      "Button with logo screenshot": { photo: clicker, caption: "My button with an engraved lightning logo, centered with Align" },
+      "Final layout screenshot": { photo: clicker, caption: "All three parts flat and separate — ready to print!" },
     },
     wrapUp:
-      "Day 2 was harder but better. My clicker actually CLICKS — the 0.4 millimeter gap worked first try. The bracket test was my favorite part because I bet on the wrong bracket and now I get why layer direction matters. Two days, two things I made myself.",
+      "Day 2 was harder but better. My fidget has THREE parts that stay separate, a real keyboard switch socket, and my own engraved logo. The clearance idea clicked for me — pun intended — when I saw the 41 inside the 42. Two days, two things I made myself.",
     feedback:
-      "You designed a moving part that worked on the first print — that's rare! And your bracket explanation nails the big idea of layer direction. Brilliant camp, Test Camper.",
+      "You handled a real mechanical assembly today — locked templates, clearance, and a three-part print. Your logo placement with Align was perfect. Brilliant camp, Test Camper.",
   });
 
   console.log(`"${NAME}" created with both modules completed.`);

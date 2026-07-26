@@ -145,115 +145,147 @@ async function main() {
   });
 
   // ==========================================================================
-  // MODULE 2 · DAY 2 — Fidget clicker (Tinkercad only)
-  // Step-by-step build with screenshot uploads and reinforcement/perspective
-  // audio questions. The structural-analysis discussion feeds one audio
-  // question here; the Canva game-design block runs separately in the room.
+  // MODULE 2 · DAY 2 — Circular clicky fidget (Tinkercad only)
+  // Based on the "Design a Circular Clicky Fidget" tutorial: a real keyboard
+  // switch clicks inside a three-part circular body. The socket/cap cutout
+  // templates are supplied on the workplane and are Scaling-Locked — students
+  // must never resize them. Checkpoints are screenshots + short audio
+  // questions; the structure session and Canva run separately in the room.
   // ==========================================================================
   const module2 = await prisma.module.create({
     data: {
       orgId: camp.id,
-      title: "Winners Camp, Module 2 — Fidget Clicker",
+      title: "Winners Camp, Module 2 — Clicky Fidget",
       summary:
-        "Day 2 build: a two-part fidget clicker with real moving parts — housing, spring arm, and a button with 0.4 mm clearance. It either clicks or it doesn't.",
+        "Day 2 build: a circular fidget clicker with a REAL keyboard switch inside — three printed parts, a moving button, and your own logo on the front.",
       badgeName: "Clicker Engineer",
       badgeIcon: "🛠️",
       badgeDescription:
-        "Designed a two-part fidget clicker with a flexing spring arm and working clearance in Tinkercad.",
+        "Designed a three-part circular fidget clicker with working clearance, mechanical cutouts, and a custom logo.",
       contentJson: JSON.stringify([
         block("heading", { text: "Day 2 — Print reveal!" }),
         block("text", {
-          text: "This morning you're holding yesterday's keychain — made by you, printed overnight. Look closely at yours and a neighbor's: can you see the layer lines? Any rough spots? That's print quality, and it'll matter today. This build is harder: a toy with MOVING parts. It will either click… or it won't. That's engineering.",
+          text: "This morning you're holding yesterday's keychain — made by you, printed overnight. Look at the layer lines: that's how your fidget will be built too. Today's project CLICKS: a real keyboard switch lives inside it. You'll design three parts — a Back Plate, a Front Frame, and a moving Clicker Button with YOUR logo on it.",
+        }),
+        block("heading", { text: "Check your workplane first" }),
+        block("text", {
+          text: "Your teacher has already put three special things on your workplane: the SOCKET cutout (a square hole for the switch), the CAP cutout (a cross-shaped hole for the button), and a logo. The two cutouts are locked so they can't be resized — their sizes must stay EXACT or the switch won't fit. Move them, never stretch them.",
         }),
 
-        block("heading", { text: "Step 1 — The housing" }),
+        block("heading", { text: "Part 1 — The Back Plate" }),
         block("text", {
-          text: "The clicker is two parts: a housing with a springy arm, and a button that snaps in. Start with the housing: a 40 mm disc, 10 mm tall. Then hollow it out with a 36 mm hole cylinder — line it up with Align before you group, so the walls come out an even 2 mm all the way around.",
+          text: "Drag a Cylinder onto the workplane and set it to Width 50, Length 50, Height 4. Then open its shape panel and push Sides up to the maximum — that's what makes the circle smooth instead of chunky when it prints. Rename it 'Back Plate' (double-click the name in the shape panel). Naming parts is what real designers do — you're about to have six shapes on screen.",
         }),
         block("checkpoint", {
           capture: "photo",
-          criterionLabel: "Housing screenshot",
-          text: "Screenshot your hollowed housing. Tip: switch to the top view — you should see a clean 2 mm ring.",
+          criterionLabel: "Back Plate screenshot",
+          text: "Screenshot your Back Plate with the shape panel open — 50 × 50 × 4, sides maxed, renamed.",
         }),
 
-        block("heading", { text: "Step 2 — The spring arm" }),
+        block("heading", { text: "Part 2 — The Front Frame" }),
         block("text", {
-          text: "Cut a slot into the housing for the spring arm, and keep the arm exactly 2 mm thick. That number is the whole game: thick enough to survive being pressed a thousand times, thin enough to flex. That flex IS the click.",
-        }),
-        block("checkpoint", {
-          capture: "audio",
-          criterionLabel: "Voice note: the 2 mm arm",
-          text: "Quick thinking question — press record and answer: The spring arm is exactly 2 mm. What do you think happens if you make it much thicker? What if it's much thinner?",
-        }),
-
-        block("heading", { text: "Step 3 — The button and the gap" }),
-        block("text", {
-          text: "Model the button: a 14 mm cap on a stem, with the stem 0.4 mm narrower than its slot. That tiny gap is called CLEARANCE — too tight and it jams, too loose and it rattles. 0.4 mm is the sweet spot for our printers. Test-fit visually from the front view BEFORE you group anything. Then export both parts as one STL, labeled with your name, and into the print queue it goes — both parts print flat, 0.2 mm layers, supports off.",
+          text: "Select the Back Plate and press Ctrl+D (duplicate) — a perfect copy. Move the copy aside and rename it 'Front Frame'. Change its Height to 6. Now make its opening: drag in another cylinder, set it to 42 × 42 × 7, and switch it to HOLE. Select the Front Frame and the hole together, press L, and click the middle dots in both directions so the hole is dead-center. Then Ctrl+G — the hole cuts through and you have a ring.",
         }),
         block("checkpoint", {
           capture: "photo",
-          criterionLabel: "Finished clicker screenshot",
-          text: "Screenshot your clicker from the front view showing both parts and the gap between them. If a neighbor can spot your clearance, you've modeled it right.",
+          criterionLabel: "Front Frame ring screenshot",
+          text: "Screenshot your Front Frame from the top view — a clean ring with a 42 mm opening in the middle.",
         }),
 
-        block("heading", { text: "One more question" }),
+        block("heading", { text: "Part 3 — The moving button" }),
         block("text", {
-          text: "You've now designed for strength (the arm), for movement (the clearance), and yesterday for printing flat. In the structure session we asked: after a storm, the shops are closed and the ferry hasn't run — what could you print to hold a building together?",
+          text: "One more cylinder: 41 × 41 × 4.25, sides maxed. Rename it 'Clicker Button'. Notice: the button is 41 and the frame opening is 42. That missing millimeter is CLEARANCE — about half a millimeter of breathing room all the way around, so the button can move without jamming.",
         }),
         block("checkpoint", {
           capture: "audio",
-          criterionLabel: "Voice note: the bracket bet",
-          text: "From the bracket test: which bracket broke first, and WHY? And name one thing you'd print for your house before hurricane season.",
+          criterionLabel: "Voice note: the clearance question",
+          text: "Press record and answer: The opening is 42 mm and the button is 41 mm. Why don't we just make them the same size? What would happen if we did?",
+        }),
+
+        block("heading", { text: "Part 4 — The click mechanism" }),
+        block("text", {
+          text: "Now the locked templates. SOCKET cutout: move it over the Back Plate, select both, press L, center it both ways, and check from the side view that it pokes all the way through the plate — then Ctrl+G to cut. CAP cutout: move it over the Clicker Button and center it the same way. Before grouping, set the Snap Grid (bottom-right) to 0.5 mm and raise the cutout 0.5 mm so it doesn't punch through the button's face. Check it from the side view, then Ctrl+G.",
+        }),
+
+        block("heading", { text: "Part 5 — Your logo" }),
+        block("text", {
+          text: "Move the logo over your Clicker Button. Hold Shift and resize from a corner so it doesn't stretch — keep it 30 mm or less, with space around the edge. Select logo + button, press L, center both ways. Then choose your style: ENGRAVED (switch the logo to Hole, height 0.5, lower it 0.5 into the face) or RAISED (keep it Solid, height about 1, sitting on top). Either way, finish with Ctrl+G.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Button with logo screenshot",
+          text: "Screenshot your Clicker Button with the logo centered on it. Tell us in the caption: engraved or raised?",
+        }),
+
+        block("heading", { text: "Part 6 — The fit check" }),
+        block("text", {
+          text: "Move the Clicker Button into the Front Frame's opening, select both, press L and center — but DO NOT group them! Look closely: there should be a thin, even gap all the way around the button. If it touches anywhere, shrink the button a touch (41 → 40.5). Your three parts — Back Plate, Front Frame, Clicker Button — must stay separate forever: they print as three pieces and snap together with the real switch inside.",
+        }),
+        block("heading", { text: "Part 7 — Ready to print" }),
+        block("text", {
+          text: "Spread your three parts side by side, flat on the workplane — nothing floating, nothing overlapping. Check from the top, front, and side views: logo centered, cutouts centered, button smaller than the opening, templates never resized. This is the exact checklist a real manufacturer runs before hitting print.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Final layout screenshot",
+          text: "Screenshot all three parts laid out flat, side by side, ready for printing. This is the money shot for your portfolio!",
         }),
 
         block("heading", { text: "You made it!" }),
         block("prompt", {
-          text: "Final step of camp: a written wrap-up of your two days. Then download your portfolio — two builds, your voice, all in one timeline.",
+          text: "Final step of camp: a short written wrap-up of your two days. Then download your portfolio — and after printing, you'll snap the cap on the switch, drop the switch in the Back Plate, set the button, attach the frame… and CLICK.",
         }),
       ]),
       criteria: {
         create: [
           {
-            label: "Housing screenshot",
-            description: "The hollowed 40 mm housing with even 2 mm walls.",
+            label: "Back Plate screenshot",
+            description: "50 × 50 × 4 cylinder, sides maxed, renamed Back Plate.",
             checkType: "AUTO",
             requiresEvidenceType: "PHOTO",
             required: true,
             order: 0,
           },
           {
-            label: "Voice note: the 2 mm arm",
-            description:
-              "Reinforcement question: what happens if the spring arm is thicker or thinner than 2 mm.",
+            label: "Front Frame ring screenshot",
+            description: "The duplicated 6 mm frame with the centered 42 mm opening cut through.",
             checkType: "AUTO",
-            requiresEvidenceType: "AUDIO",
+            requiresEvidenceType: "PHOTO",
             required: true,
             order: 1,
           },
           {
-            label: "Finished clicker screenshot",
+            label: "Voice note: the clearance question",
             description:
-              "Front view showing both parts and the 0.4 mm clearance gap.",
+              "Reinforcement question: why the 41 mm button needs a 42 mm opening (clearance).",
             checkType: "AUTO",
-            requiresEvidenceType: "PHOTO",
+            requiresEvidenceType: "AUDIO",
             required: true,
             order: 2,
           },
           {
-            label: "Voice note: the bracket bet",
-            description:
-              "Perspective question from the structure session: which bracket failed first and why, plus a hurricane-season print idea.",
+            label: "Button with logo screenshot",
+            description: "The Clicker Button with a centered engraved or raised logo (≤ 30 mm).",
             checkType: "AUTO",
-            requiresEvidenceType: "AUDIO",
+            requiresEvidenceType: "PHOTO",
             required: true,
             order: 3,
+          },
+          {
+            label: "Final layout screenshot",
+            description:
+              "All three separate parts laid flat side by side, cutouts centered, ready to print.",
+            checkType: "AUTO",
+            requiresEvidenceType: "PHOTO",
+            required: true,
+            order: 4,
           },
           {
             label: "Written wrap-up",
             description: "A short written reflection on the two days of camp.",
             checkType: "AUTO",
             required: true,
-            order: 4,
+            order: 5,
           },
         ],
       },
@@ -310,8 +342,9 @@ async function main() {
   console.log("Winners Camp seeded.");
   console.log(`  Class code: HAPPY — ${CAMPERS.length} campers, click-name access (no PIN), ages 11–14`);
   console.log('  Module 1 (Day 1): Name Tag Keychain — 2 build screenshots + 1 audio question + wrap-up');
-  console.log('  Module 2 (Day 2): Fidget Clicker — 2 build screenshots + 2 audio questions + wrap-up');
-  console.log('  (Lightbot and Canva run separately in the room — modules never gate on them.)');
+  console.log('  Module 2 (Day 2): Clicky Fidget — 4 build screenshots + 1 audio question + wrap-up');
+  console.log('  (Lightbot, Canva, and the bracket test run in the room — modules never gate on them.)');
+  console.log('  ⚠️  Module 2 requires the teacher-supplied workplane: socket cutout, cap cutout, logo.');
   console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
   if (CAMPERS[0].startsWith("Camper ")) {
     console.log("  ⚠️  Roster is placeholder names — edit CAMPERS in prisma/seed-camp.mjs and re-run.");
