@@ -227,15 +227,19 @@ export default function Tutorial({
       .map((e) => [e.criterionId as string, e.url as string]),
   );
 
-  // Resume where they left off: first incomplete checkpoint, or start.
+  // First visit starts at step 1. Returning learners (any checkpoint already
+  // captured) resume at their first incomplete checkpoint — or the finish
+  // card if every checkpoint is done.
   const firstPending = steps.findIndex(
     (s) =>
       s.block.type === "checkpoint" &&
       !initiallyDone.has(critByLabel.get(s.block.criterionLabel ?? "")?.id ?? ""),
   );
-  const [step, setStep] = useState(
-    initialComplete || hasSubmission ? steps.length : firstPending === -1 ? 0 : firstPending,
-  );
+  const [step, setStep] = useState(() => {
+    if (initialComplete || hasSubmission) return steps.length;
+    if (initiallyDone.size === 0) return 0;
+    return firstPending === -1 ? steps.length : firstPending;
+  });
   const [done, setDone] = useState(initiallyDone);
   const [media, setMedia] = useState(savedMedia);
   const [busy, setBusy] = useState(false);
