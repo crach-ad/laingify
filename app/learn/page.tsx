@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
 import LogoutButton from "./LogoutButton";
+import PhotoCapture from "./PhotoCapture";
 
 export default async function Dashboard() {
   const { learner, klass, sprite } = await requireLearner();
@@ -62,12 +63,21 @@ export default async function Dashboard() {
         </div>
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2.5">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] text-xs font-semibold"
-              style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
-            >
-              {learner.displayName.charAt(0).toUpperCase()}
-            </div>
+            {learner.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={learner.photoUrl}
+                alt=""
+                className="h-8 w-8 rounded-full border border-[var(--border)] object-cover"
+              />
+            ) : (
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] text-xs font-semibold"
+                style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
+              >
+                {learner.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <span className="text-sm font-medium" style={{ color: "var(--body)" }}>
               {learner.displayName}
             </span>
@@ -106,6 +116,11 @@ export default async function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* One-time portfolio photo prompt (opt-out remembered) */}
+      {!learner.photoUrl && !learner.photoSkipped && (
+        <PhotoCapture learnerName={learner.displayName} />
+      )}
 
       {/* Sprite */}
       <section className="animate-fade-up mt-10" style={{ animationDelay: "0.08s" }}>

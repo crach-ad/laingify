@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { wipeOrg } from "./org-wipe.mjs";
 
 const prisma = new PrismaClient();
 
@@ -52,27 +53,11 @@ function figure(kind, label) {
 }
 
 async function main() {
-  console.log("Seeding Laing Learning — Product Design & Innovation…");
+  console.log("Seeding the PDI demo org (org-scoped — other orgs untouched)…");
 
-  // Wipe (dev only) for idempotent re-seeds.
-  await prisma.message.deleteMany();
-  await prisma.discussionThread.deleteMany();
-  await prisma.autoFeedback.deleteMany();
-  await prisma.submission.deleteMany();
-  await prisma.evidence.deleteMany();
-  await prisma.criterionStatus.deleteMany();
-  await prisma.spriteInteraction.deleteMany();
-  await prisma.project.deleteMany();
-  await prisma.moduleProgress.deleteMany();
-  await prisma.criterion.deleteMany();
-  await prisma.classModule.deleteMany();
-  await prisma.rosterEntry.deleteMany();
-  await prisma.sprite.deleteMany();
-  await prisma.module.deleteMany();
-  await prisma.class.deleteMany();
-  await prisma.learner.deleteMany();
-  await prisma.instructor.deleteMany();
-  await prisma.org.deleteMany();
+  // Only this org's data is wiped; the Winners Camp org (real students) is
+  // never touched by the demo seed.
+  await wipeOrg(prisma, "Product Design & Innovation");
 
   // ---- Org: the program --------------------------------------------------
   // A thirteen-week program taking girls from a blank sketch to a working,

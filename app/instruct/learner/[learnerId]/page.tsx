@@ -82,12 +82,21 @@ export default async function LearnerProfilePage({
 
       {/* Identity */}
       <header className="animate-fade-up mt-5 flex items-start gap-4">
-        <span
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-xl font-semibold"
-          style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
-        >
-          {learner.displayName.charAt(0).toUpperCase()}
-        </span>
+        {learner.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={learner.photoUrl}
+            alt=""
+            className="h-14 w-14 shrink-0 rounded-full border border-[var(--border)] object-cover"
+          />
+        ) : (
+          <span
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-xl font-semibold"
+            style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
+          >
+            {learner.displayName.charAt(0).toUpperCase()}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="overline mb-1.5">Learner profile</div>
           <h1 className="text-3xl font-semibold tracking-tight">{learner.displayName}</h1>
@@ -229,6 +238,12 @@ export default async function LearnerProfilePage({
                   <span className="pill pill-done ml-auto shrink-0">{m?.badgeName ?? "Badge"}</span>
                 </div>
                 <p className="muted mt-2.5 text-[13px] leading-relaxed">{p.summary}</p>
+                <Link
+                  href={`/instruct/learner/${learner.id}/portfolio/${p.moduleId}`}
+                  className="mono-label mt-3 inline-block transition-colors hover:text-[var(--accent)]"
+                >
+                  View portfolio →
+                </Link>
               </div>
             );
           })}

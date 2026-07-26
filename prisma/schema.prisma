@@ -114,6 +114,10 @@ model Learner {
   band        String   @default("YOUTH")
   // Tier-1 PIN (plaintext for MVP; hash before production)
   pin         String?
+  // Portfolio photo (data URL for MVP). Opt-out is remembered so the learner
+  // isn't re-prompted every visit.
+  photoUrl     String?
+  photoSkipped Boolean @default(false)
   sprite      Sprite?
   roster      RosterEntry[]
   submissions Submission[]

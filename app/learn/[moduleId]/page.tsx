@@ -7,8 +7,15 @@ import { evaluateModule } from "@/lib/completion";
 import SpriteChat from "../SpriteChat";
 import ModuleWorkspace from "./ModuleWorkspace";
 import Lesson from "./Lesson";
+import Tutorial from "./Tutorial";
 
-type Block = { type: string; text?: string; url?: string };
+type Block = {
+  type: string;
+  text?: string;
+  url?: string;
+  capture?: "photo" | "audio";
+  criterionLabel?: string;
+};
 
 export default async function ModulePage({
   params,
@@ -65,6 +72,9 @@ export default async function ModulePage({
   ]);
 
   const blocks: Block[] = JSON.parse(module.contentJson || "[]");
+  // Checkpoint modules (camp format) use the gated step-by-step Tutorial
+  // instead of the read-then-workspace Lesson flow.
+  const isTutorial = blocks.some((b) => b.type === "checkpoint");
   // Returning learners (anyone with prior work) skip straight to the activity.
   const hasActivity = complete || evidence.length > 0 || !!lastSubmission || threads.length > 0;
   const fb = lastSubmission?.feedback;
@@ -99,25 +109,37 @@ export default async function ModulePage({
         </div>
       </header>
 
-      <Lesson blocks={blocks} startRevealed={hasActivity}>
-        <ModuleWorkspace
+      {isTutorial ? (
+        <Tutorial
           moduleId={moduleId}
-          badge={{ name: module.badgeName, icon: module.badgeIcon, description: module.badgeDescription }}
-          spriteName={sprite.name}
-          initialCriteria={criteria}
-          initialEvidence={evidence.map((e) => ({
-            id: e.id,
-            type: e.type,
-            text: e.text,
-            url: e.url,
-            caption: e.caption,
-          }))}
-          initialFeedback={initialFeedback}
-          initialThreads={threads.map((t) => ({ id: t.id, seed: t.seed, messages: t.messages }))}
+          badge={{ name: module.badgeName, icon: module.badgeIcon }}
+          blocks={blocks}
+          criteria={criteria.map((c) => ({ id: c.id, label: c.label, status: c.status }))}
+          evidence={evidence.map((e) => ({ criterionId: e.criterionId, type: e.type, url: e.url }))}
           initialComplete={complete}
-          initialProject={project ? { summary: project.summary } : null}
+          hasSubmission={!!lastSubmission}
         />
-      </Lesson>
+      ) : (
+        <Lesson blocks={blocks} startRevealed={hasActivity}>
+          <ModuleWorkspace
+            moduleId={moduleId}
+            badge={{ name: module.badgeName, icon: module.badgeIcon, description: module.badgeDescription }}
+            spriteName={sprite.name}
+            initialCriteria={criteria}
+            initialEvidence={evidence.map((e) => ({
+              id: e.id,
+              type: e.type,
+              text: e.text,
+              url: e.url,
+              caption: e.caption,
+            }))}
+            initialFeedback={initialFeedback}
+            initialThreads={threads.map((t) => ({ id: t.id, seed: t.seed, messages: t.messages }))}
+            initialComplete={complete}
+            initialProject={project ? { summary: project.summary } : null}
+          />
+        </Lesson>
+      )}
 
       <SpriteChat
         sprite={{ name: sprite.name, avatar: sprite.avatar, color: sprite.color }}

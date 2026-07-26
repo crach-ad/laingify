@@ -239,6 +239,54 @@ h1, h2, h3, .display {
   }
 }
 
+/* --- Portfolio print (download = print-to-PDF) ----------------------------- */
+.portfolio-print-only {
+  display: none;
+}
+
+@media print {
+  :root {
+    --bg: #ffffff;
+    --card: #ffffff;
+    --card-hover: #ffffff;
+    --tile: #f4f4f1;
+    --border: #d8d8d4;
+    --border-soft: #e6e6e2;
+    --heading: #141414;
+    --text: #1f1f1f;
+    --body: #333333;
+    --muted: #555555;
+    --faint: #6a6a6a;
+    --accent: #4a7c00;
+    --accent-soft: #f3f8e8;
+    --accent-border: #b9d788;
+    --info: #2c5eaa;
+    --info-text: #2c5eaa;
+    --info-border: #aac4e6;
+  }
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: #ffffff;
+  }
+  /* Chrome that makes no sense on paper */
+  .portfolio-chrome,
+  .portfolio-audio {
+    display: none !important;
+  }
+  .portfolio-print-only {
+    display: block;
+  }
+  .portfolio .card,
+  .portfolio-item {
+    break-inside: avoid;
+  }
+  .animate-fade-up {
+    animation: none !important;
+  }
+}
+
 /* --- Scrollbar ------------------------------------------------------------ */
 ::-webkit-scrollbar {
   width: 10px;

@@ -30,7 +30,10 @@ export async function setStatus(
   });
 }
 
-// Recompute every criterion that is satisfied by the presence of an evidence type.
+// Recompute every criterion that is satisfied by the presence of an evidence
+// type. Evidence tagged with a criterionId only counts toward that criterion
+// (checkpoint flows); untagged evidence counts toward any criterion of its
+// type (the original behavior).
 export async function recomputeEvidenceCriteria(learnerId: string, moduleId: string) {
   const criteria = await prisma.criterion.findMany({
     where: { moduleId, requiresEvidenceType: { not: null } },
@@ -38,10 +41,12 @@ export async function recomputeEvidenceCriteria(learnerId: string, moduleId: str
   if (criteria.length === 0) return;
 
   const evidence = await prisma.evidence.findMany({ where: { learnerId, moduleId } });
-  const typesPresent = new Set(evidence.map((e) => e.type));
 
   for (const c of criteria) {
-    const met = typesPresent.has(c.requiresEvidenceType!);
+    const met = evidence.some(
+      (e) =>
+        e.type === c.requiresEvidenceType && (!e.criterionId || e.criterionId === c.id),
+    );
     await setStatus(learnerId, c.id, met ? "MET" : "NOT_STARTED", "system");
   }
 }

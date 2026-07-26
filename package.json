@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node prisma/seed.mjs",
-    "db:reset": "prisma migrate reset --force --skip-seed && node prisma/seed.mjs",
+    "seed:demo": "node prisma/seed.mjs",
+    "seed:camp": "node prisma/seed-camp.mjs",
     "postinstall": "prisma generate"
   },
   "prisma": {

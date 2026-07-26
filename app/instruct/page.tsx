@@ -161,12 +161,21 @@ export default async function InstructorDashboard() {
                       href={`/instruct/learner/${entry.learnerId}`}
                       className="-mx-2 flex items-center gap-4 rounded-xl px-2 py-1 transition-colors hover:bg-[var(--card-hover)]"
                     >
-                      <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-xs font-semibold"
-                        style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
-                      >
-                        {entry.learner.displayName.charAt(0).toUpperCase()}
-                      </span>
+                      {entry.learner.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={entry.learner.photoUrl}
+                          alt=""
+                          className="h-8 w-8 shrink-0 rounded-full border border-[var(--border)] object-cover"
+                        />
+                      ) : (
+                        <span
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-xs font-semibold"
+                          style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
+                        >
+                          {entry.learner.displayName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                       <span className="w-36 truncate text-sm font-medium" style={{ color: "var(--body)" }}>
                         {entry.learner.displayName}
                       </span>
