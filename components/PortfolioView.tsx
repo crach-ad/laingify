@@ -1,9 +1,9 @@
-// Shared portfolio renderer: a chronological timeline of everything a learner
-// made in one module — photos, voice notes, written work, and feedback —
-// crowned by the badge if the module is complete. Print-friendly (see the
-// `.portfolio` rules in globals.css); "download" = print to PDF.
+// Shared portfolio renderer: the learner's work grouped by tutorial step —
+// photos, voice notes, and written work — crowned by the badge when the
+// module is complete. Print-friendly (see `.portfolio` rules in globals.css);
+// the standalone-download route reuses this exact structure server-side.
 
-type TimelineItem = {
+export type PortfolioItem = {
   id: string;
   kind: "evidence" | "submission";
   type?: string; // evidence: TEXT | AUDIO | PHOTO | FILE
@@ -14,27 +14,26 @@ type TimelineItem = {
   createdAt: Date;
 };
 
+export type PortfolioSection = { title: string; items: PortfolioItem[] };
+
 export type PortfolioData = {
   learner: { displayName: string; photoUrl: string | null };
   module: { title: string; summary: string; badgeName: string; badgeIcon: string };
   orgName: string;
   complete: boolean;
   projectSummary: string | null;
-  items: TimelineItem[];
+  sections: PortfolioSection[];
+  stats: { photoCount: number; audioCount: number; wordCount: number };
+  finishedAt: Date | null;
 };
 
-const TIME_FMT = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
+const DATE_FMT = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" });
+const TIME_FMT = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-function ItemBody({ item }: { item: TimelineItem }) {
+function ItemBody({ item }: { item: PortfolioItem }) {
   if (item.kind === "submission") {
     return (
       <>
-        <div className="mono-label mb-2">✍️ Written reflection</div>
         <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--body)" }}>
           {item.text}
         </p>
@@ -49,12 +48,11 @@ function ItemBody({ item }: { item: TimelineItem }) {
   if (item.type === "PHOTO" && item.url) {
     return (
       <>
-        <div className="mono-label mb-2">📸 Photo</div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.url}
           alt={item.caption ?? "Work photo"}
-          className="max-h-72 rounded-lg border border-[var(--border-soft)]"
+          className="max-h-80 rounded-lg border border-[var(--border-soft)]"
         />
         {item.caption && <p className="muted mt-2 text-[13px]">{item.caption}</p>}
       </>
@@ -63,21 +61,15 @@ function ItemBody({ item }: { item: TimelineItem }) {
   if (item.type === "AUDIO") {
     return (
       <>
-        <div className="mono-label mb-2">🎙️ Voice note</div>
         {item.url && <audio controls src={item.url} className="portfolio-audio w-full max-w-sm" />}
-        {item.text && (
-          <p className="muted mt-2 text-[13px] italic">Transcript: {item.text}</p>
-        )}
+        {item.text && <p className="muted mt-2 text-[13px] italic">Transcript: {item.text}</p>}
         {item.caption && <p className="muted mt-1 text-[13px]">{item.caption}</p>}
-        <p className="portfolio-print-only muted text-[12px]">
-          (Audio recording — listen in the online portfolio)
-        </p>
+        <p className="portfolio-print-only muted text-[12px]">(Voice note — listen in the online portfolio)</p>
       </>
     );
   }
   return (
     <>
-      <div className="mono-label mb-2">📝 Note</div>
       {item.text && (
         <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--body)" }}>
           {item.text}
@@ -88,23 +80,29 @@ function ItemBody({ item }: { item: TimelineItem }) {
   );
 }
 
+const KIND_LABEL = (item: PortfolioItem) =>
+  item.kind === "submission" ? "✍️ Writing" : item.type === "PHOTO" ? "📸 Photo" : item.type === "AUDIO" ? "🎙️ Voice note" : "📝 Note";
+
 export default function PortfolioView({ data }: { data: PortfolioData }) {
-  const { learner, module, orgName, complete, projectSummary, items } = data;
+  const { learner, module, orgName, complete, projectSummary, sections, stats, finishedAt } = data;
   return (
     <div className="portfolio">
       {/* Cover */}
-      <header className="card overflow-hidden">
+      <header
+        className="card overflow-hidden"
+        style={complete ? { borderColor: "var(--accent-border)" } : undefined}
+      >
         <div className="flex flex-wrap items-center gap-5 p-7">
           {learner.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={learner.photoUrl}
               alt={learner.displayName}
-              className="h-20 w-20 rounded-2xl border border-[var(--border)] object-cover"
+              className="h-24 w-24 rounded-2xl border border-[var(--border)] object-cover"
             />
           ) : (
             <span
-              className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--border)] text-3xl font-semibold"
+              className="flex h-24 w-24 items-center justify-center rounded-2xl border border-[var(--border)] text-4xl font-semibold"
               style={{ background: "var(--tile)", color: "var(--accent)", fontFamily: "var(--font-grotesk)" }}
             >
               {learner.displayName.charAt(0).toUpperCase()}
@@ -112,23 +110,44 @@ export default function PortfolioView({ data }: { data: PortfolioData }) {
           )}
           <div className="min-w-0 flex-1">
             <div className="overline mb-1">{orgName} · Portfolio</div>
-            <h1 className="text-3xl font-semibold tracking-tight">{learner.displayName}</h1>
-            <p className="muted mt-1 text-sm">{module.title}</p>
+            <h1 className="text-4xl font-semibold tracking-tight">{learner.displayName}</h1>
+            <p className="muted mt-1.5 text-sm">
+              {module.title}
+              {finishedAt && <> · {DATE_FMT.format(finishedAt)}</>}
+            </p>
           </div>
           {complete && (
             <div
-              className="flex items-center gap-3 rounded-xl border px-4 py-3"
+              className="flex items-center gap-3 rounded-xl border px-5 py-4"
               style={{ borderColor: "var(--accent-border)", background: "var(--accent-soft)" }}
             >
-              <span className="text-3xl">{module.badgeIcon}</span>
+              <span className="text-4xl">{module.badgeIcon}</span>
               <div>
-                <div className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
+                <div className="text-base font-semibold" style={{ color: "var(--accent)" }}>
                   {module.badgeName}
                 </div>
                 <div className="mono-label text-[10px]">Badge earned</div>
               </div>
             </div>
           )}
+        </div>
+        {/* Stats strip */}
+        <div
+          className="flex flex-wrap gap-6 border-t px-7 py-4"
+          style={{ borderColor: "var(--border-soft)", background: "var(--tile)" }}
+        >
+          {[
+            { v: stats.photoCount, l: stats.photoCount === 1 ? "photo" : "photos" },
+            { v: stats.audioCount, l: stats.audioCount === 1 ? "voice note" : "voice notes" },
+            { v: stats.wordCount, l: "words written" },
+          ].map((s) => (
+            <div key={s.l} className="flex items-baseline gap-2">
+              <span className="display text-xl font-semibold" style={{ color: "var(--accent)" }}>
+                {s.v}
+              </span>
+              <span className="mono-label">{s.l}</span>
+            </div>
+          ))}
         </div>
         {projectSummary && (
           <div className="border-t px-7 py-4" style={{ borderColor: "var(--border-soft)" }}>
@@ -137,30 +156,32 @@ export default function PortfolioView({ data }: { data: PortfolioData }) {
         )}
       </header>
 
-      {/* Timeline */}
-      <section className="mt-8">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold">Timeline</h2>
-          <span className="mono-label">
-            {items.length} moment{items.length === 1 ? "" : "s"}
-          </span>
-        </div>
-        <ol className="relative mt-5 flex flex-col gap-6 border-l pl-6" style={{ borderColor: "var(--border)" }}>
-          {items.map((item) => (
-            <li key={`${item.kind}-${item.id}`} className="portfolio-item relative">
-              <span
-                className="absolute -left-[30px] top-1.5 h-2.5 w-2.5 rounded-full"
-                style={{ background: item.kind === "submission" ? "var(--accent)" : "var(--info)" }}
-              />
-              <div className="mono-label mb-2">{TIME_FMT.format(item.createdAt)}</div>
-              <div className="card p-5">
+      {/* Work, grouped by tutorial step */}
+      {sections.map((section, si) => (
+        <section key={section.title} className="mt-9">
+          <div className="flex items-baseline gap-3">
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold"
+              style={{ background: "var(--accent)", color: "var(--bg)", fontFamily: "var(--font-grotesk)" }}
+            >
+              {si + 1}
+            </span>
+            <h2 className="text-lg font-semibold">{section.title}</h2>
+          </div>
+          <div className="mt-4 flex flex-col gap-4 border-l pl-6" style={{ borderColor: "var(--border)" }}>
+            {section.items.map((item) => (
+              <div key={`${item.kind}-${item.id}`} className="portfolio-item card p-5">
+                <div className="mb-2.5 flex items-center justify-between">
+                  <span className="mono-label">{KIND_LABEL(item)}</span>
+                  <span className="mono-label">{TIME_FMT.format(item.createdAt)}</span>
+                </div>
                 <ItemBody item={item} />
               </div>
-            </li>
-          ))}
-          {items.length === 0 && <p className="muted text-sm">Nothing captured yet.</p>}
-        </ol>
-      </section>
+            ))}
+          </div>
+        </section>
+      ))}
+      {sections.length === 0 && <p className="muted mt-8 text-sm">Nothing captured yet.</p>}
     </div>
   );
 }

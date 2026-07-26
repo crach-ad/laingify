@@ -18,7 +18,7 @@ export default async function LearnerPortfolioPage({
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
-      <div className="portfolio-chrome mb-6 flex items-center justify-between">
+      <div className="portfolio-chrome mb-6 flex items-center justify-between gap-3">
         <Link
           href={`/learn/${moduleId}`}
           className="text-sm font-medium transition-colors hover:text-[var(--text)]"
@@ -26,7 +26,12 @@ export default async function LearnerPortfolioPage({
         >
           ← Back to the module
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <a href={`/learn/${moduleId}/portfolio/download`} className="btn-ghost h-11 px-4 text-sm">
+            💾 Save file
+          </a>
+          <PrintButton />
+        </div>
       </div>
       <PortfolioView data={data} />
     </main>

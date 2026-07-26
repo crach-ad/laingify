@@ -39,7 +39,15 @@ export default async function InstructorPortfolioPage({
         >
           ← {learner.displayName}&apos;s profile
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <a
+            href={`/instruct/learner/${learnerId}/portfolio/${moduleId}/download`}
+            className="btn-ghost h-11 px-4 text-sm"
+          >
+            💾 Save file
+          </a>
+          <PrintButton />
+        </div>
       </div>
       <PortfolioView data={data} />
     </main>

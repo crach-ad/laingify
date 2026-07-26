@@ -341,9 +341,12 @@ export default function Tutorial({
                 ? "Every step is done and your work is saved."
                 : "Your work is in — a few checks are still finishing up.")}
           </p>
-          <div className="mt-6 flex justify-center gap-3">
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a href={`/learn/${moduleId}/portfolio`} className="btn-primary h-12 px-6 text-sm">
-              📖 View & download your portfolio
+              📖 View your portfolio
+            </a>
+            <a href={`/learn/${moduleId}/portfolio/download`} className="btn-ghost h-12 px-6 text-sm">
+              💾 Download it
             </a>
           </div>
         </div>

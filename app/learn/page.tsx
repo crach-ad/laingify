@@ -138,11 +138,10 @@ export default async function Dashboard() {
         <div className="mt-4 flex flex-wrap gap-3">
           {rows.map(({ cm, m }) => {
             const has = completedModuleIds.has(m.id);
-            return (
+            const chip = (
               <div
-                key={cm.id}
-                title={m.badgeDescription}
-                className="flex items-center gap-2.5 rounded-xl border py-2.5 pl-3 pr-4"
+                title={has ? `${m.badgeDescription} — view your portfolio` : m.badgeDescription}
+                className={`flex items-center gap-2.5 rounded-xl border py-2.5 pl-3 pr-4 ${has ? "transition-colors hover:border-[var(--accent)]" : ""}`}
                 style={
                   has
                     ? { borderColor: "rgba(182,242,77,0.28)", background: "rgba(182,242,77,0.06)" }
@@ -164,7 +163,16 @@ export default async function Dashboard() {
                 >
                   {m.badgeName}
                 </span>
+                {has && <span className="mono-label ml-1">📖</span>}
               </div>
+            );
+            // Earned badges open that module's portfolio.
+            return has ? (
+              <Link key={cm.id} href={`/learn/${m.id}/portfolio`}>
+                {chip}
+              </Link>
+            ) : (
+              <div key={cm.id}>{chip}</div>
             );
           })}
         </div>
