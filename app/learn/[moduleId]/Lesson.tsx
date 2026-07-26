@@ -36,6 +36,18 @@ function BlockBody({ block }: { block: Block }) {
     );
   if (block.type === "video" && block.url)
     return <video controls src={block.url} className="w-full rounded-xl" />;
+  if (block.type === "image" && block.url)
+    return (
+      <figure>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={block.url}
+          alt={block.text ?? "Lesson illustration"}
+          className="w-full rounded-xl border border-[var(--border-soft)]"
+        />
+        {block.text && <figcaption className="muted mt-2 text-[13px]">{block.text}</figcaption>}
+      </figure>
+    );
   return (
     <p className="leading-relaxed" style={{ color: "var(--body)" }}>
       {block.text}

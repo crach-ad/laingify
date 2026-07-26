@@ -59,7 +59,11 @@ async function main() {
 
         block("heading", { text: "Step 1 — The tag body" }),
         block("text", {
-          text: "Log in to Tinkercad and start a new design. Drag a box onto the workplane and set it to exactly 60 × 22 × 3 mm in the shape panel — type the numbers, don't eyeball them. Then round it off: use the rounded-box shape, or soften the corners with four cylinders (3 mm corner radius).",
+          text: "Log in to Tinkercad and start a new design. Drag a box onto the workplane and set it to exactly 60 × 22 × 3 mm in the shape panel — type the numbers, don't eyeball them. Then round it off: set the Radius to 3 in the shape panel.",
+        }),
+        block("image", {
+          url: "/tutorial/keychain/step1_body.gif",
+          text: "Watch: drag the box in, type 60 × 22 × 3, then Radius 3 for rounded corners.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -69,7 +73,11 @@ async function main() {
 
         block("heading", { text: "Step 2 — Your name, raised" }),
         block("text", {
-          text: "Add the text tool, type YOUR name, and raise it 1 mm above the face of the tag. Then use Align to center it perfectly — select both shapes first, then click the little dots. Dragging by eye is never quite centered; Align always is.",
+          text: "Drag the TEXT shape onto your tag and type YOUR name. Set its Height to 4 — your tag is 3 tall, so the letters rise exactly 1 mm above the face. Shrink it with a corner handle until it fits, then use Align to center it perfectly: select both shapes (Ctrl/Cmd+A), press L, and click the middle dots. Dragging by eye is never quite centered; Align always is.",
+        }),
+        block("image", {
+          url: "/tutorial/keychain/step2_name.gif",
+          text: "Watch: add TEXT, type your name, Height 4, then Align → middle dots to center it.",
         }),
         block("checkpoint", {
           capture: "audio",
@@ -79,7 +87,11 @@ async function main() {
 
         block("heading", { text: "Step 3 — Hole, group, make it yours" }),
         block("text", {
-          text: "The keyring hole: add a 4 mm cylinder, switch it to Hole, and place it 6 mm from the short edge. Group everything — now it's one solid piece. Then personalize: stretch the letters, add a shape you love, try a pattern along the edge. Two rules of print-ready design: keep everything at least 2 mm thick, and keep the bottom flat. It prints flat — 0.2 mm layers, 15% infill, no supports.",
+          text: "The keyring hole: add a 4 mm cylinder, switch it to Hole, and tuck it into the top-left corner of the tag — clear of your letters. If it floats above the tag, press D to drop it onto the workplane so it cuts all the way through. Group everything — now it's one solid piece. Then personalize: stretch the letters, add a shape you love. Two rules of print-ready design: keep everything at least 2 mm thick, and keep the bottom flat. It prints flat — 0.2 mm layers, 15% infill, no supports.",
+        }),
+        block("image", {
+          url: "/tutorial/keychain/step3_hole.gif",
+          text: "Watch: 4 mm cylinder → Hole → into the corner → Group. The hole cuts clean through.",
         }),
         block("checkpoint", {
           capture: "photo",

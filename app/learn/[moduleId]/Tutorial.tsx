@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 // collects a short written wrap-up, and completion unlocks the portfolio.
 
 type Block = {
-  type: string; // heading | text | prompt | video | checkpoint
+  type: string; // heading | text | prompt | video | image | checkpoint
   text?: string;
   url?: string;
   capture?: "photo" | "audio";
@@ -468,6 +468,18 @@ export default function Tutorial({
           </div>
         ) : current!.block.type === "video" && current!.block.url ? (
           <video controls src={current!.block.url} className="w-full rounded-xl" />
+        ) : current!.block.type === "image" && current!.block.url ? (
+          <figure>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={current!.block.url}
+              alt={current!.block.text ?? "Tutorial illustration"}
+              className="w-full rounded-xl border border-[var(--border-soft)]"
+            />
+            {current!.block.text && (
+              <figcaption className="muted mt-2 text-[13px]">{current!.block.text}</figcaption>
+            )}
+          </figure>
         ) : (
           <p className="leading-relaxed" style={{ color: "var(--body)" }}>
             {current!.block.text}
