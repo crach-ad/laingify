@@ -6,23 +6,21 @@
 
 | Who | How |
 |---|---|
-| Campers | laingify.vercel.app → code **HAPPY** → tap their name (no PIN) |
+| Campers, first time | laingify.vercel.app → code **HAPPY** → type their name → "I'm new here" → selfie |
+| Campers, returning | code **HAPPY** → type the SAME name → "I'm coming back" |
 | Coach | laingify.vercel.app/instruct/login → **crachad.laing@gmail.com** / PIN **4321** |
+
+Names are the account code: unique per class (case doesn't matter). Two kids with the
+same first name — the second one adds a last initial ("Maya B"); the app tells them so.
 
 ## Day 1 state (as prepped)
 
-- 40 roster slots, click-name access, ages 11–14 band
+- Empty roster: campers self-register as they arrive (no name list needed)
 - **Module 1 (Name Tag Keychain) only** — Module 2 is seeded but hidden from the class
 - Tutorial has annotated step GIFs; checkpoints: 2 screenshots + 1 voice note + written wrap-up
 - Written wrap-up needs ≥ 40 characters AND ≥ 8 words to pass (deterministic fallback; no AI key set)
 - Portfolio: kids get View + Download buttons at the finish screen; earned badge on the dashboard also opens it
 - Coach console: review queue + roster progress; each camper's profile has portfolio view/download
-
-## Swap in the real camper names (BEFORE camp starts — never after)
-
-1. Edit the `CAMPERS` array at the top of `prisma/seed-camp.mjs` (40 first names, add a last initial for duplicates)
-2. `npm run seed:camp`
-3. ⚠️ This wipes ALL camper work in the org — do it tonight or first thing, never mid-camp
 
 ## Enable Module 2 on Day 2 morning (safe mid-camp)
 
