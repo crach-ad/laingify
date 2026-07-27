@@ -292,6 +292,10 @@ async function main() {
     },
   });
 
+  // Module 2's tutorial captures aren't finished yet — keep it OFF the class
+  // until Day 2 so campers can't wander in. Re-seed with --with-module2 (or
+  // run: node prisma/enable-module2.mjs) when it's ready.
+  const withModule2 = process.argv.includes("--with-module2");
   const klass = await prisma.class.create({
     data: {
       orgId: camp.id,
@@ -302,7 +306,7 @@ async function main() {
       modules: {
         create: [
           { moduleId: module1.id, order: 0 },
-          { moduleId: module2.id, order: 1 },
+          ...(withModule2 ? [{ moduleId: module2.id, order: 1 }] : []),
         ],
       },
     },
@@ -341,6 +345,11 @@ async function main() {
 
   console.log("Winners Camp seeded.");
   console.log(`  Class code: HAPPY — ${CAMPERS.length} campers, click-name access (no PIN), ages 11–14`);
+  console.log(
+    withModule2
+      ? "  Modules assigned: 1 AND 2 (Day 2 enabled)"
+      : "  Modules assigned: Module 1 only — enable Module 2 with: node prisma/enable-module2.mjs",
+  );
   console.log('  Module 1 (Day 1): Name Tag Keychain — 2 build screenshots + 1 audio question + wrap-up');
   console.log('  Module 2 (Day 2): Clicky Fidget — 4 build screenshots + 1 audio question + wrap-up');
   console.log('  (Lightbot, Canva, and the bracket test run in the room — modules never gate on them.)');
