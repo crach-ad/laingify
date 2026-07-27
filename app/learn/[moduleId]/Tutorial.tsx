@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import SlideShow from "@/components/SlideShow";
 
 // Step-by-step tutorial player for checkpoint modules (camp format).
 // Content advances one card at a time; checkpoint cards ask for a photo/
@@ -8,9 +9,10 @@ import { useEffect, useRef, useState } from "react";
 // collects a short written wrap-up, and completion unlocks the portfolio.
 
 type Block = {
-  type: string; // heading | text | prompt | video | image | checkpoint
+  type: string; // heading | text | prompt | video | image | slides | checkpoint
   text?: string;
   url?: string;
+  urls?: string[];
   capture?: "photo" | "audio";
   criterionLabel?: string;
 };
@@ -471,6 +473,8 @@ export default function Tutorial({
           </div>
         ) : current!.block.type === "video" && current!.block.url ? (
           <video controls src={current!.block.url} className="w-full rounded-xl" />
+        ) : current!.block.type === "slides" && current!.block.urls?.length ? (
+          <SlideShow urls={current!.block.urls} caption={current!.block.text} />
         ) : current!.block.type === "image" && current!.block.url ? (
           <figure>
             {/* eslint-disable-next-line @next/next/no-img-element */}
