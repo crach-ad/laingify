@@ -11,6 +11,7 @@ type ClassInfo = {
   name: string;
   band: string;
   minAuthTier: number;
+  selfRegister?: boolean;
   orgName: string;
   context: string;
 };
@@ -22,8 +23,32 @@ export default function JoinPage() {
   const [roster, setRoster] = useState<RosterName[]>([]);
   const [learnerId, setLearnerId] = useState("");
   const [pin, setPin] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | boolean>(false);
+
+  // Self-registration (camp) classes: create a profile or come back by name.
+  async function joinByName(create: boolean) {
+    if (!name.trim()) {
+      setError("Please type your name first.");
+      return;
+    }
+    setError("");
+    setBusy(create ? "create" : "return");
+    try {
+      const res = await fetch("/api/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classCode: code.trim(), name, create }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not sign you in.");
+      router.push("/learn");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setBusy(false);
+    }
+  }
 
   async function lookup(e: React.FormEvent) {
     e.preventDefault();
@@ -91,10 +116,70 @@ export default function JoinPage() {
             />
           </label>
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
-          <button type="submit" disabled={busy || !code.trim()} className="btn-primary h-12 text-sm">
+          <button type="submit" disabled={!!busy || !code.trim()} className="btn-primary h-12 text-sm">
             {busy ? "Looking…" : "Find my class"}
           </button>
         </form>
+      ) : klass.selfRegister ? (
+        <div className="animate-fade-up card flex flex-col gap-5 p-6">
+          <div className="tile p-4 text-center">
+            <p className="mono-label">{klass.orgName}</p>
+            <p className="mt-1 text-lg font-semibold" style={{ color: "var(--heading)" }}>
+              {klass.name}
+            </p>
+          </div>
+
+          <label className="flex flex-col gap-2">
+            <span className="mono-label">Your name</span>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && joinByName(false)}
+              placeholder="e.g. Maya"
+              maxLength={40}
+              className="field px-4 py-3 text-lg"
+            />
+            <span className="muted text-xs">
+              First time? You&apos;ll create your profile with a selfie next. Coming back? Use the
+              exact same name as before — it&apos;s your account code.
+            </span>
+          </label>
+
+          {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
+
+          <div className="flex flex-col gap-2.5">
+            <button
+              type="button"
+              onClick={() => joinByName(true)}
+              disabled={!!busy || !name.trim()}
+              className="btn-primary h-12 text-sm"
+            >
+              {busy === "create" ? "Creating your profile…" : "🌟 I'm new here — create my profile"}
+            </button>
+            <button
+              type="button"
+              onClick={() => joinByName(false)}
+              disabled={!!busy || !name.trim()}
+              className="btn-ghost h-12 text-sm"
+            >
+              {busy === "return" ? "Finding you…" : "👋 I'm coming back"}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setKlass(null);
+              setRoster([]);
+              setName("");
+              setError("");
+            }}
+            className="muted self-start rounded-xl px-1 py-1 text-sm font-medium transition-colors hover:text-[var(--text)]"
+          >
+            ← Back
+          </button>
+        </div>
       ) : (
         <form onSubmit={join} className="animate-fade-up card flex flex-col gap-5 p-6">
           <div className="tile p-4 text-center">
@@ -159,7 +244,7 @@ export default function JoinPage() {
             >
               ← Back
             </button>
-            <button type="submit" disabled={busy || !learnerId} className="btn-primary h-12 flex-1 text-sm">
+            <button type="submit" disabled={!!busy || !learnerId} className="btn-primary h-12 flex-1 text-sm">
               {busy ? "Signing in…" : "Let's go"}
             </button>
           </div>

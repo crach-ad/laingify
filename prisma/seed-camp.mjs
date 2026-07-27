@@ -12,11 +12,9 @@ import { wipeOrg } from "./org-wipe.mjs";
 
 const prisma = new PrismaClient();
 
-// ---------------------------------------------------------------------------
-// EDIT ME: the real roster. Placeholders until the actual list arrives —
-// paste the 40 real first names (plus last initial if two share a name).
-// ---------------------------------------------------------------------------
-const CAMPERS = Array.from({ length: 40 }, (_, i) => `Camper ${String(i + 1).padStart(2, "0")}`);
+// Roster: none seeded. The camp class is tier 0 (open self-registration) —
+// campers create their own profile (name + selfie) with the class code, and
+// return by re-entering the class code + their name.
 
 // Instructor sign-in for the camp org.
 const INSTRUCTOR = {
@@ -312,15 +310,6 @@ async function main() {
     },
   });
 
-  for (const displayName of CAMPERS) {
-    const learner = await prisma.learner.create({
-      data: { displayName, band: "TEEN" },
-    });
-    await prisma.rosterEntry.create({
-      data: { classId: klass.id, learnerId: learner.id },
-    });
-  }
-
   await prisma.instructor.create({
     data: { ...INSTRUCTOR, orgId: camp.id },
   });
@@ -344,7 +333,7 @@ async function main() {
   }
 
   console.log("Winners Camp seeded.");
-  console.log(`  Class code: HAPPY — ${CAMPERS.length} campers, click-name access (no PIN), ages 11–14`);
+  console.log("  Class code: HAPPY — empty roster, campers self-register (name + selfie)");
   console.log(
     withModule2
       ? "  Modules assigned: 1 AND 2 (Day 2 enabled)"
@@ -355,9 +344,6 @@ async function main() {
   console.log('  (Lightbot, Canva, and the bracket test run in the room — modules never gate on them.)');
   console.log('  ⚠️  Module 2 requires the teacher-supplied workplane: socket cutout, cap cutout, logo.');
   console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
-  if (CAMPERS[0].startsWith("Camper ")) {
-    console.log("  ⚠️  Roster is placeholder names — edit CAMPERS in prisma/seed-camp.mjs and re-run.");
-  }
 }
 
 main()

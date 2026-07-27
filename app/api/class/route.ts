@@ -20,18 +20,25 @@ export async function GET(req: Request) {
   });
   if (!klass) return NextResponse.json({ error: "Unknown class code." }, { status: 404 });
 
+  // Tier 0 = open self-registration: learners create a profile (name + selfie)
+  // and come back by re-entering their name, so the roster is never listed.
+  const selfRegister = klass.minAuthTier === 0;
+
   return NextResponse.json({
     class: {
       id: klass.id,
       name: klass.name,
       band: klass.band,
       minAuthTier: klass.minAuthTier,
+      selfRegister,
       orgName: klass.org.name,
       context: klass.org.context,
     },
-    roster: klass.roster.map((r) => ({
-      learnerId: r.learner.id,
-      displayName: r.learner.displayName,
-    })),
+    roster: selfRegister
+      ? []
+      : klass.roster.map((r) => ({
+          learnerId: r.learner.id,
+          displayName: r.learner.displayName,
+        })),
   });
 }

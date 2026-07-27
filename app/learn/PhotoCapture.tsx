@@ -102,11 +102,11 @@ export default function PhotoCapture({ learnerName }: { learnerName: string }) {
     <div className="card animate-fade-up mt-10 p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="overline mb-2">Your portfolio</div>
-          <h2 className="text-lg font-semibold">Add a photo of yourself, {learnerName}?</h2>
+          <div className="overline mb-2">Finish your profile</div>
+          <h2 className="text-lg font-semibold">Take a selfie, {learnerName}!</h2>
           <p className="muted mt-1.5 max-w-md text-sm">
-            It goes on the cover of the portfolio you&apos;ll build this camp. Totally optional —
-            skipping is fine, and you can add one later.
+            It goes on your profile and the cover of the portfolio you&apos;ll build this camp.
+            (You can skip it — that&apos;s okay too.)
           </p>
         </div>
 
