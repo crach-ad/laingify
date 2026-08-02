@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed:demo": "node prisma/seed.mjs",
     "seed:camp": "node prisma/seed-camp.mjs",
+    "seed:abaco": "node prisma/seed-abaco.mjs",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -16,13 +17,16 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@types/three": "^0.185.3",
     "clsx": "^2.1.1",
     "motion": "^12.41.0",
     "next": "16.2.9",
     "prisma": "^6.19.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "tailwind-merge": "^3.6.0"
+    "scratchblocks": "^3.7.1",
+    "tailwind-merge": "^3.6.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

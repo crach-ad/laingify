@@ -11,8 +11,9 @@ const DATE_FMT = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric
 const TIME_FMT = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 function itemHtml(item: PortfolioItem): string {
+  const isStl = item.type === "FILE" && /\.stl\b/i.test(item.caption ?? "");
   const kind =
-    item.kind === "submission" ? "✍️ Writing" : item.type === "PHOTO" ? "📸 Photo" : item.type === "AUDIO" ? "🎙️ Voice note" : "📝 Note";
+    item.kind === "submission" ? "✍️ Writing" : item.type === "PHOTO" ? "📸 Photo" : item.type === "AUDIO" ? "🎙️ Voice note" : isStl ? "🧊 3D model" : "📝 Note";
   let body = "";
   if (item.kind === "submission") {
     body = `<p class="text">${esc(item.text ?? "")}</p>`;
@@ -20,9 +21,14 @@ function itemHtml(item: PortfolioItem): string {
   } else if (item.type === "PHOTO" && item.url) {
     body = `<img src="${item.url}" alt="${esc(item.caption ?? "Work photo")}" />`;
     if (item.caption) body += `<p class="muted">${esc(item.caption)}</p>`;
+  } else if (isStl) {
+    body = `<p class="muted">🧊 ${esc(item.caption ?? "3D model file")} — interactive 3D model, viewable in the online portfolio.</p>`;
   } else if (item.type === "AUDIO") {
     body = item.url ? `<audio controls src="${item.url}"></audio>` : "";
-    if (item.text) body += `<p class="muted"><em>Transcript: ${esc(item.text)}</em></p>`;
+    if (item.text)
+      body += `<p class="label transcript-label">Transcript</p><p class="text">${esc(item.text)}</p>`;
+    else body += `<p class="muted print-note">(Voice note — listen in the online portfolio)</p>`;
+    if (item.caption) body += `<p class="muted">${esc(item.caption)}</p>`;
   } else {
     body = item.text ? `<p class="text">${esc(item.text)}</p>` : "";
     if (item.caption) body += `<p class="muted">${esc(item.caption)}</p>`;
@@ -31,13 +37,13 @@ function itemHtml(item: PortfolioItem): string {
 }
 
 export function renderPortfolioHtml(data: PortfolioData): string {
-  const { learner, module, orgName, complete, projectSummary, sections, stats, finishedAt } = data;
+  const { learner, module, orgName, complete, progress, projectSummary, sections, stats, finishedAt } = data;
   const avatar = learner.photoUrl
     ? `<img class="avatar" src="${learner.photoUrl}" alt="${esc(learner.displayName)}" />`
     : `<div class="avatar initial">${esc(learner.displayName.charAt(0).toUpperCase())}</div>`;
   const badge = complete
     ? `<div class="badge"><span class="badge-icon">${module.badgeIcon}</span><div><div class="badge-name">${esc(module.badgeName)}</div><div class="label">Badge earned</div></div></div>`
-    : "";
+    : `<div class="badge wip"><span class="badge-icon">🛠️</span><div><div class="badge-name">Work in progress</div><div class="label">${progress.met} of ${progress.required} steps done</div></div></div>`;
   const sectionsHtml = sections
     .map(
       (s, i) =>
@@ -68,6 +74,8 @@ export function renderPortfolioHtml(data: PortfolioData): string {
   .badge { display: flex; align-items: center; gap: 12px; background: rgba(182,242,77,.1); border: 1px solid rgba(182,242,77,.25); border-radius: 12px; padding: 14px 18px; }
   .badge-icon { font-size: 34px; }
   .badge-name { color: #b6f24d; font-weight: 700; }
+  .badge.wip { background: rgba(110,168,255,.08); border-color: rgba(110,168,255,.25); }
+  .badge.wip .badge-name { color: #8fbeff; }
   .statsbar { display: flex; flex-wrap: wrap; gap: 24px; padding: 14px 28px; background: #181b21; border-top: 1px solid rgba(255,255,255,.06); }
   .stat b { color: #b6f24d; font-size: 19px; margin-right: 6px; }
   .summary { padding: 14px 28px; border-top: 1px solid rgba(255,255,255,.06); color: #8a909b; font-size: 14px; }
@@ -79,6 +87,8 @@ export function renderPortfolioHtml(data: PortfolioData): string {
   .item img { max-width: 100%; max-height: 420px; border-radius: 10px; border: 1px solid rgba(255,255,255,.06); }
   .item audio { width: 100%; max-width: 380px; }
   .text { white-space: pre-wrap; font-size: 15px; color: #b4bac4; }
+  .transcript-label { margin: 10px 0 4px; }
+  .print-note { display: none; }
   .feedback { margin-top: 10px; padding-left: 12px; border-left: 2px solid rgba(182,242,77,.25); color: #8a909b; font-size: 13px; font-style: italic; }
   .foot { margin-top: 44px; text-align: center; }
   @media print {
@@ -88,8 +98,11 @@ export function renderPortfolioHtml(data: PortfolioData): string {
     h1, h2 { color: #141414; }
     .badge { background: #f3f8e8; }
     .badge-name, .stat b, .overline { color: #4a7c00; }
+    .badge.wip { background: #eef4fc; }
+    .badge.wip .badge-name { color: #2b6cb0; }
     .statsbar { background: #f4f4f1; }
     audio { display: none; }
+    .print-note { display: block; }
   }
 </style>
 </head>
@@ -101,7 +114,7 @@ export function renderPortfolioHtml(data: PortfolioData): string {
       <div class="who">
         <div class="label overline">${esc(orgName)} · Portfolio</div>
         <h1>${esc(learner.displayName)}</h1>
-        <p class="muted">${esc(module.title)}${finishedAt ? ` · ${DATE_FMT.format(finishedAt)}` : ""}</p>
+        <p class="muted">${esc(module.title)}${finishedAt ? ` · ${complete ? "" : "updated "}${DATE_FMT.format(finishedAt)}` : ""}</p>
       </div>
       ${badge}
     </div>
@@ -121,5 +134,5 @@ export function renderPortfolioHtml(data: PortfolioData): string {
 
 export function portfolioFilename(data: PortfolioData): string {
   const clean = (s: string) => s.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "");
-  return `${clean(data.learner.displayName)}-${clean(data.module.title)}-portfolio.html`;
+  return `${clean(data.learner.displayName)}-${clean(data.module.title)}-portfolio${data.complete ? "" : "-in-progress"}.html`;
 }

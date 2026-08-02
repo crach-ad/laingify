@@ -1,7 +1,13 @@
 // Shared portfolio renderer: the learner's work grouped by tutorial step —
-// photos, voice notes, and written work — crowned by the badge when the
-// module is complete. Print-friendly (see `.portfolio` rules in globals.css);
-// the standalone-download route reuses this exact structure server-side.
+// photos, voice notes, written work, and interactive 3D models — crowned by
+// the badge when the module is complete. Print-friendly (see `.portfolio`
+// rules in globals.css); the standalone-download route reuses this exact
+// structure server-side.
+
+import StlViewer from "@/components/StlViewer";
+
+export const isStlItem = (item: { type?: string; caption?: string | null }) =>
+  item.type === "FILE" && /\.stl\b/i.test(item.caption ?? "");
 
 export type PortfolioItem = {
   id: string;
@@ -21,6 +27,7 @@ export type PortfolioData = {
   module: { title: string; summary: string; badgeName: string; badgeIcon: string };
   orgName: string;
   complete: boolean;
+  progress: { met: number; required: number };
   projectSummary: string | null;
   sections: PortfolioSection[];
   stats: { photoCount: number; audioCount: number; wordCount: number };
@@ -58,13 +65,33 @@ function ItemBody({ item }: { item: PortfolioItem }) {
       </>
     );
   }
+  if (isStlItem(item) && item.url) {
+    return (
+      <>
+        <StlViewer url={item.url} />
+        <p className="muted mt-2 text-[13px]">
+          {item.caption} — drag to spin, scroll to zoom. This is the actual designed object.
+        </p>
+        <p className="portfolio-print-only muted text-[12px]">(Interactive 3D model — view in the online portfolio)</p>
+      </>
+    );
+  }
   if (item.type === "AUDIO") {
     return (
       <>
         {item.url && <audio controls src={item.url} className="portfolio-audio w-full max-w-sm" />}
-        {item.text && <p className="muted mt-2 text-[13px] italic">Transcript: {item.text}</p>}
-        {item.caption && <p className="muted mt-1 text-[13px]">{item.caption}</p>}
-        <p className="portfolio-print-only muted text-[12px]">(Voice note — listen in the online portfolio)</p>
+        {item.text && (
+          <>
+            <p className="mono-label mt-3">Transcript</p>
+            <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--body)" }}>
+              {item.text}
+            </p>
+          </>
+        )}
+        {item.caption && <p className="muted mt-2 text-[13px]">{item.caption}</p>}
+        {!item.text && (
+          <p className="portfolio-print-only muted text-[12px]">(Voice note — listen in the online portfolio)</p>
+        )}
       </>
     );
   }
@@ -81,10 +108,18 @@ function ItemBody({ item }: { item: PortfolioItem }) {
 }
 
 const KIND_LABEL = (item: PortfolioItem) =>
-  item.kind === "submission" ? "✍️ Writing" : item.type === "PHOTO" ? "📸 Photo" : item.type === "AUDIO" ? "🎙️ Voice note" : "📝 Note";
+  item.kind === "submission"
+    ? "✍️ Writing"
+    : item.type === "PHOTO"
+      ? "📸 Photo"
+      : item.type === "AUDIO"
+        ? "🎙️ Voice note"
+        : isStlItem(item)
+          ? "🧊 3D model"
+          : "📝 Note";
 
 export default function PortfolioView({ data }: { data: PortfolioData }) {
-  const { learner, module, orgName, complete, projectSummary, sections, stats, finishedAt } = data;
+  const { learner, module, orgName, complete, progress, projectSummary, sections, stats, finishedAt } = data;
   return (
     <div className="portfolio">
       {/* Cover */}
@@ -113,10 +148,10 @@ export default function PortfolioView({ data }: { data: PortfolioData }) {
             <h1 className="text-4xl font-semibold tracking-tight">{learner.displayName}</h1>
             <p className="muted mt-1.5 text-sm">
               {module.title}
-              {finishedAt && <> · {DATE_FMT.format(finishedAt)}</>}
+              {finishedAt && <> · {complete ? "" : "updated "}{DATE_FMT.format(finishedAt)}</>}
             </p>
           </div>
-          {complete && (
+          {complete ? (
             <div
               className="flex items-center gap-3 rounded-xl border px-5 py-4"
               style={{ borderColor: "var(--accent-border)", background: "var(--accent-soft)" }}
@@ -127,6 +162,21 @@ export default function PortfolioView({ data }: { data: PortfolioData }) {
                   {module.badgeName}
                 </div>
                 <div className="mono-label text-[10px]">Badge earned</div>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-3 rounded-xl border px-5 py-4"
+              style={{ borderColor: "var(--border)", background: "var(--tile)" }}
+            >
+              <span className="text-4xl">🛠️</span>
+              <div>
+                <div className="text-base font-semibold" style={{ color: "var(--info-text)" }}>
+                  Work in progress
+                </div>
+                <div className="mono-label text-[10px]">
+                  {progress.met} of {progress.required} steps done
+                </div>
               </div>
             </div>
           )}

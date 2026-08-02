@@ -15,7 +15,7 @@ export async function buildPortfolio(
   ]);
   if (!learner || !module) return null;
 
-  const [{ complete }, criteria, evidence, submissions, project] = await Promise.all([
+  const [{ criteria: evaluated, complete }, criteria, evidence, submissions, project] = await Promise.all([
     evaluateModule(learnerId, moduleId),
     prisma.criterion.findMany({ where: { moduleId }, orderBy: { order: "asc" } }),
     prisma.evidence.findMany({ where: { learnerId, moduleId }, orderBy: { createdAt: "asc" } }),
@@ -60,6 +60,9 @@ export async function buildPortfolio(
     });
   }
 
+  const requiredCriteria = evaluated.filter((c) => c.required);
+  const metCount = requiredCriteria.filter((c) => c.status === "MET").length;
+
   const photoCount = evidence.filter((e) => e.type === "PHOTO").length;
   const audioCount = evidence.filter((e) => e.type === "AUDIO").length;
   const wordCount = submissions.reduce((n, s) => n + s.content.split(/\s+/).filter(Boolean).length, 0);
@@ -75,6 +78,7 @@ export async function buildPortfolio(
     },
     orgName: module.org.name,
     complete,
+    progress: { met: metCount, required: requiredCriteria.length },
     projectSummary: project?.summary ?? null,
     sections,
     stats: { photoCount, audioCount, wordCount },

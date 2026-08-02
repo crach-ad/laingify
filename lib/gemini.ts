@@ -171,7 +171,8 @@ export async function transcribeAudio(
             {
               text: "Transcribe this audio recording verbatim in English. Return only the transcript text, no preamble.",
             },
-            { inlineData: { mimeType, data: base64 } },
+            // Recorders report e.g. "audio/mp4;codecs=opus" — Gemini wants the bare type.
+            { inlineData: { mimeType: mimeType.split(";")[0], data: base64 } },
           ],
         },
       ],

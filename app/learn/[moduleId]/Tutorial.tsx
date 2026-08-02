@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import SlideShow from "@/components/SlideShow";
+import ScratchBlocks from "@/components/ScratchBlocks";
 
 // Step-by-step tutorial player for checkpoint modules (camp format).
 // Content advances one card at a time; checkpoint cards ask for a photo/
@@ -9,12 +10,15 @@ import SlideShow from "@/components/SlideShow";
 // collects a short written wrap-up, and completion unlocks the portfolio.
 
 type Block = {
-  type: string; // heading | text | prompt | video | image | slides | checkpoint
+  type: string; // heading | text | code | scratch | embed | prompt | video | image | slides | checkpoint
   text?: string;
   url?: string;
   urls?: string[];
   capture?: "photo" | "audio";
   criterionLabel?: string;
+  // Photo checkpoints can optionally accept the design file itself (.stl) so
+  // the portfolio gets an interactive 3D model alongside the screenshot.
+  allowModel?: boolean;
 };
 type Step = { heading?: string; block: Block };
 type Crit = { id: string; label: string; status: string };
@@ -87,6 +91,84 @@ function PhotoCheckpoint({
   );
 }
 
+// Optional add-on for photo checkpoints: attach the exported .stl design file
+// so the portfolio can show an interactive, spinnable 3D model of the actual
+// object — not just a screenshot.
+function ModelAttach({ moduleId }: { moduleId: string }) {
+  const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
+
+  async function onFile(file: File) {
+    setState("busy");
+    try {
+      const dataUrl = await readDataUrl(file);
+      const res = await fetch("/api/evidence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          moduleId,
+          type: "FILE",
+          dataUrl,
+          caption: `3D model file: ${file.name}`,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setState("done");
+    } catch {
+      setState("error");
+    }
+  }
+
+  if (state === "done") {
+    return <span className="pill pill-done mt-3">3D model attached ✓ — it&apos;ll spin in your portfolio!</span>;
+  }
+  return (
+    <div className="mt-3">
+      <label className="btn-ghost inline-flex h-11 cursor-pointer items-center px-4 text-sm">
+        🧊 {state === "busy" ? "Attaching…" : "Bonus: attach your .stl file"}
+        <input
+          type="file"
+          accept=".stl"
+          className="hidden"
+          disabled={state === "busy"}
+          onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
+        />
+      </label>
+      {state === "error" && (
+        <p className="mt-2 text-sm" style={{ color: "var(--danger)" }}>
+          Couldn&apos;t attach the file — try again.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Minimal Web Speech API surface (not in TS's DOM lib on all targets). Used
+// for a live transcript while recording, so voice notes are readable even
+// when no server-side transcription key is configured.
+type SpeechRecognitionLike = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult:
+    | ((e: {
+        resultIndex: number;
+        results: { length: number; [i: number]: { isFinal: boolean; 0: { transcript: string } } };
+      }) => void)
+    | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+function newSpeechRecognition(): SpeechRecognitionLike | null {
+  const w = window as unknown as {
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  };
+  const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+  return Ctor ? new Ctor() : null;
+}
+
 function AudioCheckpoint({
   done,
   savedUrl,
@@ -96,13 +178,21 @@ function AudioCheckpoint({
   done: boolean;
   savedUrl: string | null;
   busy: boolean;
-  onRecorded: (blob: Blob, mimeType: string) => void;
+  onRecorded: (blob: Blob, mimeType: string, transcript: string) => void;
 }) {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const recognizerRef = useRef<SpeechRecognitionLike | null>(null);
+  const transcriptRef = useRef("");
+  const listeningRef = useRef(false);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [preview, setPreview] = useState<{ url: string; blob: Blob; mime: string } | null>(null);
+  const [preview, setPreview] = useState<{
+    url: string;
+    blob: Blob;
+    mime: string;
+    transcript: string;
+  } | null>(null);
   const [micFailed, setMicFailed] = useState(false);
 
   useEffect(() => {
@@ -129,10 +219,16 @@ function AudioCheckpoint({
       rec.onstop = () => {
         const type = rec.mimeType || mime || "audio/webm";
         const blob = new Blob(chunksRef.current, { type });
-        setPreview({ url: URL.createObjectURL(blob), blob, mime: type });
+        setPreview({
+          url: URL.createObjectURL(blob),
+          blob,
+          mime: type,
+          transcript: transcriptRef.current.trim(),
+        });
         stream.getTracks().forEach((tr) => tr.stop());
       };
       recorderRef.current = rec;
+      startTranscription();
       rec.start();
       setSeconds(0);
       setRecording(true);
@@ -141,7 +237,41 @@ function AudioCheckpoint({
     }
   }
 
+  // Live transcript while recording. Best-effort: where the Web Speech API is
+  // missing (some tablets), the server-side transcription still covers it.
+  function startTranscription() {
+    transcriptRef.current = "";
+    const recog = newSpeechRecognition();
+    if (!recog) return;
+    recog.continuous = true;
+    recog.interimResults = false;
+    recog.lang = "en-US";
+    recog.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) transcriptRef.current += e.results[i][0].transcript + " ";
+      }
+    };
+    // Chrome ends recognition after silence — restart while still recording.
+    recog.onend = () => {
+      if (!listeningRef.current) return;
+      try {
+        recog.start();
+      } catch {
+        listeningRef.current = false;
+      }
+    };
+    listeningRef.current = true;
+    try {
+      recog.start();
+      recognizerRef.current = recog;
+    } catch {
+      listeningRef.current = false;
+    }
+  }
+
   function stop() {
+    listeningRef.current = false;
+    recognizerRef.current?.stop();
     recorderRef.current?.stop();
     setRecording(false);
   }
@@ -162,7 +292,7 @@ function AudioCheckpoint({
           <audio controls src={preview.url} className="w-full max-w-sm" />
           <div className="flex gap-2">
             <button
-              onClick={() => onRecorded(preview.blob, preview.mime)}
+              onClick={() => onRecorded(preview.blob, preview.mime, preview.transcript)}
               disabled={busy}
               className="btn-primary h-11 px-5 text-sm"
             >
@@ -288,7 +418,7 @@ export default function Tutorial({
     await capture({ type: "PHOTO", dataUrl, caption: current?.block.text?.slice(0, 120) }, currentCrit.id);
   }
 
-  async function onAudio(blob: Blob, mimeType: string) {
+  async function onAudio(blob: Blob, mimeType: string, transcript: string) {
     if (!currentCrit) return;
     const dataUrl = await readDataUrl(blob);
     await capture(
@@ -297,6 +427,9 @@ export default function Tutorial({
         dataUrl,
         dataBase64: dataUrl.split(",")[1],
         mimeType,
+        // Live transcript from the browser; the server upgrades it to an AI
+        // transcription when a key is configured.
+        text: transcript || undefined,
         caption: current?.block.text?.slice(0, 120),
       },
       currentCrit.id,
@@ -446,7 +579,7 @@ export default function Tutorial({
             <span className="overline">
               {current!.block.capture === "audio" ? "🎙️ Say it out loud" : "📸 Show your work"}
             </span>
-            <p className="mt-2 leading-relaxed">{current!.block.text}</p>
+            <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
             {current!.block.capture === "audio" ? (
               <AudioCheckpoint
                 done={currentDone}
@@ -462,6 +595,7 @@ export default function Tutorial({
                 onFile={onPhoto}
               />
             )}
+            {current!.block.allowModel && <ModelAttach moduleId={moduleId} />}
           </>
         ) : current!.block.type === "prompt" ? (
           <div
@@ -469,8 +603,32 @@ export default function Tutorial({
             style={{ borderColor: "var(--accent)", background: "var(--accent-soft)" }}
           >
             <span className="overline">Your turn</span>
-            <p className="mt-2 leading-relaxed">{current!.block.text}</p>
+            <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
           </div>
+        ) : current!.block.type === "scratch" && current!.block.text ? (
+          <ScratchBlocks code={current!.block.text} />
+        ) : current!.block.type === "embed" && current!.block.url ? (
+          <div>
+            <iframe
+              src={current!.block.url}
+              className="h-[440px] w-full rounded-xl border border-[var(--border-soft)]"
+              allow="fullscreen"
+              loading="lazy"
+            />
+            {current!.block.text && <p className="muted mt-2 text-[13px]">{current!.block.text}</p>}
+          </div>
+        ) : current!.block.type === "code" ? (
+          <pre
+            className="overflow-x-auto rounded-xl border p-4 text-[13px] leading-relaxed"
+            style={{
+              borderColor: "var(--border-soft)",
+              background: "var(--tile)",
+              color: "var(--body)",
+              fontFamily: "ui-monospace, Menlo, monospace",
+            }}
+          >
+            {current!.block.text}
+          </pre>
         ) : current!.block.type === "video" && current!.block.url ? (
           <video controls src={current!.block.url} className="w-full rounded-xl" />
         ) : current!.block.type === "slides" && current!.block.urls?.length ? (
@@ -488,7 +646,7 @@ export default function Tutorial({
             )}
           </figure>
         ) : (
-          <p className="leading-relaxed" style={{ color: "var(--body)" }}>
+          <p className="whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
             {current!.block.text}
           </p>
         )}
