@@ -1,0 +1,34 @@
+[
+  {
+    "file": "bahamas-from-iss.jpg",
+    "nasa_id": "iss071e449837",
+    "title": "The clear blue waters surrounding The Bahamas",
+    "source": "https://images.nasa.gov/details/iss071e449837",
+    "credit": "NASA (public domain)",
+    "caption": "The Bahamas, photographed from the International Space Station. Astronauts say it's the most beautiful sight in orbit — find Abaco!"
+  },
+  {
+    "file": "perseverance-selfie.jpg",
+    "nasa_id": "PIA24542",
+    "title": "Perseverance's Selfie with Ingenuity",
+    "source": "https://images.nasa.gov/details/PIA24542",
+    "credit": "NASA (public domain)",
+    "caption": "A real photo: the Perseverance rover's selfie with the Ingenuity helicopter, taken on Mars. This is the rover you'll find in NASA Eyes."
+  },
+  {
+    "file": "cosmic-cliffs-webb.jpg",
+    "nasa_id": "carina_nebula",
+    "title": "James Webb Space Telescope NIRCam Image of the “Cosmic Cliffs” in Carina Nebula",
+    "source": "https://images.nasa.gov/details/carina_nebula",
+    "credit": "NASA (public domain)",
+    "caption": "The 'Cosmic Cliffs' of the Carina Nebula, captured by the James Webb Space Telescope — baby stars being born, 7,600 light-years away."
+  },
+  {
+    "file": "earthrise.jpg",
+    "nasa_id": "as08-14-2383",
+    "title": "Apollo 8 Mission image, Earth over the horizon of the moon",
+    "source": "https://images.nasa.gov/details/as08-14-2383",
+    "credit": "NASA (public domain)",
+    "caption": "'Earthrise' — taken by Apollo 8 astronauts in 1968, the first time humans saw Earth rise over another world."
+  }
+]
