@@ -94,47 +94,150 @@ async function main() {
       badgeIcon: "💻",
       badgeDescription:
         "Built and extended an interactive program using algorithms, sequencing, events, and loops.",
+      // v2 flow: short cards, tappable action checklists, tip/warn callouts,
+      // and track-tagged blocks — the tutorial reshapes itself per learner.
       contentJson: JSON.stringify([
         block("heading", { text: "You're a programmer today" }),
         block("text", {
-          text: "Every app, game, and website started as an idea in someone's head — then they wrote instructions a computer could follow. That's all code is: exact instructions, in exact order.\n\nToday you build a real GAME: a chase game where you steer a character with the arrow keys to catch something that keeps escaping. Score counter included. By the end you'll have used the four big ideas of programming — events, sequencing, loops, and variables — without even noticing.",
+          kind: "learn",
+          minutes: 2,
+          text: "Every app and game you've ever used is just instructions a computer follows — exact instructions, in exact order. Today you write your own.\n\nBy the end of this module you'll have built a real GAME: steer a character with the arrow keys, chase something that keeps escaping, rack up a live score.",
+          tip: "You'll use the four big ideas behind ALL software — events, sequencing, loops, and variables — without even noticing.",
         }),
 
         block("heading", { text: "Pick your track" }),
-        block("text", {
-          text: "The next steps walk you through the Scratch build, click by click. If you've coded before, pick a bigger challenge — every step also has your version:\n\n🟢 BEGINNER · Scratch — drag-and-drop blocks. Start here if you're new. This is the main path.\n\n🟡 INTERMEDIATE · Web (HTML/CSS/JavaScript) — real code in the browser. Open codepen.io and click Start Coding (no account needed).\n\n🔴 ADVANCED · Swift Playgrounds — Apple's real programming language. Open the Swift Playgrounds app → 'Get Started with Code'.",
+        block("trackpick", {
+          text: "Three tracks, one room. Pick the one that fits you — not sure? Start Beginner, you can level up this afternoon.",
         }),
 
+        // ---- Step 1: set the stage -----------------------------------------
         block("heading", { text: "Step 1 — Set the stage" }),
         block("text", {
-          text: "🟢 Scratch: Go to scratch.mit.edu and click Create. You'll see the cat sprite and an empty stage.\n1. Bottom-right, click the round Choose a Backdrop button and pick one you like.\n2. Hover the cat-face Choose a Sprite button, click the magnifying glass, and add a SECOND sprite — something catchable (Star, Butterfly, Crab…).\n3. Drag your two sprites apart so they're not touching.\n\n🟡 Web: In CodePen, type this in the HTML panel:\n<h1>Catch the Star</h1>\n<button id=\"star\">⭐</button>\n<p>Score: <span id=\"score\">0</span></p>\n\n🔴 Swift: Complete the first two pages of 'Get Started with Code' (Commands, then Functions) — moveForward(), turnLeft(), collectGem().",
+          track: "beginner",
+          kind: "build",
+          minutes: 5,
+          text: "Build your game world:",
+          actions: [
+            "Go to scratch.mit.edu and click Create — you'll see the cat and an empty stage",
+            "Bottom-right: click Choose a Backdrop and pick one you like",
+            "Hover Choose a Sprite → magnifying glass → add something catchable (Star, Butterfly, Crab…)",
+            "Drag the two sprites apart so they're not touching",
+          ],
+          tip: "Two sprites and a backdrop — that's a game world. Everything else is behavior.",
+        }),
+        block("text", {
+          track: "intermediate",
+          kind: "build",
+          minutes: 5,
+          text: "Set up your page:",
+          actions: [
+            "Open codepen.io and click Start Coding (no account needed)",
+            "In the HTML panel type: <h1>Catch the Star</h1>",
+            "Add the star: <button id=\"star\">⭐</button>",
+            "Add the score line: <p>Score: <span id=\"score\">0</span></p>",
+          ],
+          tip: "The id attributes are handles — your JavaScript will grab the star and the score by name.",
+        }),
+        block("text", {
+          track: "advanced",
+          kind: "build",
+          minutes: 5,
+          text: "Boot up the real thing:",
+          actions: [
+            "Open the Swift Playgrounds app → 'Get Started with Code'",
+            "Complete the Commands page — moveForward(), turnLeft(), collectGem()",
+            "Complete the Functions page — bundle commands into your own function",
+          ],
+          tip: "Swift is the language iPhone apps are written in. These puzzles are the same thinking as Scratch — in professional syntax.",
         }),
 
-        block("heading", { text: "Step 2 — Events: make the arrow keys work" }),
+        // ---- Step 2: events ------------------------------------------------
+        block("heading", { text: "Step 2 — Events: make it respond" }),
         block("text", {
-          text: "An EVENT is 'WHEN this happens, DO that'. Every game is a pile of events.\n\n🟢 Scratch: Click the CAT, then the Code tab. From the yellow Events drawer, drag out 'when [space] key pressed' — then change [space] to [right arrow]. Snap on two blue Motion blocks. Build exactly this stack:",
+          track: "beginner",
+          kind: "learn",
+          minutes: 8,
+          text: "An EVENT is 'WHEN this happens, DO that'. Every game is a pile of events. Give your CAT arrow-key controls:",
+          actions: [
+            "Click the CAT, then the Code tab",
+            "Events drawer (yellow): drag out 'when [space] key pressed' — change space to right arrow",
+            "Motion drawer (blue): snap on 'point in direction 90', then 'move 10 steps'",
+            "Make three more stacks: left arrow → -90 · up arrow → 0 · down arrow → 180",
+            "Test it — click the stage and press the arrows!",
+          ],
         }),
         block("scratch", {
+          track: "beginner",
           text: "when [right arrow v] key pressed\npoint in direction (90)\nmove (10) steps",
+          tip: "Cat flips upside down going left? Click the sprite's Direction and choose the left-right arrows icon.",
         }),
         block("text", {
-          text: "Now make three more stacks, one per arrow key:\n• left arrow → point in direction -90 → move 10 steps\n• up arrow → point in direction 0 → move 10 steps\n• down arrow → point in direction 180 → move 10 steps\nTest it: click the stage, press the arrows. Your cat obeys you. If it flips upside down going left: click the sprite's Direction and choose the left-right arrows icon.\n\n🟡 Web: In the JS panel:\ndocument.getElementById(\"star\").onclick = function () {\n  alert(\"Caught me? Not yet!\");\n};\nClick the button — that's an event handler.\n\n🔴 Swift: Do the For Loops page. Notice: 'for i in 1...4' is Scratch's 'repeat 4' in real syntax.",
+          track: "intermediate",
+          kind: "learn",
+          minutes: 8,
+          text: "An EVENT is 'WHEN this happens, DO that'. In the browser, events are handlers. Type this in the JS panel:",
+        }),
+        block("code", {
+          track: "intermediate",
+          text: "document.getElementById(\"star\").onclick = function () {\n  alert(\"Caught me? Not yet!\");\n};",
+          tip: "Click the button. That function you wrote? It's an event handler — the same idea as Scratch's 'when clicked' hat blocks.",
+        }),
+        block("text", {
+          track: "advanced",
+          kind: "learn",
+          minutes: 8,
+          text: "Work through the For Loops page.",
+          actions: [
+            "Complete the For Loops puzzles",
+            "Read one of your solutions out loud — 'for i in 1...4' is Scratch's 'repeat 4' in real syntax",
+          ],
         }),
         block("checkpoint", {
           capture: "photo",
           criterionLabel: "Program running screenshot",
-          text: "Screenshot your program running — Scratch: your cat mid-move with your event blocks visible on the right. Web: your page with the button. Swift: a completed puzzle. This is proof the computer is following YOUR instructions.",
+          text: "Screenshot your program running — your code visible if you can. This is proof the computer is following YOUR instructions.",
         }),
 
-        block("heading", { text: "Step 3 — Loops: make the star run away" }),
+        // ---- Step 3: loops -------------------------------------------------
+        block("heading", { text: "Step 3 — Loops: the chase begins" }),
         block("text", {
-          text: "A LOOP repeats instructions so you don't have to. 'Forever' is the heartbeat of every game — the game loop.\n\n🟢 Scratch: Click your STAR sprite (its code is separate from the cat's!) and build this:",
+          track: "beginner",
+          kind: "build",
+          minutes: 6,
+          text: "A LOOP repeats instructions so you don't have to — 'forever' is the heartbeat of every game. Make the star run away:",
+          actions: [
+            "Click your STAR sprite — its code is separate from the cat's!",
+            "Events: 'when green flag clicked'",
+            "Control drawer (orange): snap a 'forever' block under it",
+            "Motion: put 'glide 1 secs to random position' INSIDE the forever",
+            "Click the green flag and try to catch it!",
+          ],
         }),
         block("scratch", {
+          track: "beginner",
           text: "when green flag clicked\nforever\nglide (1) secs to (random position v)\nend",
+          tip: "Too hard? Change 1 sec to 2. Too easy? 0.5. That number is game balancing — real designers tune it for days.",
         }),
         block("text", {
-          text: "Click the green flag. The star now teleport-glides forever — try to catch it with your cat. Too hard? Change 1 sec to 2. Too easy? 0.5.\n\n🟡 Web: Make the star run away in JS:\nconst star = document.getElementById(\"star\");\nsetInterval(function () {\n  star.style.position = \"absolute\";\n  star.style.left = Math.random() * 300 + \"px\";\n  star.style.top = Math.random() * 300 + 100 + \"px\";\n}, 1000);\nsetInterval = a loop that runs every 1000 milliseconds.\n\n🔴 Swift: Do the While Loops page — 'keep going until a condition changes'.",
+          track: "intermediate",
+          kind: "build",
+          minutes: 6,
+          text: "A LOOP repeats instructions so you don't have to. Make the star teleport away every second:",
+        }),
+        block("code", {
+          track: "intermediate",
+          text: "const star = document.getElementById(\"star\");\nsetInterval(function () {\n  star.style.position = \"absolute\";\n  star.style.left = Math.random() * 300 + \"px\";\n  star.style.top = Math.random() * 300 + 100 + \"px\";\n}, 1000);",
+          tip: "setInterval IS a loop — it runs your function every 1000 milliseconds, forever. Try 500. Try 200. Now it's a game.",
+        }),
+        block("text", {
+          track: "advanced",
+          kind: "build",
+          minutes: 6,
+          text: "Work through the While Loops page — 'keep going UNTIL something changes'.",
+          actions: [
+            "Complete the While Loops puzzles",
+            "Spot the difference: for-loops repeat a known number of times, while-loops repeat until a condition flips",
+          ],
         }),
         block("checkpoint", {
           capture: "audio",
@@ -142,20 +245,53 @@ async function main() {
           text: "Press record and answer in your own words: What is a loop, and where does YOUR game use one? What would you have to do if loops didn't exist?",
         }),
 
+        // ---- Step 4: variables ---------------------------------------------
         block("heading", { text: "Step 4 — Variables: keep score" }),
         block("text", {
-          text: "A VARIABLE is a box with a name that stores a number that can change. Score, lives, high score, speed — all variables.\n\n🟢 Scratch: Orange Variables drawer → Make a Variable → name it: score\nThen on the STAR sprite, build this (the 'touching' block lives in light-blue Sensing):",
+          track: "beginner",
+          kind: "build",
+          minutes: 8,
+          text: "A VARIABLE is a named box that stores a number that can change — score, lives, speed. Wire up scoring on the STAR sprite:",
+          actions: [
+            "Variables drawer (orange): Make a Variable → name it 'score'",
+            "Build the script below — the 'touching' block lives in light-blue Sensing",
+            "Play it! Every catch: +1, a pop, and the star escapes",
+          ],
         }),
         block("scratch", {
+          track: "beginner",
           text: "when green flag clicked\nset [score v] to (0)\nforever\nif <touching (Cat v)?> then\nchange [score v] by (1)\nstart sound (Pop v)\ngo to (random position v)\nend\nend",
+          tip: "Look at what you just wrote: a loop, checking a condition, updating a variable. That's real game logic — the same shape as any video game ever made.",
         }),
         block("text", {
-          text: "Play it! Every catch: +1, pop, and the star escapes. You just wrote game logic: a loop, checking a condition, updating a variable.\n\n🟡 Web: Add scoring to your click handler:\nlet score = 0;\nstar.onclick = function () {\n  score = score + 1;\n  document.getElementById(\"score\").textContent = score;\n};\n\n🔴 Swift: Do the Variables page, then keep a gem count as you solve.",
+          track: "intermediate",
+          kind: "build",
+          minutes: 8,
+          text: "A VARIABLE is a named box storing a value that changes. Add scoring:",
+        }),
+        block("code", {
+          track: "intermediate",
+          text: "let score = 0;\nstar.onclick = function () {\n  score = score + 1;\n  document.getElementById(\"score\").textContent = score;\n};",
+          tip: "Two things happen on every click: the variable changes, then the page shows the new value. State → display. Every app you use works this way.",
+        }),
+        block("text", {
+          track: "advanced",
+          kind: "build",
+          minutes: 8,
+          text: "Work through the Variables page.",
+          actions: [
+            "Complete the Variables puzzles",
+            "Keep a running gem count as you solve — you're doing state management",
+          ],
         }),
 
-        block("heading", { text: "Step 5 — Extend challenge: make it YOURS" }),
+        // ---- Step 5: extend -------------------------------------------------
+        block("heading", { text: "Step 5 — Make it YOURS" }),
         block("text", {
-          text: "Creativity over correctness. Add at least ONE feature nobody told you exactly how to build (experimenting and half-breaking things is the point):\n\n• A 30-second timer — hint: make a 'time' variable, set to 30, forever: wait 1 second, change by -1, and 'if time = 0 then stop all'.\n• A second escaping sprite worth 5 points.\n• A 'speed boost' — the star glides faster every 5 points.\n• Sound and costume effects on every catch.\n• Web track: make the star SHRINK every catch, or dodge AWAY from your mouse.\n• Swift track: finish the Conditional Code page and use if/else in a puzzle.\n\nStuck? Ask yourself the two debugging questions: 'What did I expect this block to do?' and 'What happened instead?' The gap between those answers is where the bug lives.",
+          kind: "create",
+          minutes: 15,
+          text: "Creativity over correctness. Add at least ONE feature nobody told you exactly how to build — pick something slightly too hard:\n\n• A 30-second timer (hint: a 'time' variable, minus 1 every second, 'stop all' at 0)\n• A second escaping sprite worth 5 points\n• A speed boost — the star moves faster every 5 points\n• Sound and costume effects on every catch\n• Web track: the star SHRINKS every catch, or dodges AWAY from your mouse\n• Swift track: finish Conditional Code and use if/else in a puzzle",
+          warn: "It WILL break at some point — that's the plan. Ask the two debugging questions: 'What did I expect this to do?' and 'What happened instead?' The gap between those answers is where the bug lives.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -195,22 +331,50 @@ async function main() {
       contentJson: JSON.stringify([
         block("heading", { text: "From idea to object" }),
         block("text", {
-          text: "Yesterday you made a screen do things. Today you make a THING. CAD (computer-aided design) is how every manufactured product around you started — designed on screen, measured exactly, then made real. The 3D printer builds your design by melting plastic and stacking it layer by layer, bottom to top, 0.2 mm at a time.\n\nFirst you'll learn the five core CAD moves on a quick build. Then you'll use them to design your own product for the printer.",
+          kind: "learn",
+          minutes: 2,
+          text: "Yesterday you made a screen do things. Today you make a THING.\n\nCAD (computer-aided design) is how every manufactured product around you started — designed on screen, measured exactly, then made real. First you'll learn the five core CAD moves on a quick build, then use them to design your own product.",
+          tip: "The 3D printer builds your design by melting plastic and stacking it layer by layer, bottom to top, 0.2 mm at a time.",
         }),
 
         block("heading", { text: "Step 1 — Get set up in Tinkercad" }),
         block("text", {
-          text: "1. Go to tinkercad.com and sign in (use the class login if your coach gave one).\n2. Click + Create → 3D Design. You're looking at the blue workplane — the printer's bed.\n3. Learn the camera in 20 seconds: RIGHT-drag to orbit around, scroll to zoom, press F to frame whatever's selected. Try all three now.\n\nOne rule all day: TYPE your measurements, never eyeball them. Manufacturing runs on exact numbers.",
+          kind: "build",
+          minutes: 3,
+          text: "Get into the workshop:",
+          actions: [
+            "Go to tinkercad.com and sign in (class login if your coach gave one)",
+            "Click + Create → 3D Design — the blue workplane is the printer's bed",
+            "Learn the camera: RIGHT-drag to orbit, scroll to zoom, press F to frame — try all three now",
+          ],
+          tip: "One rule all day: TYPE your measurements, never eyeball them. Manufacturing runs on exact numbers.",
         }),
 
         block("heading", { text: "Step 2 — Skill builder: the tag" }),
         block("text", {
-          text: "Quick build to learn the moves — a name tag keychain:\n\n1. Drag a red Box onto the workplane.\n2. Click it, then click a white corner handle and look at the little number boxes: type Length 60, Width 22, Height 3.\n3. In the shape panel (top right), set Radius to 3 — the corners round off. Smooth corners aren't just pretty; sharp printed corners snag and crack.\n\nThat's move #1: exact dimensions.",
+          kind: "build",
+          minutes: 5,
+          text: "A quick build to learn the moves — a name tag:",
+          actions: [
+            "Drag a red Box onto the workplane",
+            "Click a white corner handle and type the numbers: Length 60, Width 22, Height 3",
+            "In the shape panel, set Radius to 3 — the corners round off",
+          ],
+          tip: "Smooth corners aren't just pretty — sharp printed corners snag and crack. That's move #1: exact dimensions.",
         }),
 
-        block("heading", { text: "Step 3 — Raised text + perfect centering" }),
+        block("heading", { text: "Step 3 — Raised text, perfect centering" }),
         block("text", {
-          text: "1. From the shapes panel, drag the TEXT shape onto your tag and type YOUR name in the shape panel.\n2. Set its Height to 4. Your tag is 3 tall, so the letters rise exactly 1 mm above the face — enough to see and feel, not enough to snap off.\n3. Shrink the text with a corner handle until it fits with a border around it.\n4. Now the pro move — ALIGN: select both shapes (drag a box around everything, or Ctrl/Cmd+A), press L, then click the two middle dots. Dragging by eye is never centered. Align always is.\n\nMoves #2 and #3: combining shapes, aligning precisely.",
+          kind: "build",
+          minutes: 6,
+          text: "Put your name on it — the pro way:",
+          actions: [
+            "Drag the TEXT shape onto your tag and type YOUR name in the shape panel",
+            "Set its Height to 4 — the tag is 3 tall, so letters rise exactly 1 mm above the face",
+            "Shrink the text with a corner handle until it fits with a border around it",
+            "ALIGN: select everything (Ctrl/Cmd+A), press L, click the two middle dots",
+          ],
+          tip: "Dragging by eye is never quite centered. Align always is. Moves #2 and #3: combining shapes, aligning precisely.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -220,12 +384,24 @@ async function main() {
 
         block("heading", { text: "Step 4 — Holes and grouping" }),
         block("text", {
-          text: "1. Drag a Cylinder onto the workplane. Set it to 4 × 4 × 10.\n2. In the shape panel, switch it from Solid to HOLE — it turns see-through. Hole shapes CUT instead of add.\n3. Move it into the top-left corner of your tag, clear of the letters. If it floats above the tag, press D — that drops any shape flat onto the workplane so the hole cuts all the way through.\n4. Select everything (Ctrl/Cmd+A) and Group (Ctrl/Cmd+G). One solid piece, with a keyring hole through it.\n\nMoves #4 and #5: holes and grouping. That's the whole CAD toolkit — everything else is combinations.",
+          kind: "build",
+          minutes: 5,
+          text: "Cut the keyring hole and make it one piece:",
+          actions: [
+            "Drag a Cylinder in and set it to 4 × 4 × 10",
+            "Shape panel: switch it from Solid to HOLE — it turns see-through",
+            "Move it to the top-left corner, clear of your letters — press D if it floats",
+            "Select everything (Ctrl/Cmd+A) and Group (Ctrl/Cmd+G)",
+          ],
+          tip: "Moves #4 and #5: holes and grouping. That's the whole CAD toolkit — everything else is combinations.",
         }),
 
-        block("heading", { text: "Step 5 — Tolerances: the secret of parts that FIT" }),
+        block("heading", { text: "Step 5 — Tolerances: why parts FIT" }),
         block("text", {
-          text: "Here's what separates a model that looks right from a product that works:\n\nIf a printed peg must fit a printed hole, they can NOT be the same size — plastic isn't perfect, and same-size parts jam solid. Designers leave a small gap called CLEARANCE: about 0.5 mm all the way around. A 10 mm peg gets a 10.5–11 mm hole. A lid for a 50 mm box is 51 mm inside.\n\nA keyring needs the same thinking: our hole is 4 mm because a keyring wire is ~1–2 mm — room to thread and swing. If the hole were exactly wire-sized, you could never get the ring in.",
+          kind: "learn",
+          minutes: 3,
+          text: "Here's what separates a model that looks right from a product that works:\n\nIf a printed peg must fit a printed hole, they can NOT be the same size — plastic isn't perfect, and same-size parts jam solid. Designers leave a small gap called CLEARANCE: about 0.5 mm all around. A 10 mm peg gets a 10.5–11 mm hole.",
+          tip: "Your keyring hole is 4 mm because keyring wire is 1–2 mm — room to thread and swing. Exactly wire-sized, and the ring would never go in.",
         }),
         block("checkpoint", {
           capture: "audio",
@@ -235,12 +411,26 @@ async function main() {
 
         block("heading", { text: "Step 6 — Now design YOUR product" }),
         block("text", {
-          text: "Pick ONE and build it with the five moves you just learned. Sketch on paper first — two minutes, boxes and circles are fine. Real designers always start on paper.\n\n🔑 CUSTOM KEYCHAIN — evolve your tag: different outline (try the Heart or Star shapes), an emoji-style icon from the shape library, engraved text (make the TEXT a Hole, sink it 1 mm).\n\n📱 PHONE STAND — Box 1: base, 70 × 90 × 8. Box 2: back rest, 70 × 80 × 8 — select it, grab the curved rotate arrow, and rotate it back 25° (type the number!), then plant it on the base. Box 3: a lip on the base front, 70 × 8 × 12, so the phone can't slide off. Align everything on the center line, group, done. Test-fit against a real phone before you print!\n\n🌀 FIDGET — a spinning disc: Cylinder 45 × 45 × 6 with sides maxed for smoothness, a 12 mm center hole, and 4–6 small holes or shapes arranged around the edge for grip. Or stack + group any satisfying shape sandwich — just keep it ≥ 6 mm thick so it feels solid.\n\n🌀🏠 HURRICANE-RESILIENCE TOOL — something that helps your community prepare or recover. Ideas: an emergency whistle keychain (Tube shape + small mouthpiece box + air slot hole — loud and always on your keys), a labeled clip for sealing supply bags (two 60 × 10 × 4 arms), a name tag for emergency kits and coolers. Design for real use: chunky, ≥ 3 mm walls, nothing delicate.",
+          kind: "create",
+          minutes: 25,
+          text: "Pick ONE and build it with the five moves you just learned:\n\n🔑 CUSTOM KEYCHAIN — evolve your tag: a new outline (Heart, Star), an icon from the shape library, engraved text (make the TEXT a Hole, sink it 1 mm).\n\n📱 PHONE STAND — base Box 70 × 90 × 8 · back rest Box 70 × 80 × 8, rotated back 25° (type the number!) · a lip on the front, 70 × 8 × 12, so the phone can't slide. Align on the center line, group. Test against a real phone!\n\n🌀 FIDGET — spinning disc: Cylinder 45 × 45 × 6, sides maxed, a 12 mm center hole, small shapes around the edge for grip. Keep it ≥ 6 mm thick so it feels solid.\n\n🌀🏠 HURRICANE-RESILIENCE TOOL — help your community prepare or recover: an emergency whistle keychain (Tube + mouthpiece box + air-slot hole), a supply-bag sealing clip (two 60 × 10 × 4 arms), a name tag for emergency kits. Chunky, ≥ 3 mm walls, nothing delicate.",
+          tip: "Sketch it on paper first — two minutes, boxes and circles are fine. Real designers always start on paper.",
         }),
 
         block("heading", { text: "Step 7 — The manufacturer's checklist" }),
         block("text", {
-          text: "Before ANY design goes to the printer, run this exact checklist (real factories do the same):\n\n✅ Nothing floating — every part sits ON the workplane (select, press D).\n✅ Nothing thinner than 2 mm — thin parts snap.\n✅ Bottom is flat — it prints without supports.\n✅ Everything that should be one piece is Grouped.\n✅ Check it from the top, front, and side views (click the view cube corners).\n\nThen: Export (top right) → .STL → save with your name in the filename → drop it in the class print queue. The printer is the bottleneck — export as soon as you're happy!",
+          kind: "build",
+          minutes: 5,
+          text: "Before ANY design goes to the printer, run the exact checklist real factories use:",
+          actions: [
+            "Nothing floating — every part sits ON the workplane (select, press D)",
+            "Nothing thinner than 2 mm — thin parts snap",
+            "Bottom is flat — it prints without supports",
+            "Everything that should be one piece is Grouped",
+            "Check it from the top, front, AND side views (click the view cube corners)",
+            "Export (top right) → .STL → your name in the filename → class print queue",
+          ],
+          warn: "The printer is the bottleneck for the whole class — export as soon as you're happy, not at the last minute!",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -281,23 +471,46 @@ async function main() {
       contentJson: JSON.stringify([
         block("heading", { text: "Code you can touch" }),
         block("text", {
-          text: "So far your code lived on a screen. Today it controls electricity.\n\nAn Arduino is a tiny computer the size of a cracker. It reads INPUTS (buttons, sensors) and switches OUTPUTS (LEDs, motors, buzzers). Your microwave, a game controller, a traffic light — inside, they all work exactly like what you build today.\n\nNo Arduino at your station? No problem: wokwi.com simulates everything free in the browser — click 'Arduino Uno' under Starter Templates and you get a virtual board, parts, and code editor. Every step today works there too.",
+          kind: "learn",
+          minutes: 2,
+          text: "So far your code lived on a screen. Today it controls electricity.\n\nAn Arduino is a tiny computer the size of a cracker. It reads INPUTS (buttons, sensors) and switches OUTPUTS (LEDs, motors, buzzers). Your microwave, a game controller, a traffic light — inside, they all work exactly like what you build today.",
+          tip: "No Arduino at your station? wokwi.com simulates everything free in the browser — every step today works there too.",
         }),
 
         block("heading", { text: "Safety first — every single time" }),
         block("text", {
-          text: "Three rules, no exceptions:\n\n1. Wire with the power OFF (USB unplugged). Plug in only after you've checked the circuit.\n2. Check POLARITY: electricity flows + to −, and some parts only work one way. An LED's LONG leg is + (positive); the short leg goes to ground (GND).\n3. LEDs always get a resistor (220 Ω — red-red-brown stripes). Without it, the LED burns out. The resistor is a speed bump for electricity.\n\nAnd the volunteer rule applies to you too: read the diagram YOURSELF. The person who wires the circuit is the person who learns.",
+          kind: "learn",
+          minutes: 2,
+          text: "Three rules, no exceptions:\n\n⚡ Wire with the power OFF (USB unplugged). Plug in only after you've checked the circuit.\n\n➕ Check POLARITY: electricity flows + to −. An LED's LONG leg is + (positive); the short leg goes to ground (GND).\n\n🚧 LEDs always get a resistor (220 Ω — red-red-brown stripes). It's a speed bump for electricity; without it, the LED burns out.",
+          warn: "Read the diagram YOURSELF — the person who wires the circuit is the person who learns.",
         }),
 
         block("heading", { text: "Step 1 — First blink (no wiring needed)" }),
         block("text", {
-          text: "The Arduino has a tiny LED built into the board, wired to pin 13. Let's control it:\n\n1. Open the Arduino IDE (arduino.cc/en/software) — or your Wokwi project.\n2. Plug in the board via USB (IDE: Tools → Board 'Arduino Uno', Tools → Port → the one that mentions USB).\n3. Type the sketch below, then click Upload (the → arrow). In Wokwi, just press the green Play button.\n\nWatch the little LED marked 'L' blink once per second. You are now programming hardware.",
+          kind: "build",
+          minutes: 8,
+          text: "The Arduino has a tiny LED built into the board, wired to pin 13. Take control of it:",
+          actions: [
+            "Open the Arduino IDE (arduino.cc/en/software) — or your Wokwi project",
+            "Plug in via USB · Tools → Board 'Arduino Uno' · Tools → Port → the USB one",
+            "Type the sketch on the next card, then click Upload (the → arrow) — in Wokwi, press green Play",
+            "Watch the little LED marked 'L' blink once per second",
+          ],
+          tip: "That blink means the board is running YOUR instructions. You are now programming hardware.",
         }),
         block("code", {
           text: "void setup() {\n  pinMode(13, OUTPUT);   // pin 13 will push power out\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);  // LED on\n  delay(1000);             // wait 1000 ms = 1 second\n  digitalWrite(13, LOW);   // LED off\n  delay(1000);\n}",
         }),
         block("text", {
-          text: "Now OWN it — change the numbers and re-upload:\n• delay(100) → panic blink.\n• delay(2000) → lighthouse.\n• Make a heartbeat: two quick blinks, then a long pause (hint: you'll need four digitalWrite lines and four delays).\n\nNotice: loop() runs forever — it's the same 'forever' loop from your Scratch game. delay(1000) is a variable you're tuning. Same ideas, new world.",
+          kind: "build",
+          minutes: 5,
+          text: "Now OWN it — change the numbers and re-upload:",
+          actions: [
+            "delay(100) → panic blink",
+            "delay(2000) → lighthouse",
+            "Make a heartbeat: two quick blinks, then a long pause (hint: four digitalWrite lines, four delays)",
+          ],
+          tip: "Notice: loop() runs forever — the same 'forever' loop from your game. delay(1000) is a variable you're tuning. Same ideas, new world.",
         }),
         block("heading", { text: "No board yet? Try it RIGHT HERE" }),
         block("embed", {
@@ -307,7 +520,18 @@ async function main() {
 
         block("heading", { text: "Step 2 — Wire a REAL LED" }),
         block("text", {
-          text: "Now bring the blink off the board. Unplug the USB first!\n\nBreadboard secret: the 5 holes in each numbered row are connected inside. Two parts in the same row = wired together.\n\n1. Push the LED into the breadboard: long leg in row 10, short leg in row 12.\n2. Resistor (220 Ω): one end in row 10 (same row as the long leg), other end in row 5.\n3. Jumper wire from Arduino pin 8 → row 5.\n4. Jumper wire from Arduino GND → row 12.\nThe path: pin 8 → resistor → long leg → LED → short leg → GND.\n\n5. In your sketch, change BOTH 13s to 8. Plug in, upload — your first real circuit blinks. (Wokwi: click +, add LED and resistor, wire the same way by dragging.)",
+          kind: "build",
+          minutes: 10,
+          text: "Bring the blink off the board. Breadboard secret: the 5 holes in each numbered row are connected inside — two parts in the same row are wired together.",
+          actions: [
+            "UNPLUG the USB first",
+            "LED into the breadboard: long leg row 10, short leg row 12",
+            "Resistor (220 Ω): one end row 10 (with the long leg), other end row 5",
+            "Jumper from Arduino pin 8 → row 5",
+            "Jumper from Arduino GND → row 12",
+            "In your sketch change BOTH 13s to 8 · plug in · upload",
+          ],
+          tip: "The path is a circle: pin 8 → resistor → long leg → LED → short leg → GND. (Wokwi: click +, add LED and resistor, wire by dragging.)",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -317,7 +541,17 @@ async function main() {
 
         block("heading", { text: "Step 3 — When it doesn't work (and it won't)" }),
         block("text", {
-          text: "Circuits fail in honest ways. When yours does, DON'T shotgun random changes — hunt in order, one check at a time:\n\n1. Power: is the board's ON light lit?\n2. Polarity: is the LED's long leg on the resistor side? (Backwards LED = nothing, forever.)\n3. Rows: are the parts REALLY in the rows you think? Count the holes.\n4. Code: does the pin number in the sketch match the pin the wire is actually in?\n5. The part: swap in a different LED — parts do die.\n\nThat patient hunt is the actual skill. Engineers call it debugging; it's most of the job.",
+          kind: "learn",
+          minutes: 4,
+          text: "Circuits fail in honest ways. When yours does, DON'T shotgun random changes — run the hunt in order, one check at a time:",
+          actions: [
+            "Power: is the board's ON light lit?",
+            "Polarity: long leg on the resistor side? (Backwards LED = nothing, forever)",
+            "Rows: are the parts REALLY in the rows you think? Count the holes",
+            "Code: does the pin number in the sketch match the pin the wire is in?",
+            "The part: swap in a different LED — parts do die",
+          ],
+          tip: "That patient hunt is the actual skill. Engineers call it debugging — it's most of the job.",
         }),
         block("checkpoint", {
           capture: "audio",
@@ -327,13 +561,25 @@ async function main() {
 
         block("heading", { text: "Step 4 — Inputs: read a push button" }),
         block("text", {
-          text: "Time for the other half: INPUT. Unplug, then:\n\n1. Push the button across the breadboard's center gap (legs in rows 20 and 22).\n2. Jumper from pin 2 → row 20.\n3. Jumper from GND → row 22.\n\nKeep your LED on pin 8, and upload this sketch:",
+          kind: "build",
+          minutes: 10,
+          text: "Time for the other half: INPUT.",
+          actions: [
+            "Unplug!",
+            "Push the button across the breadboard's center gap (legs in rows 20 and 22)",
+            "Jumper from pin 2 → row 20",
+            "Jumper from GND → row 22",
+            "Keep the LED on pin 8, and upload the sketch on the next card",
+          ],
         }),
         block("code", {
           text: "void setup() {\n  pinMode(8, OUTPUT);\n  pinMode(2, INPUT_PULLUP);   // button pin; PULLUP = no extra resistor needed\n}\n\nvoid loop() {\n  if (digitalRead(2) == LOW) {   // LOW means PRESSED (pullup logic is flipped)\n    digitalWrite(8, HIGH);\n  } else {\n    digitalWrite(8, LOW);\n  }\n}",
         }),
         block("text", {
-          text: "Hold the button: light. Release: dark. You've built the complete loop every smart device runs: sense → decide → act.\n\nLevel up if there's time:\n🚦 TRAFFIC LIGHT — red, yellow, green LEDs on pins 8, 9, 10 (each with its own resistor + GND). Sequence them with digitalWrite + delay: green 5 s → yellow 2 s → red 5 s, forever.\n🌡️ TEMPERATURE LOGGER — TMP36 sensor: flat side facing you, legs = 5V, A0, GND. Read with analogRead(A0), print with Serial.println(), watch live in Tools → Serial Monitor. Pinch the sensor and watch the number rise!",
+          kind: "create",
+          minutes: 20,
+          text: "Hold the button: light. Release: dark. You've built the complete loop every smart device runs: sense → decide → act.\n\nLevel up if there's time:\n\n🚦 TRAFFIC LIGHT — red, yellow, green LEDs on pins 8, 9, 10 (each with its own resistor + GND). Sequence with digitalWrite + delay: green 5 s → yellow 2 s → red 5 s, forever.\n\n🌡️ TEMPERATURE LOGGER — TMP36 sensor: flat side facing you, legs = 5V, A0, GND. Read with analogRead(A0), print with Serial.println(), watch live in Tools → Serial Monitor.",
+          tip: "Pinch the temperature sensor between your fingers and watch the number rise — you're the experiment!",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -372,7 +618,10 @@ async function main() {
       contentJson: JSON.stringify([
         block("heading", { text: "Go somewhere impossible" }),
         block("text", {
-          text: "Today you don't look at a screen — you step through it. Immersive tech puts you places no bus can take you: the surface of Mars, inside a beating heart, a city from 500 years ago.\n\nThe plan: three short expeditions with specific missions, then YOU become the builder and design an immersive experience of your own. As you explore, keep one question running: what makes this feel REAL — the scale? the sound? being able to look anywhere?",
+          kind: "learn",
+          minutes: 2,
+          text: "Today you don't look at a screen — you step through it. Immersive tech puts you places no bus can take you: the surface of Mars, inside a beating heart, a city from 500 years ago.\n\nThe plan: guided expeditions with specific missions, then YOU become the builder and design an immersive experience of your own.",
+          tip: "Keep one question running all day: what makes this feel REAL — the scale? the sound? being able to look anywhere?",
         }),
         block("heading", { text: "Postcards from space — all real photos" }),
         block("slides", {
@@ -387,12 +636,28 @@ async function main() {
 
         block("heading", { text: "Expedition 1 — Wonders of the world" }),
         block("text", {
-          text: "Google Arts & Culture: artsandculture.google.com\n\nYour missions (10 minutes):\n1. Search 'Machu Picchu' → open the Street View-style tour and walk the terraces. Look UP.\n2. Search 'Great Barrier Reef' — dive it.\n3. Free choice: find one place or museum that connects to something YOU care about (search anything — 'space', 'sharks', 'Junkanoo', 'pyramids').\n\nAs you go: which of these could a classroom in Abaco never visit in person — and now just did?",
+          kind: "build",
+          minutes: 10,
+          text: "Destination: Google Arts & Culture — artsandculture.google.com. Your missions:",
+          actions: [
+            "Search 'Machu Picchu' → open the Street View-style tour → walk the terraces. Look UP",
+            "Search 'Great Barrier Reef' — dive it",
+            "Free choice: find one place that connects to something YOU care about — 'space', 'sharks', 'Junkanoo', 'pyramids'…",
+          ],
+          tip: "As you go: which of these could a classroom in Abaco never visit in person — and now just did?",
         }),
 
         block("heading", { text: "Expedition 2 — The solar system, live" }),
         block("text", {
-          text: "NASA Eyes: eyes.nasa.gov → 'Eyes on the Solar System'\n\nThis isn't animation — it's live NASA data. Your missions (10 minutes):\n1. Fly to Mars: search Mars, then zoom until you can see surface features.\n2. Find a real spacecraft: search 'Perseverance' — that rover is on Mars RIGHT NOW; this is where it is.\n3. Use the time slider (bottom) to fast-forward the planets a year in ten seconds.\n4. On the way back: visit Earth and find the Bahamas from space.",
+          kind: "build",
+          minutes: 10,
+          text: "Destination: NASA Eyes — eyes.nasa.gov → 'Eyes on the Solar System'. This isn't animation — it's live NASA data. Your missions:",
+          actions: [
+            "Fly to Mars: search Mars, zoom until you can see surface features",
+            "Find a real spacecraft: search 'Perseverance' — that rover is on Mars RIGHT NOW, and this is where",
+            "Use the time slider (bottom) to fast-forward the planets a year in ten seconds",
+            "On the way home: visit Earth and find the Bahamas from space",
+          ],
         }),
         block("checkpoint", {
           capture: "photo",
@@ -402,7 +667,10 @@ async function main() {
 
         block("heading", { text: "Where does immersive tech change real work?" }),
         block("text", {
-          text: "Now think like a builder, not a tourist. Real examples happening today:\n\n🏥 MEDICINE — surgeons rehearse a rare operation in VR the night before touching the patient. Mistake cost: zero.\n🏗️ ARCHITECTURE — clients walk through a building that doesn't exist yet and say 'move that wall' before concrete is poured.\n🎓 EDUCATION — a school that can't afford a lab dissects a virtual heart, visits Mars at 9am and the reef at 10.\n⚙️ ENGINEERING — mechanics learn a jet engine by pulling apart a virtual one that can't break.\n🎬 ENTERTAINMENT — concerts and games happen in places that could never physically exist.\n\nThe pattern: immersive tech wins wherever 'being there' beats 'reading about it' — and where real practice is expensive, dangerous, or impossible.",
+          kind: "learn",
+          minutes: 5,
+          text: "Now think like a builder, not a tourist. Real examples happening today:\n\n🏥 MEDICINE — surgeons rehearse a rare operation in VR the night before touching the patient. Mistake cost: zero.\n\n🏗️ ARCHITECTURE — clients walk through a building that doesn't exist yet and say 'move that wall' before concrete is poured.\n\n🎓 EDUCATION — a school that can't afford a lab dissects a virtual heart, visits Mars at 9am and the reef at 10.\n\n⚙️ ENGINEERING — mechanics learn a jet engine by pulling apart a virtual one that can't break.\n\n🎬 ENTERTAINMENT — concerts and games in places that could never physically exist.",
+          tip: "The pattern: immersive tech wins wherever 'being there' beats 'reading about it' — and where real practice is expensive, dangerous, or impossible.",
         }),
         block("checkpoint", {
           capture: "audio",
@@ -412,7 +680,15 @@ async function main() {
 
         block("heading", { text: "Create — design YOUR immersive experience" }),
         block("text", {
-          text: "Consumers visit worlds; creators build them. Your build (pick by equipment):\n\n🎨 HEADSET OR TABLET: Open Brush (openbrush.app) — paint in 3D. Build one scene: a reef, your street, a creature, an invention. Walk around it as you paint.\n\n📋 NO HEADSET? Storyboard the VR experience YOU would build for your community — on paper or in Canva (canva.com → 'Storyboard'). Three panels:\n1. ARRIVE — the first thing visitors see and hear when they put on the headset.\n2. EXPLORE — what they can move toward, look inside, discover.\n3. DO — the one thing they can interact with (grab, press, change). Interaction is what makes VR different from a movie!\n\nIdea sparks: dive the reef before and after a hurricane · walk Marsh Harbour in 1920 · shrink to ant size in a garden · train boat-safety skills in a storm simulator.",
+          kind: "create",
+          minutes: 20,
+          text: "Consumers visit worlds; creators build them. Pick by equipment:\n\n🎨 HEADSET OR TABLET — Open Brush (openbrush.app): paint one 3D scene — a reef, your street, a creature, an invention. Walk around it as you paint.\n\n📋 NO HEADSET — storyboard the VR experience YOU would build for your community, on paper or in Canva (search 'Storyboard'). Three panels:",
+          actions: [
+            "Panel 1 · ARRIVE — the first thing visitors see and hear when the headset goes on",
+            "Panel 2 · EXPLORE — what they can move toward, look inside, discover",
+            "Panel 3 · DO — the one thing they can interact with (grab, press, change)",
+          ],
+          tip: "Idea sparks: dive the reef before and after a hurricane · walk Marsh Harbour in 1920 · shrink to ant size in a garden · a boat-safety storm simulator. Interaction is what makes VR different from a movie!",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -451,27 +727,47 @@ async function main() {
       contentJson: JSON.stringify([
         block("heading", { text: "What is AI, really?" }),
         block("text", {
-          text: "In your own words, by end of day, you should be able to answer: What is AI? What is generative AI? What is a model?\n\nHere's the honest version:\n• An AI MODEL is a program that studied millions of examples (text, images, code) and learned the patterns in them.\n• GENERATIVE AI uses those patterns to produce NEW things — it predicts what should come next, word by word or pixel by pixel.\n• It doesn't 'know' facts the way you do. It predicts. That's why it can write a poem in seconds AND confidently state something false (people call these hallucinations).\n\nBoth halves matter: it's an astonishing tool, and it needs a human checking it. Today, that human is you.",
+          kind: "learn",
+          minutes: 4,
+          text: "By end of day you should be able to answer in your own words: What is AI? What is generative AI? What is a model?\n\nThe honest version:\n\n🧠 An AI MODEL is a program that studied millions of examples (text, images, code) and learned the patterns in them.\n\n✨ GENERATIVE AI uses those patterns to produce NEW things — it predicts what should come next, word by word or pixel by pixel.\n\n❗ It doesn't 'know' facts the way you do. It predicts. That's why it can write a poem in seconds AND confidently state something false (a hallucination).",
+          tip: "Both halves matter: it's an astonishing tool, and it needs a human checking it. Today, that human is you.",
         }),
 
         block("heading", { text: "The rules that keep you safe" }),
         block("text", {
-          text: "Non-negotiable, every AI tool, every time:\n\n🔑 Never share passwords.\n🙈 Never share personal information — your full name, address, school, phone number. Yours or anyone else's.\n✅ Verify AI-generated information before you trust or repeat it.\n©️ Respect copyright — AI output isn't automatically yours to use anywhere.\n🧠 AI assists your thinking — it doesn't replace it.\n\nOne more: if an AI conversation ever feels weird or too personal — close it and tell an adult. AI is a tool, not a friend.",
+          kind: "learn",
+          minutes: 3,
+          text: "Non-negotiable, every AI tool, every time:\n\n🔑 Never share passwords.\n\n🙈 Never share personal information — full name, address, school, phone number. Yours or anyone else's.\n\n✅ Verify AI-generated information before you trust or repeat it.\n\n©️ Respect copyright — AI output isn't automatically yours to use anywhere.\n\n🧠 AI assists your thinking — it doesn't replace it.",
+          warn: "If an AI conversation ever feels weird or too personal — close it and tell an adult. AI is a tool, not a friend.",
         }),
 
         block("heading", { text: "Your AI toolbox" }),
         block("text", {
-          text: "Different tools, different strengths:\n\n💬 ChatGPT (chatgpt.com) — research, writing, code, brainstorming.\n📚 Claude (claude.ai) — long documents, careful reasoning, planning.\n🔍 Perplexity (perplexity.ai) — research WITH sources shown; great for fact-checking.\n🌐 v0 (v0.dev) — type a description, get a working website.\n🎨 Canva Magic Studio (canva.com) — AI design: posters, presentations, images.\n💎 Gemini (gemini.google.com) — Google ecosystem work.\n\nToday you'll use at least two: one to CREATE and one to VERIFY.",
+          kind: "learn",
+          minutes: 3,
+          text: "Different tools, different strengths:\n\n💬 ChatGPT (chatgpt.com) — research, writing, code, brainstorming.\n\n📚 Claude (claude.ai) — long documents, careful reasoning, planning.\n\n🔍 Perplexity (perplexity.ai) — research WITH sources shown; great for fact-checking.\n\n🌐 v0 (v0.dev) — type a description, get a working website.\n\n🎨 Canva Magic Studio (canva.com) — AI design: posters, presentations, images.\n\n💎 Gemini (gemini.google.com) — Google ecosystem work.",
+          tip: "Today you'll use at least two: one to CREATE and one to VERIFY.",
         }),
 
         block("heading", { text: "Prompting is a skill — here's the anatomy" }),
         block("text", {
-          text: "The AI can't read your mind; it can only read your prompt. Compare:\n\n❌ WEAK: \"make me a poster\"\n→ generic clip-art junk.\n\n✅ STRONG: \"Make a poster for a hurricane-preparedness kit aimed at families in Abaco, Bahamas. Bright beach colors, bold friendly style. Must include: a checklist of 5 essential items, a short memorable slogan, space at the bottom for a logo.\"\n→ something you can actually use.\n\nThe formula — four ingredients:\n1. WHAT you want (poster / webpage / plan / paragraph)\n2. WHO it's for (audience!)\n3. STYLE (colors, tone, mood)\n4. MUST-INCLUDES (the details that matter)\n\nAnd the fifth secret ingredient: ITERATE. Your second prompt ('make the slogan shorter, change blue to teal') matters more than your first.",
+          kind: "learn",
+          minutes: 5,
+          text: "The AI can't read your mind; it can only read your prompt. Compare:\n\n❌ WEAK: \"make me a poster\" → generic clip-art junk.\n\n✅ STRONG: \"Make a poster for a hurricane-preparedness kit aimed at families in Abaco, Bahamas. Bright beach colors, bold friendly style. Must include: a checklist of 5 essential items, a short memorable slogan, space at the bottom for a logo.\" → something you can actually use.\n\nThe formula — four ingredients:\n1. WHAT you want (poster / webpage / plan / paragraph)\n2. WHO it's for (audience!)\n3. STYLE (colors, tone, mood)\n4. MUST-INCLUDES (the details that matter)",
+          tip: "The fifth secret ingredient: ITERATE. Your second prompt ('make the slogan shorter, change blue to teal') matters more than your first.",
         }),
 
         block("heading", { text: "Build block — create your first draft" }),
         block("text", {
-          text: "Pick a project — ideally something your Shark Tank team can actually use:\n\n📄 A poster or flyer for your product → Canva: search 'Magic Design', paste your prompt.\n🌐 A landing page for your product → v0.dev: describe the page ('A clean landing page for a student-invented storm whistle, with a hero section, 3 feature cards, and a big orange Get One button').\n🎤 Pitch help → ChatGPT or Claude: 'Give me 5 catchy name ideas and a 2-sentence pitch for [your product], aimed at [your audience].'\n\nWrite your prompt with all four ingredients. Generate. Don't fix anything yet — we want the raw first draft for your portfolio.",
+          kind: "create",
+          minutes: 15,
+          text: "Pick a project — ideally something your Shark Tank team can actually use:\n\n📄 Poster or flyer → Canva: search 'Magic Design', paste your prompt.\n\n🌐 Landing page → v0.dev: describe it ('A clean landing page for a student-invented storm whistle, with a hero section, 3 feature cards, and a big orange Get One button').\n\n🎤 Pitch help → ChatGPT or Claude: 'Give me 5 catchy name ideas and a 2-sentence pitch for [your product], aimed at [your audience].'",
+          actions: [
+            "Pick your project and your tool",
+            "Write your prompt with all four ingredients — WHAT, WHO, STYLE, MUST-INCLUDES",
+            "Generate — and DON'T fix anything yet",
+          ],
+          tip: "We want the raw first draft for your portfolio — the before picture.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -481,7 +777,16 @@ async function main() {
 
         block("heading", { text: "Iterate, then VERIFY" }),
         block("text", {
-          text: "Round two:\n\n1. ITERATE — tell the AI two specific changes ('shorten the slogan to 5 words', 'make the colors match Bahamian flag colors'). Watch it improve. Specific beats vague, every time.\n\n2. VERIFY — find one FACT in your draft (a claim, a statistic, safety advice…). Check it: paste it into Perplexity (which shows sources) or find it on a trusted site (for hurricane facts, try nema.gov.bs or noaa.gov). If the AI got it wrong or made it up — congratulations, you caught a hallucination. Fix it in your draft and be proud: THAT's responsible AI use.",
+          kind: "build",
+          minutes: 10,
+          text: "Round two — make it better, then make it TRUE:",
+          actions: [
+            "ITERATE: tell the AI two specific changes ('shorten the slogan to 5 words', 'match Bahamian flag colors')",
+            "VERIFY: find one FACT in your draft — a claim, a statistic, safety advice",
+            "Check it in Perplexity (shows sources) or a trusted site — hurricane facts: nema.gov.bs or noaa.gov",
+            "Wrong or made up? Fix it in your draft",
+          ],
+          tip: "If you caught the AI inventing something — congratulations, that's a hallucination, and catching it is EXACTLY what responsible AI use looks like.",
         }),
         block("checkpoint", {
           capture: "audio",
@@ -491,7 +796,15 @@ async function main() {
 
         block("heading", { text: "Make it YOURS" }),
         block("text", {
-          text: "The AI draft is raw material, not the finished work. Now add the part no AI has: what YOU know.\n\n• Fix what's generic — the AI has never been to Abaco; you live there. Swap the stock details for real ones.\n• Add your voice — the joke, the phrase, the design touch that sounds like you.\n• Apply your verification — the corrected facts.\n\nThe test: your final version should be BETTER than the AI's draft, and you should be able to point at exactly what you changed and why. That difference is your thinking — the thing AI assists but never replaces.",
+          kind: "create",
+          minutes: 10,
+          text: "The AI draft is raw material, not the finished work. Add the part no AI has: what YOU know.",
+          actions: [
+            "Fix what's generic — the AI has never been to Abaco; you live there. Swap stock details for real ones",
+            "Add your voice — the joke, the phrase, the design touch that sounds like you",
+            "Apply your verification — the corrected facts",
+          ],
+          tip: "The test: your final should be BETTER than the AI's draft, and you should be able to point at exactly what you changed and why. That difference is your thinking — the thing AI assists but never replaces.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -530,12 +843,25 @@ async function main() {
       contentJson: JSON.stringify([
         block("heading", { text: "Showcase day" }),
         block("text", {
-          text: "This week you coded, designed, wired, explored, and created with AI. Today your team puts it together and pitches it to judges — Shark Tank style.\n\nEvery pitch must cover six things:\n1. The PROBLEM you chose\n2. Your SOLUTION\n3. Your CAD model\n4. Your prototype\n5. The AI tools you used — and what YOU added on top\n6. The BUSINESS pitch — who needs this, and why would they pay?\n\nFormat: 3–5 minutes, every teammate speaks, then judges' questions. Judges will name one thing that worked and one thing to improve — that's how feedback is supposed to sound.",
+          kind: "learn",
+          minutes: 3,
+          text: "This week you coded, designed, wired, explored, and created with AI. Today your team puts it together and pitches it to judges — Shark Tank style.\n\nEvery pitch must cover six things:\n1. The PROBLEM you chose\n2. Your SOLUTION\n3. Your CAD model\n4. Your prototype\n5. The AI tools you used — and what YOU added on top\n6. The BUSINESS pitch — who needs this, and why would they pay?",
+          tip: "Format: 3–5 minutes, every teammate speaks, then judges' questions. Judges name one thing that worked and one to improve — that's how feedback is supposed to sound.",
         }),
 
         block("heading", { text: "Build the deck — five slides, no more" }),
         block("text", {
-          text: "Open Canva → Presentation. Big pictures, few words — you are the show, slides are the backdrop. The template:\n\n🎬 SLIDE 1 — TEAM & NAME: product name, team name, one strong image (your CAD render or prototype photo!). One line: what it is.\n\n😫 SLIDE 2 — THE PROBLEM: make the judges FEEL it. A photo, a true story, or one hard-hitting number. End with the question your product answers.\n\n💡 SLIDE 3 — THE SOLUTION: your product, big. What it does in 2–3 bullet points, and what makes it different.\n\n🛠️ SLIDE 4 — HOW WE BUILT IT: your week in one slide — CAD screenshot, circuit photo, AI draft vs. YOUR final version. Judges love seeing the journey.\n\n💰 SLIDE 5 — THE BUSINESS: who buys it (be specific — 'families preparing hurricane kits', not 'everyone'), what it costs to make (3D print material is cheap — pennies per gram), what you'd charge, and your ask ('We're seeking $200 to print our first 50 units').",
+          kind: "build",
+          minutes: 30,
+          text: "Open Canva → Presentation. Big pictures, few words — YOU are the show, slides are the backdrop. Build them in order:",
+          actions: [
+            "🎬 SLIDE 1 · TEAM & NAME — product name, team name, one strong image (CAD render or prototype photo), one line on what it is",
+            "😫 SLIDE 2 · THE PROBLEM — make the judges FEEL it: a photo, a true story, or one hard-hitting number. End with the question your product answers",
+            "💡 SLIDE 3 · THE SOLUTION — your product, big. What it does in 2–3 bullets, and what makes it different",
+            "🛠️ SLIDE 4 · HOW WE BUILT IT — the week in one slide: CAD screenshot, circuit photo, AI draft vs. YOUR final",
+            "💰 SLIDE 5 · THE BUSINESS — who buys it (be specific!), cost to make, your price, and your ask ('We're seeking $200 to print our first 50 units')",
+          ],
+          tip: "Judges love seeing the journey — slide 4 is where your checkpoint photos from all week become pitch material.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -545,7 +871,15 @@ async function main() {
 
         block("heading", { text: "The 30-second hook" }),
         block("text", {
-          text: "If the whole pitch had to fit in 30 seconds, what survives? Nail the short version and the long version gets sharper. Fill in the blanks:\n\n\"Have you ever ___[the problem, as a question they'll say YES to]___?\nWe're ___[team name]___, and we built ___[product name]___ — a ___[what it is in five words]___.\nIt ___[the one thing it does best]___.\nWe made it real this week with ___[CAD / 3D printing / code / AI]___,\nand we believe every ___[who needs it]___ in Abaco should have one.\"\n\nSay it out loud three times. Cut every word you stumble on. Investors — and judges — remember the team that can say it simply.",
+          kind: "create",
+          minutes: 10,
+          text: "If the whole pitch had to fit in 30 seconds, what survives? Nail the short version and the long version gets sharper. Fill in the blanks:\n\n\"Have you ever ___[the problem, as a question they'll say YES to]___?\nWe're ___[team name]___, and we built ___[product name]___ — a ___[what it is in five words]___.\nIt ___[the one thing it does best]___.\nWe made it real this week with ___[CAD / 3D printing / code / AI]___,\nand we believe every ___[who needs it]___ in Abaco should have one.\"",
+          actions: [
+            "Fill in every blank with your team",
+            "Say it out loud three times",
+            "Cut every word you stumble on",
+          ],
+          tip: "Investors — and judges — remember the team that can say it simply.",
         }),
         block("checkpoint", {
           capture: "audio",
@@ -555,7 +889,16 @@ async function main() {
 
         block("heading", { text: "The demo — nothing beats a real thing" }),
         block("text", {
-          text: "Judges holding your 3D print beats any slide. Plan the demo like a pit crew:\n\n1. WHAT: pick the single best 60 seconds — the print in hand, the circuit responding, the game being played, the website live.\n2. WHO: one teammate DRIVES the demo while another NARRATES. Decide now, not on stage.\n3. BACKUP: tech fails on stage — it's a law of nature. Screenshot everything; if the live demo dies, you calmly show the photos and keep talking.\n4. HANDOFFS: practice the physical hand-over of the prototype to the judges. 'Pass it around — that clicked switch is a real keyboard switch we designed the housing for.'",
+          kind: "build",
+          minutes: 15,
+          text: "Judges holding your 3D print beats any slide. Plan the demo like a pit crew:",
+          actions: [
+            "WHAT: pick the single best 60 seconds — print in hand, circuit responding, game playing, website live",
+            "WHO: one teammate DRIVES the demo, another NARRATES — decide now, not on stage",
+            "BACKUP: screenshot everything now, in case the live demo dies",
+            "HANDOFF: practice physically passing the prototype to the judges",
+          ],
+          warn: "Tech fails on stage — it's a law of nature. When it does, you calmly show the photos and keep talking. That recovery impresses judges more than a perfect demo.",
         }),
         block("checkpoint", {
           capture: "photo",
@@ -565,7 +908,16 @@ async function main() {
 
         block("heading", { text: "Rehearse like it's real" }),
         block("text", {
-          text: "Two full run-throughs, minimum. The drill:\n\n⏱️ Time it — under 5 minutes or judges cut you off.\n🗣️ Every teammate speaks — hand off with names ('...and Maya will show you how we built it').\n👀 Eyes up — talk to the judges, not the screen. If you need notes, one card with bullet words, not sentences.\n❓ Prep for questions — judges always ask: 'How much would it cost to make?', 'Who did what on the team?', 'What would you do next?'. Decide your answers now.\n\nThen breathe. You built something real this week. The pitch is just showing it.",
+          kind: "build",
+          minutes: 20,
+          text: "Two full run-throughs, minimum. The drill:",
+          actions: [
+            "⏱️ Time it — under 5 minutes or judges cut you off",
+            "🗣️ Every teammate speaks — hand off with names ('…and Maya will show you how we built it')",
+            "👀 Eyes up — talk to the judges, not the screen. Notes = one card, bullet words only",
+            "❓ Prep the three questions judges always ask: cost to make? who did what? what's next?",
+          ],
+          tip: "Then breathe. You built something real this week. The pitch is just showing it.",
         }),
 
         block("heading", { text: "After the pitch — reflect on the week" }),

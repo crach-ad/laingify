@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "motion/react";
 import SlideShow from "@/components/SlideShow";
 import ScratchBlocks from "@/components/ScratchBlocks";
 
@@ -9,8 +10,10 @@ import ScratchBlocks from "@/components/ScratchBlocks";
 // screenshot or a voice note and gate "Next" until captured. The final card
 // collects a short written wrap-up, and completion unlocks the portfolio.
 
+type TrackId = "beginner" | "intermediate" | "advanced";
+
 type Block = {
-  type: string; // heading | text | code | scratch | embed | prompt | video | image | slides | checkpoint
+  type: string; // heading | text | code | scratch | embed | prompt | video | image | slides | checkpoint | trackpick
   text?: string;
   url?: string;
   urls?: string[];
@@ -19,6 +22,29 @@ type Block = {
   // Photo checkpoints can optionally accept the design file itself (.stl) so
   // the portfolio gets an interactive 3D model alongside the screenshot.
   allowModel?: boolean;
+  // --- v2 flow layout ---
+  kind?: string; // learn | build | create | reflect — step-type chip on the card
+  minutes?: number; // pacing chip: "~N min"
+  actions?: string[]; // numbered, tappable do-this checklist
+  tip?: string; // 💡 callout under the content
+  warn?: string; // ⚠️ callout under the content
+  track?: TrackId; // show this block only on the matching track
+};
+
+// The difficulty tracks a module can split into (playbook: three tracks, one
+// room). A `trackpick` block renders the chooser; blocks tagged with `track`
+// only appear on that track, so the tutorial reshapes itself per learner.
+const TRACKS: { id: TrackId; icon: string; name: string; blurb: string }[] = [
+  { id: "beginner", icon: "🟢", name: "Beginner", blurb: "Scratch — drag-and-drop blocks. New to coding? Start here." },
+  { id: "intermediate", icon: "🟡", name: "Intermediate", blurb: "Web — real HTML, CSS & JavaScript in the browser." },
+  { id: "advanced", icon: "🔴", name: "Advanced", blurb: "Swift Playgrounds — a real programming language." },
+];
+
+const KIND_CHIP: Record<string, { label: string; color: string }> = {
+  learn: { label: "📖 Learn", color: "var(--info-text)" },
+  build: { label: "🔨 Build", color: "var(--accent)" },
+  create: { label: "🎨 Create", color: "var(--accent)" },
+  reflect: { label: "💭 Reflect", color: "var(--warn-text, var(--body))" },
 };
 type Step = { heading?: string; block: Block };
 type Crit = { id: string; label: string; status: string };
@@ -87,6 +113,94 @@ function PhotoCheckpoint({
           />
         </label>
       )}
+    </div>
+  );
+}
+
+// Numbered, tappable checklist — the "do this now" heart of a build step.
+// Ticking items is local-only (satisfying, not graded); when everything's
+// ticked the list celebrates and the learner knows they're ready to move on.
+function ActionList({ items }: { items: string[] }) {
+  const [ticked, setTicked] = useState<Set<number>>(new Set());
+  const allDone = ticked.size === items.length;
+
+  function toggle(i: number) {
+    setTicked((t) => {
+      const next = new Set(t);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-2">
+      {items.map((item, i) => {
+        const on = ticked.has(i);
+        return (
+          <motion.button
+            key={i}
+            type="button"
+            onClick={() => toggle(i)}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.05, duration: 0.2 }}
+            className="flex items-start gap-3 rounded-xl border p-3 text-left transition-colors"
+            style={{
+              borderColor: on ? "var(--accent-border)" : "var(--border-soft)",
+              background: on ? "var(--accent-soft)" : "var(--tile)",
+            }}
+          >
+            <motion.span
+              animate={{ scale: on ? [1, 1.25, 1] : 1 }}
+              transition={{ duration: 0.25 }}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+              style={{
+                background: on ? "var(--accent)" : "var(--card)",
+                color: on ? "var(--bg)" : "var(--faint)",
+                border: on ? "none" : "1px solid var(--border)",
+                fontFamily: "var(--font-grotesk)",
+              }}
+            >
+              {on ? "✓" : i + 1}
+            </motion.span>
+            <span
+              className="pt-0.5 text-sm leading-relaxed"
+              style={{ color: on ? "var(--faint)" : "var(--body)" }}
+            >
+              {item}
+            </span>
+          </motion.button>
+        );
+      })}
+      {allDone && items.length > 1 && (
+        <motion.p
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-sm font-semibold"
+          style={{ color: "var(--accent)" }}
+        >
+          All done — keep going! →
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+// 💡 / ⚠️ callouts that sit under a card's main content.
+function Callout({ flavor, text }: { flavor: "tip" | "warn"; text: string }) {
+  const warn = flavor === "warn";
+  return (
+    <div
+      className="mt-4 flex items-start gap-2.5 rounded-xl border-l-2 p-3.5 text-sm leading-relaxed"
+      style={{
+        borderColor: warn ? "#f2b84d" : "var(--accent)",
+        background: warn ? "rgba(242,184,77,0.07)" : "var(--accent-soft)",
+        color: "var(--body)",
+      }}
+    >
+      <span className="shrink-0">{warn ? "⚠️" : "💡"}</span>
+      <span>{text}</span>
     </div>
   );
 }
@@ -346,7 +460,26 @@ export default function Tutorial({
   initialComplete: boolean;
   hasSubmission: boolean;
 }) {
-  const steps = buildSteps(blocks);
+  // Track choice reshapes the tutorial: blocks tagged for another track are
+  // filtered out entirely, so learners only ever see their own path.
+  // Persisted per-device; read in an effect to keep SSR hydration clean.
+  const [track, setTrack] = useState<TrackId>("beginner");
+  useEffect(() => {
+    // One-shot read of the persisted choice after mount (SSR-safe).
+    const stored = localStorage.getItem("laingify-track");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored === "intermediate" || stored === "advanced") setTrack(stored);
+  }, []);
+  function pickTrack(id: TrackId) {
+    setTrack(id);
+    localStorage.setItem("laingify-track", id);
+  }
+
+  const steps = useMemo(
+    () => buildSteps(blocks.filter((b) => !b.track || b.track === track)),
+    [blocks, track],
+  );
+  const trackPickIndex = steps.findIndex((s) => s.block.type === "trackpick");
   const critByLabel = new Map(initialCriteria.map((c) => [c.label, c]));
 
   // A checkpoint is done when evidence tagged with its criterion exists.
@@ -367,11 +500,13 @@ export default function Tutorial({
       s.block.type === "checkpoint" &&
       !initiallyDone.has(critByLabel.get(s.block.criterionLabel ?? "")?.id ?? ""),
   );
-  const [step, setStep] = useState(() => {
+  const [stepRaw, setStep] = useState(() => {
     if (initialComplete || hasSubmission) return steps.length;
     if (initiallyDone.size === 0) return 0;
     return firstPending === -1 ? steps.length : firstPending;
   });
+  // Switching tracks can shrink the step list — clamp at render time.
+  const step = Math.min(stepRaw, steps.length);
   const [done, setDone] = useState(initiallyDone);
   const [media, setMedia] = useState(savedMedia);
   const [busy, setBusy] = useState(false);
@@ -569,12 +704,86 @@ export default function Tutorial({
       </div>
 
       {/* Card */}
-      <div
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
         className="card min-h-36 p-6"
         style={isCheckpoint ? { borderColor: "var(--info-border)" } : undefined}
       >
+        {/* Step chrome: what kind of step, how long, which track */}
+        {(current!.block.kind || current!.block.minutes || current!.block.track) && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {current!.block.kind && KIND_CHIP[current!.block.kind] && (
+              <span
+                className="rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider"
+                style={{
+                  color: KIND_CHIP[current!.block.kind].color,
+                  borderColor: "var(--border-soft)",
+                  background: "var(--tile)",
+                }}
+              >
+                {KIND_CHIP[current!.block.kind].label}
+              </span>
+            )}
+            {current!.block.minutes && (
+              <span className="mono-label rounded-full border border-[var(--border-soft)] bg-[var(--tile)] px-2.5 py-1 !text-[11px]">
+                ⏱ ~{current!.block.minutes} min
+              </span>
+            )}
+            {current!.block.track && trackPickIndex >= 0 && (
+              <button
+                onClick={() => setStep(trackPickIndex)}
+                className="mono-label ml-auto rounded-full border border-[var(--border-soft)] px-2.5 py-1 !text-[11px] transition-colors hover:text-[var(--accent)]"
+                title="Change track"
+              >
+                {TRACKS.find((t) => t.id === current!.block.track)?.icon}{" "}
+                {TRACKS.find((t) => t.id === current!.block.track)?.name} track
+              </button>
+            )}
+          </div>
+        )}
         {current!.heading && <h2 className="mb-3 text-xl font-semibold">{current!.heading}</h2>}
-        {isCheckpoint ? (
+        {current!.block.type === "trackpick" ? (
+          <div>
+            {current!.block.text && (
+              <p className="mb-4 whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
+                {current!.block.text}
+              </p>
+            )}
+            <div className="flex flex-col gap-3">
+              {TRACKS.map((t) => {
+                const selected = track === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      pickTrack(t.id);
+                      setStep((s) => s + 1);
+                    }}
+                    className="card-interactive flex items-center gap-4 rounded-xl border p-4 text-left transition-all"
+                    style={{
+                      borderColor: selected ? "var(--accent-border)" : "var(--border-soft)",
+                      background: selected ? "var(--accent-soft)" : "var(--tile)",
+                    }}
+                  >
+                    <span className="text-2xl">{t.icon}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="display block text-[15px] font-semibold">{t.name}</span>
+                      <span className="muted mt-0.5 block text-[13px]">{t.blurb}</span>
+                    </span>
+                    {selected && <span className="pill pill-done shrink-0">Your track</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="muted mt-3 text-[13px]">
+              The tutorial reshapes itself — you&apos;ll only see steps for your track, and you can
+              come back here anytime.
+            </p>
+          </div>
+        ) : isCheckpoint ? (
           <>
             <span className="overline">
               {current!.block.capture === "audio" ? "🎙️ Say it out loud" : "📸 Show your work"}
@@ -650,12 +859,18 @@ export default function Tutorial({
             {current!.block.text}
           </p>
         )}
+        {/* v2 extras: any non-checkpoint block can carry a checklist + callouts */}
+        {!isCheckpoint && current!.block.actions && current!.block.actions.length > 0 && (
+          <ActionList key={`actions-${step}`} items={current!.block.actions} />
+        )}
+        {current!.block.tip && <Callout flavor="tip" text={current!.block.tip} />}
+        {current!.block.warn && <Callout flavor="warn" text={current!.block.warn} />}
         {error && (
           <p className="mt-3 text-sm" style={{ color: "var(--danger)" }}>
             {error}
           </p>
         )}
-      </div>
+      </motion.div>
 
       {/* Controls */}
       <div className="flex items-center justify-between">
