@@ -504,17 +504,21 @@ export default function Tutorial({
   );
 
   // First visit starts at step 1. Returning learners (any checkpoint already
-  // captured) resume at their first incomplete checkpoint — or the finish
-  // card if every checkpoint is done.
+  // captured) resume at their first incomplete checkpoint — or the wrap-up
+  // card if every checkpoint is done (the final prompt card carries the
+  // reflection form inline; the separate finish card only exists for modules
+  // that don't end on a prompt).
   const firstPending = steps.findIndex(
     (s) =>
       s.block.type === "checkpoint" &&
       !initiallyDone.has(critByLabel.get(s.block.criterionLabel ?? "")?.id ?? ""),
   );
+  const wrapUpStep =
+    steps[steps.length - 1]?.block.type === "prompt" ? steps.length - 1 : steps.length;
   const [stepRaw, setStep] = useState(() => {
     if (initialComplete || hasSubmission) return steps.length;
     if (initiallyDone.size === 0) return 0;
-    return firstPending === -1 ? steps.length : firstPending;
+    return firstPending === -1 ? wrapUpStep : firstPending;
   });
   // Switching tracks can shrink the step list — clamp at render time.
   const step = Math.min(stepRaw, steps.length);
@@ -689,6 +693,10 @@ export default function Tutorial({
 
   // ---- Step cards ---------------------------------------------------------------
   const isCheckpoint = current!.block.type === "checkpoint";
+  // When the last card is the wrap-up prompt, the reflection form lives right
+  // inside it — no extra "Next" hop to a separate finish card.
+  const lastIsPrompt = steps[steps.length - 1]?.block.type === "prompt";
+  const isFinalPrompt = current!.block.type === "prompt" && step === steps.length - 1;
   return (
     <div className="mt-8 flex flex-col gap-4">
       {/* Progress */}
@@ -708,7 +716,9 @@ export default function Tutorial({
               }}
             />
           ))}
-          <span className="h-1 flex-1 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }} />
+          {!lastIsPrompt && (
+            <span className="h-1 flex-1 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }} />
+          )}
         </div>
         <span className="mono-label shrink-0 tabular-nums">
           {step + 1} / {steps.length}
@@ -825,6 +835,29 @@ export default function Tutorial({
           >
             <span className="overline">Your turn</span>
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
+            {isFinalPrompt && (
+              <form onSubmit={submitReflection} className="mt-4">
+                <textarea
+                  value={reflection}
+                  onChange={(e) => setReflection(e.target.value)}
+                  rows={4}
+                  placeholder="Today I…"
+                  className="field w-full p-3.5 text-sm"
+                />
+                {error && (
+                  <p className="mt-2 text-sm" style={{ color: "var(--danger)" }}>
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={busy || reflection.trim().length < 10}
+                  className="btn-primary mt-3 h-12 px-6 text-sm disabled:opacity-40"
+                >
+                  {busy ? "Submitting…" : "Finish & build my portfolio →"}
+                </button>
+              </form>
+            )}
           </div>
         ) : current!.block.type === "scratch" && current!.block.text ? (
           <ScratchBlocks code={current!.block.text} />
@@ -904,14 +937,18 @@ export default function Tutorial({
         >
           ← Back
         </button>
-        <button
-          onClick={() => setStep((s) => s + 1)}
-          disabled={!currentDone}
-          className="btn-primary px-5 py-2.5 text-sm disabled:opacity-40"
-          title={currentDone ? undefined : "Complete this step to continue"}
-        >
-          Next →
-        </button>
+        {isFinalPrompt ? (
+          <span className="muted text-sm">Write your wrap-up above to finish ↑</span>
+        ) : (
+          <button
+            onClick={() => setStep((s) => s + 1)}
+            disabled={!currentDone}
+            className="btn-primary px-5 py-2.5 text-sm disabled:opacity-40"
+            title={currentDone ? undefined : "Complete this step to continue"}
+          >
+            Next →
+          </button>
+        )}
       </div>
     </div>
   );
