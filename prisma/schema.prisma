@@ -65,6 +65,9 @@ model Module {
   orgId       String
   title       String
   summary     String
+  // Content area this project belongs to — the dashboard groups by topic and
+  // each topic page lists its project modules.
+  topic       String   @default("")
   version     Int      @default(1)
   // Ordered content blocks: [{type:"text"|"heading"|"video"|"prompt", ...}]
   contentJson String   @default("[]")

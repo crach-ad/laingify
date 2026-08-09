@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { compressImage } from "@/lib/client-image";
 
 // One-time portfolio photo card, shown until the learner takes a photo or
 // opts out (both remembered server-side). Camera preview via getUserMedia
@@ -72,9 +73,8 @@ export default function PhotoCapture({ learnerName }: { learnerName: string }) {
 
   function onFile(file: File) {
     setError("");
-    const r = new FileReader();
-    r.onload = () => setShot(String(r.result));
-    r.readAsDataURL(file);
+    // Uploaded camera-roll photos can be huge — shrink like the selfie path.
+    compressImage(file, 960).then(setShot);
   }
 
   async function save(payload: { dataUrl?: string; skip?: true }) {

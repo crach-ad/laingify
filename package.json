@@ -10,6 +10,7 @@
     "seed:demo": "node prisma/seed.mjs",
     "seed:camp": "node prisma/seed-camp.mjs",
     "seed:abaco": "node prisma/seed-abaco.mjs",
+    "content:update": "node prisma/seed-abaco.mjs --update",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -18,6 +19,8 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@types/three": "^0.185.3",
+    "@wokwi/elements": "^1.9.2",
+    "avr8js": "^0.21.0",
     "clsx": "^2.1.1",
     "motion": "^12.41.0",
     "next": "16.2.9",

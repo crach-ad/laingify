@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import SlideShow from "@/components/SlideShow";
 import ScratchBlocks from "@/components/ScratchBlocks";
+import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
+import KnexViewer, { type KnexStep } from "@/components/KnexViewer";
+import { compressImage } from "@/lib/client-image";
 
 // Step-by-step tutorial player for checkpoint modules (camp format).
 // Content advances one card at a time; checkpoint cards ask for a photo/
@@ -13,10 +16,18 @@ import ScratchBlocks from "@/components/ScratchBlocks";
 type TrackId = "beginner" | "intermediate" | "advanced";
 
 type Block = {
-  type: string; // heading | text | code | scratch | embed | prompt | video | image | slides | checkpoint | trackpick
+  type: string; // heading | text | code | scratch | embed | circuit | prompt | video | image | slides | checkpoint | trackpick
   text?: string;
   url?: string;
   urls?: string[];
+  // --- circuit blocks: an in-page Arduino simulator running an authored sketch ---
+  parts?: CircuitPart[]; // LEDs / buttons / sensors placed at breadboard holes
+  wires?: CircuitWire[]; // jumpers from Arduino pins to breadboard holes
+  steps?: BuildStep[]; // guided build: each step places parts/wires by id
+  sketch?: string; // the Arduino source (shown collapsible under the sim)
+  hex?: string; // precompiled AVR hex (built at seed time via hexi.wokwi.com)
+  // --- knex blocks: an interactive 3D build guide assembled step by step ---
+  builds?: KnexStep[]; // each step adds rods ([[x,y,z],[x,y,z]] pairs)
   capture?: "photo" | "audio";
   criterionLabel?: string;
   // Photo checkpoints can optionally accept the design file itself (.stl) so
@@ -549,7 +560,8 @@ export default function Tutorial({
 
   async function onPhoto(file: File) {
     if (!currentCrit) return;
-    const dataUrl = await readDataUrl(file);
+    // Shrink client-side: raw camera photos exceed the upload size limit.
+    const dataUrl = await compressImage(file);
     await capture({ type: "PHOTO", dataUrl, caption: current?.block.text?.slice(0, 120) }, currentCrit.id);
   }
 
@@ -826,6 +838,17 @@ export default function Tutorial({
             />
             {current!.block.text && <p className="muted mt-2 text-[13px]">{current!.block.text}</p>}
           </div>
+        ) : current!.block.type === "circuit" && current!.block.hex ? (
+          <CircuitSim
+            parts={current!.block.parts}
+            wires={current!.block.wires}
+            steps={current!.block.steps}
+            hex={current!.block.hex}
+            sketch={current!.block.sketch}
+            text={current!.block.text}
+          />
+        ) : current!.block.type === "knex" && current!.block.builds ? (
+          <KnexViewer steps={current!.block.builds} text={current!.block.text} />
         ) : current!.block.type === "code" ? (
           <pre
             className="overflow-x-auto rounded-xl border p-4 text-[13px] leading-relaxed"

@@ -13,9 +13,13 @@
 //
 // ONLY touches the Abaco org (and removes the retired "Winners Camp" org on
 // first run) — the PDI demo org is left alone.
-// Re-run any time to reset:   npm run seed:abaco
 //
-// ⚠️  Re-running DELETES all student work in this org. Don't run mid-camp.
+// Two modes:
+//   npm run seed:abaco      — full reset. ⚠️  DELETES all student work. Never mid-camp.
+//   npm run content:update  — SAFE content update: modules are upserted in place
+//                             (matched by title), learners and their work untouched.
+//                             Renaming a module's title creates a NEW module —
+//                             keep titles stable once camp starts.
 
 import { PrismaClient } from "@prisma/client";
 import { wipeOrg } from "./org-wipe.mjs";
@@ -32,7 +36,29 @@ const ORG_NAME = "Abaco Future Ready Academy";
 const CLASS_NAME = "STEM & AI Camp";
 const CLASS_CODE = "FUTURE";
 
+// Safe content-update mode: upsert modules in place, never touch learners.
+const UPDATE = process.argv.includes("--update");
+
 const block = (type, props) => ({ type, ...props });
+
+// Compile an Arduino sketch to AVR hex via Wokwi's free build service (the
+// real arduino-cli toolchain). Runs once per sketch at seed time, so learners'
+// browsers only ever load the finished hex — no runtime compile dependency.
+async function compileHex(sketch) {
+  const res = await fetch("https://hexi.wokwi.com/build", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sketch }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.hex) {
+    throw new Error(
+      "Arduino sketch failed to compile via hexi.wokwi.com:\n" +
+        (data.stderr || data.stdout || `HTTP ${res.status}`),
+    );
+  }
+  return data.hex;
+}
 
 // Every module ends the same way: a written wrap-up built on the playbook's
 // three reflection questions.
@@ -71,23 +97,68 @@ const audioCriterion = (order, label, description) => ({
 });
 
 async function main() {
-  console.log("Seeding Abaco Future Ready Academy (org-scoped — other orgs untouched)…");
-  await wipeOrg(prisma, "Winners Camp"); // retire the old camp org + its users
-  await wipeOrg(prisma, ORG_NAME);
+  let org;
+  if (UPDATE) {
+    org = await prisma.org.findFirst({ where: { name: ORG_NAME } });
+    if (!org) throw new Error("Org not found — run the full seed once first: npm run seed:abaco");
+    console.log("Content-update mode: upserting modules in place — learners and their work are untouched.");
+  } else {
+    console.log("Seeding Abaco Future Ready Academy (org-scoped — other orgs untouched)…");
+    await wipeOrg(prisma, "Winners Camp"); // retire the old camp org + its users
+    await wipeOrg(prisma, ORG_NAME);
+    org = await prisma.org.create({
+      data: { name: ORG_NAME, context: "community" },
+    });
+  }
 
-  const org = await prisma.org.create({
-    data: { name: ORG_NAME, context: "community" },
-  });
+  // Create (full seed) or upsert-by-title (content update). In update mode,
+  // criteria are matched by label: matched ones are updated, new ones added,
+  // and ones no longer in the seed are retired (required: false) rather than
+  // deleted — learner evidence and statuses reference them.
+  async function createModule(data) {
+    if (!UPDATE) return prisma.module.create({ data });
+    const { criteria, ...fields } = data;
+    const defs = criteria.create;
+    const existing = await prisma.module.findFirst({
+      where: { orgId: org.id, title: fields.title },
+      include: { criteria: true },
+    });
+    if (!existing) {
+      console.log(`  + new module: ${fields.title}`);
+      return prisma.module.create({ data });
+    }
+    await prisma.module.update({
+      where: { id: existing.id },
+      data: { ...fields, version: { increment: 1 } },
+    });
+    for (const def of defs) {
+      const match = existing.criteria.find((c) => c.label === def.label);
+      if (match) {
+        await prisma.criterion.update({ where: { id: match.id }, data: def });
+      } else {
+        await prisma.criterion.create({ data: { ...def, moduleId: existing.id } });
+        console.log(`    + new criterion "${def.label}" in ${fields.title}`);
+      }
+    }
+    for (const c of existing.criteria) {
+      if (!defs.find((d) => d.label === c.label) && c.required) {
+        await prisma.criterion.update({ where: { id: c.id }, data: { required: false } });
+        console.log(`    - retired criterion "${c.label}" in ${fields.title}`);
+      }
+    }
+    console.log(`  ~ updated: ${fields.title}`);
+    return prisma.module.findUnique({ where: { id: existing.id } });
+  }
 
   // ==========================================================================
   // MODULE 1 — Foundations of Coding
   // Spine: a complete Scratch chase game, block by block. Intermediate and
   // advanced tracks get their own concrete steps at each stage.
   // ==========================================================================
-  const module1 = await prisma.module.create({
-    data: {
+  const module1 = await createModule({
       orgId: org.id,
-      title: "Module 1 — Foundations of Coding",
+      topic: "Foundations of Coding",
+      title: "Build Your First Game",
       summary:
         "Build a real game today: a chase game in Scratch — or a webpage, or Swift — using events, loops, and variables like a real programmer.",
       badgeName: "Code Explorer",
@@ -310,7 +381,6 @@ async function main() {
           wrapUpCriterion(3, "Written reflection: what worked, what challenged you, what you'd improve."),
         ],
       },
-    },
   });
 
   // ==========================================================================
@@ -318,10 +388,10 @@ async function main() {
   // Spine: skill-builder keychain with exact measurements (proven at camp),
   // then apply the same skills to a chosen product.
   // ==========================================================================
-  const module2 = await prisma.module.create({
-    data: {
+  const module2 = await createModule({
       orgId: org.id,
-      title: "Module 2 — CAD & Manufacturing",
+      topic: "CAD & Manufacturing",
+      title: "Design a 3D-Printable Product",
       summary:
         "Learn real CAD moves in Tinkercad with exact measurements, then design your own printable product — keychain, fidget, phone stand, or a hurricane-resilience tool.",
       badgeName: "Product Designer",
@@ -450,7 +520,6 @@ async function main() {
           wrapUpCriterion(3, "Written reflection on the design-and-make process."),
         ],
       },
-    },
   });
 
   // ==========================================================================
@@ -458,157 +527,525 @@ async function main() {
   // Spine: built-in LED blink → external LED → push button, with real wiring
   // and real sketches. Wokwi simulator path throughout.
   // ==========================================================================
-  const module3 = await prisma.module.create({
-    data: {
+  // The exact sketches the tutorial teaches, compiled to hex once here so the
+  // in-page simulator (circuit blocks) can run them instantly in the browser.
+  const SKETCH = {
+    blink13:
+      "void setup() {\n  pinMode(13, OUTPUT);   // pin 13 will push power out\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);  // LED on\n  delay(1000);             // wait 1000 ms = 1 second\n  digitalWrite(13, LOW);   // LED off\n  delay(1000);\n}",
+    blink8:
+      "void setup() {\n  pinMode(8, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(8, HIGH);\n  delay(1000);\n  digitalWrite(8, LOW);\n  delay(1000);\n}",
+    button:
+      "void setup() {\n  pinMode(8, OUTPUT);\n  pinMode(2, INPUT_PULLUP);   // button pin; PULLUP = no extra resistor needed\n}\n\nvoid loop() {\n  if (digitalRead(2) == LOW) {   // LOW means PRESSED (pullup logic is flipped)\n    digitalWrite(8, HIGH);\n  } else {\n    digitalWrite(8, LOW);\n  }\n}",
+    traffic:
+      "void setup() {\n  pinMode(8, OUTPUT);   // red\n  pinMode(9, OUTPUT);   // yellow\n  pinMode(10, OUTPUT);  // green\n}\n\nvoid loop() {\n  digitalWrite(10, HIGH);  delay(5000);  digitalWrite(10, LOW);  // green 5 s\n  digitalWrite(9, HIGH);   delay(2000);  digitalWrite(9, LOW);   // yellow 2 s\n  digitalWrite(8, HIGH);   delay(5000);  digitalWrite(8, LOW);   // red 5 s\n}",
+    tmp36:
+      'void setup() {\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int reading = analogRead(A0);\n  float voltage = reading * 5.0 / 1024.0;\n  float tempC = (voltage - 0.5) * 100.0;   // TMP36 formula\n  Serial.print("Temp: ");\n  Serial.print(tempC);\n  Serial.println(" C");\n  delay(500);\n}',
+    police:
+      "void setup() {\n  pinMode(8, OUTPUT);   // red\n  pinMode(9, OUTPUT);   // blue\n}\n\nvoid loop() {\n  digitalWrite(8, HIGH);  digitalWrite(9, LOW);\n  delay(150);\n  digitalWrite(8, LOW);   digitalWrite(9, HIGH);\n  delay(150);\n}",
+    toggle:
+      "bool lightOn = false;   // the flashlight remembers its state\n\nvoid setup() {\n  pinMode(8, OUTPUT);\n  pinMode(2, INPUT_PULLUP);\n}\n\nvoid loop() {\n  if (digitalRead(2) == LOW) {          // pressed\n    lightOn = !lightOn;                 // flip it\n    digitalWrite(8, lightOn ? HIGH : LOW);\n    while (digitalRead(2) == LOW) {}    // wait for your finger to lift\n    delay(50);                          // debounce\n  }\n}",
+    heatalarm:
+      'void setup() {\n  pinMode(8, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int reading = analogRead(A0);\n  float tempC = (reading * 5.0 / 1024.0 - 0.5) * 100.0;\n  Serial.print("Temp: ");\n  Serial.println(tempC);\n  if (tempC > 30) {                // too hot — sound the alarm!\n    digitalWrite(8, HIGH);  delay(200);\n    digitalWrite(8, LOW);   delay(200);\n  } else {\n    digitalWrite(8, LOW);\n    delay(200);\n  }\n}',
+  };
+  console.log("Compiling Module 3 Arduino sketches via hexi.wokwi.com…");
+  const HEX = Object.fromEntries(
+    await Promise.all(
+      Object.entries(SKETCH).map(async ([name, src]) => [name, await compileHex(src)]),
+    ),
+  );
+
+  // A small project module: one project, its own badge, its own checkpoints.
+  const projectModule = ({ topic, title, summary, badgeName, badgeIcon, badgeDescription, blocks, criteria }) =>
+    createModule({
       orgId: org.id,
-      title: "Module 3 — Programmable Electronics",
-      summary:
-        "Wire it, code it, fix it: make LEDs blink, read a real button, and debug like an engineer — on a real Arduino or free in the browser.",
-      badgeName: "Circuit Builder",
-      badgeIcon: "⚡",
-      badgeDescription:
-        "Wired and programmed working Arduino circuits with inputs and outputs, and debugged them hands-on.",
-      contentJson: JSON.stringify([
-        block("heading", { text: "Code you can touch" }),
-        block("text", {
-          kind: "learn",
-          minutes: 2,
-          text: "So far your code lived on a screen. Today it controls electricity.\n\nAn Arduino is a tiny computer the size of a cracker. It reads INPUTS (buttons, sensors) and switches OUTPUTS (LEDs, motors, buzzers). Your microwave, a game controller, a traffic light — inside, they all work exactly like what you build today.",
-          tip: "No Arduino at your station? wokwi.com simulates everything free in the browser — every step today works there too.",
-        }),
+      topic,
+      title,
+      summary,
+      badgeName,
+      badgeIcon,
+      badgeDescription,
+      contentJson: JSON.stringify(blocks),
+      criteria: { create: criteria },
+    });
 
-        block("heading", { text: "Safety first — every single time" }),
-        block("text", {
-          kind: "learn",
-          minutes: 2,
-          text: "Three rules, no exceptions:\n\n⚡ Wire with the power OFF (USB unplugged). Plug in only after you've checked the circuit.\n\n➕ Check POLARITY: electricity flows + to −. An LED's LONG leg is + (positive); the short leg goes to ground (GND).\n\n🚧 LEDs always get a resistor (220 Ω — red-red-brown stripes). It's a speed bump for electricity; without it, the LED burns out.",
-          warn: "Read the diagram YOURSELF — the person who wires the circuit is the person who learns.",
-        }),
+  const ELECTRONICS = "Programmable Electronics";
 
-        block("heading", { text: "Step 1 — First blink (no wiring needed)" }),
-        block("text", {
-          kind: "build",
-          minutes: 8,
-          text: "The Arduino has a tiny LED built into the board, wired to pin 13. Take control of it:",
-          actions: [
-            "Open the Arduino IDE (arduino.cc/en/software) — or your Wokwi project",
-            "Plug in via USB · Tools → Board 'Arduino Uno' · Tools → Port → the USB one",
-            "Type the sketch on the next card, then click Upload (the → arrow) — in Wokwi, press green Play",
-            "Watch the little LED marked 'L' blink once per second",
-          ],
-          tip: "That blink means the board is running YOUR instructions. You are now programming hardware.",
-        }),
-        block("code", {
-          text: "void setup() {\n  pinMode(13, OUTPUT);   // pin 13 will push power out\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);  // LED on\n  delay(1000);             // wait 1000 ms = 1 second\n  digitalWrite(13, LOW);   // LED off\n  delay(1000);\n}",
-        }),
-        block("text", {
-          kind: "build",
-          minutes: 5,
-          text: "Now OWN it — change the numbers and re-upload:",
-          actions: [
-            "delay(100) → panic blink",
-            "delay(2000) → lighthouse",
-            "Make a heartbeat: two quick blinks, then a long pause (hint: four digitalWrite lines, four delays)",
-          ],
-          tip: "Notice: loop() runs forever — the same 'forever' loop from your game. delay(1000) is a variable you're tuning. Same ideas, new world.",
-        }),
-        block("heading", { text: "No board yet? Try it RIGHT HERE" }),
-        block("embed", {
-          url: "https://wokwi.com/projects/new/arduino-uno",
-          text: "A live Arduino simulator with the Blink sketch preloaded — press the green ▶ Play button and watch the on-board LED. Change the delays and press Play again. This is Wokwi (wokwi.com); everything today also works in here.",
-        }),
-
-        block("heading", { text: "Step 2 — Wire a REAL LED" }),
-        block("text", {
-          kind: "build",
-          minutes: 10,
-          text: "Bring the blink off the board. Breadboard secret: the 5 holes in each numbered row are connected inside — two parts in the same row are wired together.",
-          actions: [
-            "UNPLUG the USB first",
-            "LED into the breadboard: long leg row 10, short leg row 12",
-            "Resistor (220 Ω): one end row 10 (with the long leg), other end row 5",
-            "Jumper from Arduino pin 8 → row 5",
-            "Jumper from Arduino GND → row 12",
-            "In your sketch change BOTH 13s to 8 · plug in · upload",
-          ],
-          tip: "The path is a circle: pin 8 → resistor → long leg → LED → short leg → GND. (Wokwi: click +, add LED and resistor, wire by dragging.)",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Working circuit photo",
-          text: "Photo of your circuit with the LED lit or mid-blink — wiring visible. Wokwi screenshots count! Caption: which pin you used.",
-        }),
-
-        block("heading", { text: "Step 3 — When it doesn't work (and it won't)" }),
-        block("text", {
-          kind: "learn",
-          minutes: 4,
-          text: "Circuits fail in honest ways. When yours does, DON'T shotgun random changes — run the hunt in order, one check at a time:",
-          actions: [
-            "Power: is the board's ON light lit?",
-            "Polarity: long leg on the resistor side? (Backwards LED = nothing, forever)",
-            "Rows: are the parts REALLY in the rows you think? Count the holes",
-            "Code: does the pin number in the sketch match the pin the wire is in?",
-            "The part: swap in a different LED — parts do die",
-          ],
-          tip: "That patient hunt is the actual skill. Engineers call it debugging — it's most of the job.",
-        }),
-        block("checkpoint", {
-          capture: "audio",
-          criterionLabel: "Voice note: debugging story",
-          text: "Press record and tell today's debugging story: what didn't work, and how you tracked it down step by step? (Nothing broke? Then explain which of the five checks you'd run first and why.)",
-        }),
-
-        block("heading", { text: "Step 4 — Inputs: read a push button" }),
-        block("text", {
-          kind: "build",
-          minutes: 10,
-          text: "Time for the other half: INPUT.",
-          actions: [
-            "Unplug!",
-            "Push the button across the breadboard's center gap (legs in rows 20 and 22)",
-            "Jumper from pin 2 → row 20",
-            "Jumper from GND → row 22",
-            "Keep the LED on pin 8, and upload the sketch on the next card",
-          ],
-        }),
-        block("code", {
-          text: "void setup() {\n  pinMode(8, OUTPUT);\n  pinMode(2, INPUT_PULLUP);   // button pin; PULLUP = no extra resistor needed\n}\n\nvoid loop() {\n  if (digitalRead(2) == LOW) {   // LOW means PRESSED (pullup logic is flipped)\n    digitalWrite(8, HIGH);\n  } else {\n    digitalWrite(8, LOW);\n  }\n}",
-        }),
-        block("text", {
-          kind: "create",
-          minutes: 20,
-          text: "Hold the button: light. Release: dark. You've built the complete loop every smart device runs: sense → decide → act.\n\nLevel up if there's time:\n\n🚦 TRAFFIC LIGHT — red, yellow, green LEDs on pins 8, 9, 10 (each with its own resistor + GND). Sequence with digitalWrite + delay: green 5 s → yellow 2 s → red 5 s, forever.\n\n🌡️ TEMPERATURE LOGGER — TMP36 sensor: flat side facing you, legs = 5V, A0, GND. Read with analogRead(A0), print with Serial.println(), watch live in Tools → Serial Monitor.",
-          tip: "Pinch the temperature sensor between your fingers and watch the number rise — you're the experiment!",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Extended project photo",
-          text: "Photo of your input build working — button, traffic light, or sensor — code visible on screen if you can. Caption: which one you built.",
-        }),
-
-        block("heading", { text: "Reflect & share" }),
-        wrapUpPrompt("Include the moment something finally worked — what fixed it?"),
-      ]),
-      criteria: {
-        create: [
-          photoCriterion(0, "Working circuit photo", "A powered, working LED circuit (external LED, wired with resistor) — real or simulated."),
-          audioCriterion(1, "Voice note: debugging story", "A debugging story: what failed and the step-by-step hunt that found it."),
-          photoCriterion(2, "Extended project photo", "The input build: push button, traffic light, or temperature sensor."),
-          wrapUpCriterion(3, "Written reflection on building and debugging hardware."),
+  const e1 = await projectModule({
+    topic: ELECTRONICS,
+    title: "First Blink",
+    summary: "Take control of the Arduino's on-board LED — your first code that touches hardware.",
+    badgeName: "First Spark",
+    badgeIcon: "⚡",
+    badgeDescription: "Programmed real hardware for the first time: uploaded a sketch and controlled the Arduino's on-board LED.",
+    blocks: [
+      block("heading", { text: "Code you can touch" }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "So far your code lived on a screen. Today it controls electricity.\n\nAn Arduino is a tiny computer the size of a cracker. It reads INPUTS (buttons, sensors) and switches OUTPUTS (LEDs, motors, buzzers). Your microwave, a game controller, a traffic light — inside, they all work exactly like what you build today.",
+        tip: "No Arduino at your station? The in-page simulator (and wokwi.com) behaves exactly like the real thing — every step works there too.",
+      }),
+      block("heading", { text: "Safety first — every single time" }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "Three rules, no exceptions:\n\n⚡ Wire with the power OFF (USB unplugged). Plug in only after you've checked the circuit.\n\n➕ Check POLARITY: electricity flows + to −. An LED's LONG leg is + (positive); the short leg goes to ground (GND).\n\n🚧 LEDs always get a resistor (220 Ω — red-red-brown stripes). It's a speed bump for electricity; without it, the LED burns out.",
+        warn: "Read the diagram YOURSELF — the person who wires the circuit is the person who learns.",
+      }),
+      block("heading", { text: "First blink (no wiring needed)" }),
+      block("text", {
+        kind: "build",
+        minutes: 8,
+        text: "The Arduino has a tiny LED built into the board, wired to pin 13. Take control of it:",
+        actions: [
+          "Open the Arduino IDE (arduino.cc/en/software) — or your Wokwi project",
+          "Plug in via USB · Tools → Board 'Arduino Uno' · Tools → Port → the USB one",
+          "Type the sketch on the next card, then click Upload (the → arrow) — in Wokwi, press green Play",
+          "Watch the little LED marked 'L' blink once per second",
         ],
-      },
-    },
+        tip: "That blink means the board is running YOUR instructions. You are now programming hardware.",
+      }),
+      block("code", {
+        text: SKETCH.blink13,
+      }),
+      block("text", {
+        kind: "build",
+        minutes: 5,
+        text: "Now OWN it — change the numbers and re-upload:",
+        actions: [
+          "delay(100) → panic blink",
+          "delay(2000) → lighthouse",
+          "Make a heartbeat: two quick blinks, then a long pause (hint: four digitalWrite lines, four delays)",
+        ],
+        tip: "Notice: loop() runs forever — the same 'forever' loop from your game. delay(1000) is a variable you're tuning. Same ideas, new world.",
+      }),
+      block("heading", { text: "See it run RIGHT HERE" }),
+      block("circuit", {
+        kind: "build",
+        minutes: 3,
+        sketch: SKETCH.blink13,
+        hex: HEX.blink13,
+        text: "This is a real Arduino simulator running the exact sketch above. Press ▶ Run and watch the tiny 'L' LED near the middle of the board blink once per second — that's pin 13.",
+        tip: "No board at your station? This simulator (and wokwi.com) behaves exactly like the real thing.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Blink photo",
+        text: "Photo of the blinking LED — your real board's 'L' light, or a screenshot of the simulator running right here. Caption: which delay numbers you tried.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What did changing the delay numbers teach you about how the code runs?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Blink photo", "The on-board LED blinking — real board or the in-page simulator."),
+      wrapUpCriterion(1, "Written reflection on running code on hardware for the first time."),
+    ],
+  });
+
+  const e2 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Wire a Real LED",
+    summary: "Bring the blink off the board: breadboard, resistor, polarity — and the debugging hunt every engineer runs.",
+    badgeName: "Circuit Builder",
+    badgeIcon: "💡",
+    badgeDescription: "Wired a working LED circuit on a breadboard with correct polarity and a resistor, and debugged it hands-on.",
+    blocks: [
+      block("heading", { text: "Wire a REAL LED" }),
+      block("text", {
+        kind: "build",
+        minutes: 10,
+        text: "Bring the blink off the board. Breadboard secret: the 5 holes in each numbered row are connected inside — two parts in the same row are wired together.",
+        actions: [
+          "UNPLUG the USB first",
+          "LED into the breadboard: long leg row 10, short leg row 12",
+          "Resistor (220 Ω): one end row 10 (with the long leg), other end row 5",
+          "Jumper from Arduino pin 8 → row 5",
+          "Jumper from Arduino GND → row 12",
+          "In your sketch change BOTH 13s to 8 · plug in · upload",
+        ],
+        tip: "The path is a circle: pin 8 → resistor → long leg → LED → short leg → GND. (Wokwi: click +, add LED and resistor, wire by dragging.)",
+      }),
+      block("heading", { text: "Build it right here, wire by wire" }),
+      block("circuit", {
+        kind: "build",
+        minutes: 5,
+        parts: [
+          { id: "led1", kind: "led", pin: 8, color: "red", label: "LED", at: "10a", catAt: "12a" },
+          { id: "r1", kind: "resistor", at: "5b", toAt: "10b", label: "220 Ω" },
+        ],
+        wires: [
+          { id: "w-sig", from: "8", to: "5a", color: "#f59e0b" },
+          { id: "w-gnd", from: "GND.1", to: "12b", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "LED into the breadboard: long leg row 10, short leg row 12", add: ["led1"] },
+          { text: "Resistor (220 Ω): one end row 10 (with the long leg), other end row 5", add: ["r1"] },
+          { text: "Jumper from Arduino pin 8 → row 5", add: ["w-sig"] },
+          { text: "Jumper from Arduino GND → row 12", add: ["w-gnd"] },
+        ],
+        sketch: SKETCH.blink8,
+        hex: HEX.blink8,
+        text: "Tap through the build steps to wire the circuit on screen — the same moves you'll make on the real breadboard. When it's complete, press ▶ Run. If your real build doesn't match this, jump to the debugging hunt below.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Working circuit photo",
+        text: "Photo of your circuit with the LED lit or mid-blink — wiring visible. Simulator screenshots count! Caption: which pin you used.",
+      }),
+      block("heading", { text: "When it doesn't work (and it won't)" }),
+      block("text", {
+        kind: "learn",
+        minutes: 4,
+        text: "Circuits fail in honest ways. When yours does, DON'T shotgun random changes — run the hunt in order, one check at a time:",
+        actions: [
+          "Power: is the board's ON light lit?",
+          "Polarity: long leg on the resistor side? (Backwards LED = nothing, forever)",
+          "Rows: are the parts REALLY in the rows you think? Count the holes",
+          "Code: does the pin number in the sketch match the pin the wire is in?",
+          "The part: swap in a different LED — parts do die",
+        ],
+        tip: "That patient hunt is the actual skill. Engineers call it debugging — it's most of the job.",
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: debugging story",
+        text: "Press record and tell today's debugging story: what didn't work, and how you tracked it down step by step? (Nothing broke? Then explain which of the five checks you'd run first and why.)",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Include the moment something finally worked — what fixed it?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Working circuit photo", "A powered, working LED circuit (external LED, wired with resistor) — real or simulated."),
+      audioCriterion(1, "Voice note: debugging story", "A debugging story: what failed and the step-by-step hunt that found it."),
+      wrapUpCriterion(2, "Written reflection on building and debugging the circuit."),
+    ],
+  });
+
+  const e3 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Push-Button Light",
+    summary: "Read the world: a push button controls your LED — sense, decide, act.",
+    badgeName: "Input Master",
+    badgeIcon: "🔘",
+    badgeDescription: "Read a real-world input with digitalRead and used it to control an output — the sense → decide → act loop.",
+    blocks: [
+      block("heading", { text: "Inputs: read a push button" }),
+      block("text", {
+        kind: "build",
+        minutes: 10,
+        text: "Time for the other half: INPUT.",
+        actions: [
+          "Unplug!",
+          "Push the button across the breadboard's center gap (legs in rows 20 and 22)",
+          "Jumper from pin 2 → row 20",
+          "Jumper from GND → row 22",
+          "Keep the LED on pin 8, and upload the sketch on the next card",
+        ],
+      }),
+      block("code", {
+        text: SKETCH.button,
+      }),
+      block("heading", { text: "Build it — then hold the button" }),
+      block("circuit", {
+        kind: "build",
+        minutes: 5,
+        parts: [
+          { id: "led1", kind: "led", pin: 8, color: "red", label: "LED", at: "10a", catAt: "12a" },
+          { id: "r1", kind: "resistor", at: "5b", toAt: "10b", label: "220 Ω" },
+          { id: "btn1", kind: "pushbutton", pin: 2, label: "Button", cols: [20, 22] },
+        ],
+        wires: [
+          { id: "w-sig8", from: "8", to: "5a", color: "#f59e0b" },
+          { id: "w-gnd-led", from: "GND.1", to: "12b", color: "#1f2937" },
+          { id: "w-sig2", from: "2", to: "20a", color: "#3b82f6" },
+          { id: "w-gnd-btn", from: "GND.1", to: "22j", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "Your LED circuit stays exactly as it was — pin 8, resistor, GND", add: ["led1", "r1", "w-sig8", "w-gnd-led"] },
+          { text: "Push the button across the center gap — legs in rows 20 and 22", add: ["btn1"] },
+          { text: "Jumper from Arduino pin 2 → row 20", add: ["w-sig2"] },
+          { text: "Jumper from GND → row 22 (bottom half of the board)", add: ["w-gnd-btn"] },
+        ],
+        sketch: SKETCH.button,
+        hex: HEX.button,
+        text: "Wire it up, press ▶ Run, then click and HOLD the button: light. Let go: dark. That's digitalRead catching your finger 16 million times a second.",
+      }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "Hold the button: light. Release: dark. You've built the complete loop every smart device runs: sense → decide → act.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Working button photo",
+        text: "Photo of your button build working — real or simulated, code visible if you can. Caption: what happens when you hold the button.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Explain in your own words why LOW means PRESSED with INPUT_PULLUP."),
+    ],
+    criteria: [
+      photoCriterion(0, "Working button photo", "The push-button circuit controlling the LED — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on reading inputs."),
+    ],
+  });
+
+  const e4 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Traffic Light",
+    summary: "Three LEDs, one sequence: green, yellow, red — forever.",
+    badgeName: "Traffic Controller",
+    badgeIcon: "🚦",
+    badgeDescription: "Sequenced multiple outputs with digitalWrite and delay to run a real traffic-light cycle.",
+    blocks: [
+      block("heading", { text: "🚦 Build the full circuit" }),
+      block("text", {
+        kind: "build",
+        minutes: 3,
+        text: "Red, yellow, green LEDs on pins 8, 9, 10 — each with its own resistor and its own GND jumper. The sketch sequences them: green 5 s → yellow 2 s → red 5 s, forever.",
+        tip: "It's the LED circuit you already know, three times over. Build one color at a time and test as you go.",
+      }),
+      block("circuit", {
+        kind: "create",
+        minutes: 6,
+        parts: [
+          { id: "led-r", kind: "led", pin: 8, color: "red", label: "red", at: "6a", catAt: "8a" },
+          { id: "r-r", kind: "resistor", at: "3b", toAt: "6b" },
+          { id: "led-y", kind: "led", pin: 9, color: "yellow", label: "yellow", at: "15a", catAt: "17a" },
+          { id: "r-y", kind: "resistor", at: "12b", toAt: "15b" },
+          { id: "led-g", kind: "led", pin: 10, color: "green", label: "green", at: "24a", catAt: "26a" },
+          { id: "r-g", kind: "resistor", at: "21b", toAt: "24b" },
+        ],
+        wires: [
+          { id: "w-r-sig", from: "8", to: "3a", color: "#ef4444" },
+          { id: "w-r-gnd", from: "GND.1", to: "8b", color: "#1f2937" },
+          { id: "w-y-sig", from: "9", to: "12a", color: "#eab308" },
+          { id: "w-y-gnd", from: "GND.1", to: "17b", color: "#1f2937" },
+          { id: "w-g-sig", from: "10", to: "21a", color: "#22c55e" },
+          { id: "w-g-gnd", from: "GND.1", to: "26b", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "RED light: LED long leg row 6, short leg row 8 · resistor row 6 → row 3", add: ["led-r", "r-r"] },
+          { text: "Wire red: pin 8 → row 3 · GND → row 8", add: ["w-r-sig", "w-r-gnd"] },
+          { text: "YELLOW light: LED long leg row 15, short leg row 17 · resistor row 15 → row 12", add: ["led-y", "r-y"] },
+          { text: "Wire yellow: pin 9 → row 12 · GND → row 17", add: ["w-y-sig", "w-y-gnd"] },
+          { text: "GREEN light: LED long leg row 24, short leg row 26 · resistor row 24 → row 21", add: ["led-g", "r-g"] },
+          { text: "Wire green: pin 10 → row 21 · GND → row 26", add: ["w-g-sig", "w-g-gnd"] },
+        ],
+        sketch: SKETCH.traffic,
+        hex: HEX.traffic,
+        text: "Three LED circuits side by side — same recipe, three times. Build it, then ▶ Run: green 5 s → yellow 2 s → red 5 s, forever.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Traffic light photo",
+        text: "Photo of your traffic light mid-cycle — real or simulated. Caption: which color was lit when you snapped it.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("How would you add a flashing-yellow night mode?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Traffic light photo", "The three-LED traffic light running its sequence — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on sequencing outputs."),
+    ],
+  });
+
+  const e5 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Temperature Logger",
+    summary: "A TMP36 sensor + the Serial Monitor: watch live temperature data stream from your code.",
+    badgeName: "Data Logger",
+    badgeIcon: "🌡️",
+    badgeDescription: "Read an analog sensor, converted raw readings to real units, and streamed live data over Serial.",
+    blocks: [
+      block("heading", { text: "🌡️ Be the experiment" }),
+      block("text", {
+        kind: "build",
+        minutes: 3,
+        text: "TMP36 temperature sensor: flat side facing you, legs = 5V, A0, GND. Read it with analogRead(A0), convert to degrees, print with Serial.println(), and watch live in Tools → Serial Monitor.",
+        tip: "Pinch the sensor between your fingers and watch the number rise — you're the experiment!",
+      }),
+      block("circuit", {
+        kind: "create",
+        minutes: 5,
+        parts: [{ id: "tmp1", kind: "tmp36", label: "TMP36 — A0", at: "15a" }],
+        wires: [
+          { id: "w-5v", from: "5V", to: "14e", color: "#ef4444" },
+          { id: "w-a0", from: "A0", to: "15e", color: "#a855f7" },
+          { id: "w-gnd", from: "GND.2", to: "16e", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "TMP36 into the breadboard, flat side facing you — legs in rows 14, 15, 16", add: ["tmp1"] },
+          { text: "Left leg is power: 5V → row 14", add: ["w-5v"] },
+          { text: "Middle leg is the signal: A0 → row 15", add: ["w-a0"] },
+          { text: "Right leg is ground: GND → row 16", add: ["w-gnd"] },
+        ],
+        sketch: SKETCH.tmp36,
+        hex: HEX.tmp36,
+        text: "Wire the sensor, press ▶ Run, then drag the temperature slider — that's you pinching the sensor. The Serial Monitor shows exactly what you'll see in Tools → Serial Monitor on the real thing.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Sensor build photo",
+        text: "Photo of your sensor build with the Serial Monitor showing readings — real or simulated. Caption: the temperature it read.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What was the highest temperature you measured, and how did you make it climb?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Sensor build photo", "The TMP36 circuit streaming readings to the Serial Monitor — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on reading sensor data."),
+    ],
+  });
+
+  const e6 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Police Flasher",
+    summary: "Two LEDs taking turns at 150 ms — patterns and timing.",
+    badgeName: "Flash Master",
+    badgeIcon: "🚨",
+    badgeDescription: "Built an alternating two-LED flasher and tuned its timing pattern.",
+    blocks: [
+      block("heading", { text: "🚨 Red, blue, red, blue" }),
+      block("circuit", {
+        kind: "create",
+        minutes: 8,
+        parts: [
+          { id: "led-r", kind: "led", pin: 8, color: "red", label: "red", at: "6a", catAt: "8a" },
+          { id: "r-r", kind: "resistor", at: "3b", toAt: "6b" },
+          { id: "led-b", kind: "led", pin: 9, color: "blue", label: "blue", at: "15a", catAt: "17a" },
+          { id: "r-b", kind: "resistor", at: "12b", toAt: "15b" },
+        ],
+        wires: [
+          { id: "w-r-sig", from: "8", to: "3a", color: "#ef4444" },
+          { id: "w-r-gnd", from: "GND.1", to: "8b", color: "#1f2937" },
+          { id: "w-b-sig", from: "9", to: "12a", color: "#3b82f6" },
+          { id: "w-b-gnd", from: "GND.1", to: "17b", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "RED LED: long leg row 6, short leg row 8 · resistor row 6 → row 3", add: ["led-r", "r-r"] },
+          { text: "Wire red: pin 8 → row 3 · GND → row 8", add: ["w-r-sig", "w-r-gnd"] },
+          { text: "BLUE LED: long leg row 15, short leg row 17 · resistor row 15 → row 12", add: ["led-b", "r-b"] },
+          { text: "Wire blue: pin 9 → row 12 · GND → row 17", add: ["w-b-sig", "w-b-gnd"] },
+        ],
+        sketch: SKETCH.police,
+        hex: HEX.police,
+        text: "Red, blue, red, blue — each LED gets 150 ms. Challenge for your real build: make it strobe (two quick red flashes, then two quick blue). Hint: four digitalWrite pairs.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Flasher photo",
+        text: "Photo of your flasher mid-flash — real or simulated. Caption: your delay numbers.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What pattern did you invent when you changed the delays?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Flasher photo", "The alternating two-LED flasher running — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on timing patterns."),
+    ],
+  });
+
+  const e7 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Toggle Flashlight",
+    summary: "Press on, press off — one variable that remembers. That's state.",
+    badgeName: "Switch Wizard",
+    badgeIcon: "🔦",
+    badgeDescription: "Used a state variable to turn a momentary button into a real on/off switch.",
+    blocks: [
+      block("heading", { text: "🔦 Same wiring, brand-new brain" }),
+      block("circuit", {
+        kind: "create",
+        minutes: 8,
+        parts: [
+          { id: "led1", kind: "led", pin: 8, color: "red", label: "LED", at: "10a", catAt: "12a" },
+          { id: "r1", kind: "resistor", at: "5b", toAt: "10b", label: "220 Ω" },
+          { id: "btn1", kind: "pushbutton", pin: 2, label: "Button", cols: [20, 22] },
+        ],
+        wires: [
+          { id: "w-sig8", from: "8", to: "5a", color: "#f59e0b" },
+          { id: "w-gnd-led", from: "GND.1", to: "12b", color: "#1f2937" },
+          { id: "w-sig2", from: "2", to: "20a", color: "#3b82f6" },
+          { id: "w-gnd-btn", from: "GND.1", to: "22j", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "The LED circuit you know by heart: LED rows 10/12, resistor to row 5, pin 8 → row 5, GND → row 12", add: ["led1", "r1", "w-sig8", "w-gnd-led"] },
+          { text: "Button across the gap at rows 20/22 · pin 2 → row 20 · GND → row 22 (bottom half)", add: ["btn1", "w-sig2", "w-gnd-btn"] },
+        ],
+        sketch: SKETCH.toggle,
+        hex: HEX.toggle,
+        text: "Same wiring as the push-button project — completely different behavior. Click the button once: light stays ON. Click again: off. The magic is one variable that remembers. That's how every light switch, TV remote, and power button works.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Flashlight photo",
+        text: "Photo of your toggle flashlight ON with your finger OFF the button — that's the proof it remembers. Real or simulated.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Explain lightOn = !lightOn to a friend who's never coded."),
+    ],
+    criteria: [
+      photoCriterion(0, "Flashlight photo", "The toggle flashlight holding its state — LED on with the button released."),
+      wrapUpCriterion(1, "Written reflection on state and memory."),
+    ],
+  });
+
+  const e8 = await projectModule({
+    topic: ELECTRONICS,
+    title: "Heat Alarm",
+    summary: "Sensor + LED + a decision: flash the alarm when it gets too hot.",
+    badgeName: "Alarm Engineer",
+    badgeIcon: "🔥",
+    badgeDescription: "Combined an analog sensor with an output and a threshold decision — a complete sense → decide → act device.",
+    blocks: [
+      block("heading", { text: "🔥 Sense → decide → act" }),
+      block("circuit", {
+        kind: "create",
+        minutes: 8,
+        parts: [
+          { id: "tmp1", kind: "tmp36", label: "TMP36 — A0", at: "15a" },
+          { id: "led1", kind: "led", pin: 8, color: "red", label: "alarm", at: "22a", catAt: "24a" },
+          { id: "r1", kind: "resistor", at: "19b", toAt: "22b" },
+        ],
+        wires: [
+          { id: "w-5v", from: "5V", to: "14e", color: "#ef4444" },
+          { id: "w-a0", from: "A0", to: "15e", color: "#a855f7" },
+          { id: "w-gnd-t", from: "GND.2", to: "16e", color: "#1f2937" },
+          { id: "w-sig", from: "8", to: "19a", color: "#f59e0b" },
+          { id: "w-gnd-led", from: "GND.1", to: "24b", color: "#1f2937" },
+        ],
+        steps: [
+          { text: "TMP36 into the breadboard, flat side facing you — legs in rows 14, 15, 16", add: ["tmp1"] },
+          { text: "Sensor wires: 5V → row 14 · A0 → row 15 · GND → row 16", add: ["w-5v", "w-a0", "w-gnd-t"] },
+          { text: "Alarm LED: long leg row 22, short leg row 24 · resistor row 22 → row 19", add: ["led1", "r1"] },
+          { text: "Wire the alarm: pin 8 → row 19 · GND → row 24", add: ["w-sig", "w-gnd-led"] },
+        ],
+        sketch: SKETCH.heatalarm,
+        hex: HEX.heatalarm,
+        text: "Run it, then drag the slider past 30°C — the alarm LED starts flashing. Under 30, silence. This is a real thermostat, a fire alarm, a fever thermometer: sense → decide → act. Challenge: change the danger line to 35.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Heat alarm photo",
+        text: "Photo of your alarm FLASHING with the temperature reading visible — real or simulated. Caption: your danger threshold.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What other alarms could this same sense → decide → act loop build?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Heat alarm photo", "The heat alarm triggering above the threshold — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on thresholds and decisions."),
+    ],
   });
 
   // ==========================================================================
   // MODULE 4 — Virtual & Augmented Reality
   // Concrete missions per app, then a creation with a no-headset fallback.
   // ==========================================================================
-  const module4 = await prisma.module.create({
-    data: {
+  const module4 = await createModule({
       orgId: org.id,
-      title: "Module 4 — Virtual & Augmented Reality",
+      topic: "Virtual & Augmented Reality",
+      title: "Three VR Expeditions",
       summary:
         "Three guided expeditions — deep ocean, deep space, deep history — then design an immersive experience of your own.",
       badgeName: "Reality Explorer",
@@ -707,17 +1144,16 @@ async function main() {
           wrapUpCriterion(3, "Written reflection on the immersive technology experience."),
         ],
       },
-    },
   });
 
   // ==========================================================================
   // MODULE 5 — Artificial Intelligence & Digital Safety
   // Worked prompt examples, a concrete build flow, and a verification step.
   // ==========================================================================
-  const module5 = await prisma.module.create({
-    data: {
+  const module5 = await createModule({
       orgId: org.id,
-      title: "Module 5 — AI & Digital Safety",
+      topic: "AI & Digital Safety",
+      title: "Build a Project with AI",
       summary:
         "Learn what AI actually is, write prompts that work, verify what it tells you — then build a real project with AI that's still 100% yours.",
       badgeName: "AI Navigator",
@@ -823,17 +1259,16 @@ async function main() {
           wrapUpCriterion(3, "Written reflection including a safety rule in the student's own words."),
         ],
       },
-    },
   });
 
   // ==========================================================================
   // MODULE 6 — Final Showcase (Shark Tank)
   // Slide-by-slide deck template, fill-in-the-blank pitch, rehearsal drill.
   // ==========================================================================
-  const module6 = await prisma.module.create({
-    data: {
+  const module6 = await createModule({
       orgId: org.id,
-      title: "Module 6 — Shark Tank Showcase",
+      topic: "Shark Tank Showcase",
+      title: "Pitch Your Project",
       summary:
         "Turn the week into a pitch: a five-slide deck, a 30-second hook, a live demo — presented Shark Tank style to real judges.",
       badgeName: "Shark Tank Star",
@@ -933,27 +1368,386 @@ async function main() {
           wrapUpCriterion(3, "Written reflection on the whole week of camp."),
         ],
       },
-    },
   });
 
-  const modules = [module1, module2, module3, module4, module5, module6];
+  // ==========================================================================
+  // MODULE 7 — K'NEX Engineering
+  // Ten step-by-step builds rendered as interactive 3D models (knex blocks).
+  // Geometry lives on a unit grid (y up, ground y = 0); rod colors map to
+  // K'NEX sizes automatically (unit rod = blue, unit-square diagonal = yellow).
+  // ==========================================================================
+  const P = (x, y, z) => [x, y, z];
+  // Rods around a closed loop of points / along an open chain of points.
+  const loop = (pts) => pts.map((p, i) => [p, pts[(i + 1) % pts.length]]);
+  const chain = (pts) => pts.slice(1).map((p, i) => [pts[i], p]);
+  // Corner points of an axis-aligned square at height y, and its four rods.
+  const corners = (x, z, y, s = 1) => [P(x, y, z), P(x + s, y, z), P(x + s, y, z + s), P(x, y, z + s)];
+  const sq = (x, z, y, s = 1) => loop(corners(x, z, y, s));
+  // Vertical rods lifting each point from y0 to y1.
+  const lift = (pts, y0, y1) => pts.map((p) => [P(p[0], y0, p[2]), P(p[0], y1, p[2])]);
 
-  await prisma.class.create({
-    data: {
-      orgId: org.id,
-      name: CLASS_NAME,
-      classCode: CLASS_CODE,
-      band: "TEEN",
-      minAuthTier: 0, // open self-registration: name + selfie, like the camp
-      modules: {
-        create: modules.map((m, i) => ({ moduleId: m.id, order: i })),
+  const hexAt = (cy, z) =>
+    [0, 60, 120, 180, 240, 300].map((a) =>
+      P(Math.round(Math.cos((a * Math.PI) / 180) * 100) / 100, cy + Math.round(Math.sin((a * Math.PI) / 180) * 100) / 100, z),
+    );
+
+  const knex = (props) => block("knex", props);
+
+  const KNEX = "K'NEX Engineering";
+  const knexPhoto = (label, hint) =>
+    block("checkpoint", {
+      capture: "photo",
+      criterionLabel: label,
+      text: `Photo of your real K'NEX build — or a screenshot of the finished 3D model if there's no kit at your station. ${hint}`,
+    });
+
+  const k1 = await projectModule({
+    topic: KNEX,
+    title: "The Perfect Cube",
+    summary: "Twelve rods, eight connectors — the atom of engineering.",
+    badgeName: "Cube Cracker",
+    badgeIcon: "🟦",
+    badgeDescription: "Built the foundational cube and discovered why squares wobble.",
+    blocks: [
+      block("heading", { text: "Welcome to the build zone" }),
+      block("text", {
+        kind: "learn",
+        minutes: 3,
+        text: "Engineers don't start with math — they start with their hands. Each K'NEX project sneaks a real engineering idea into your fingers.\n\nEvery project has a 3D guide: tap each step to add pieces, then DRAG the model to spin it and see it from every side.\n\nRod colors in the guide = rod sizes in your kit (green is shortest, then white, blue, yellow, red, gray is longest). Grab rods of matching sizes — exact colors don't matter as long as lengths match.",
+        tip: "Sort your pieces into piles by size BEFORE you start. Every real builder does — it doubles your speed.",
+      }),
+      block("heading", { text: "Build the cube" }),
+      knex({
+        kind: "build",
+        minutes: 5,
+        builds: [
+          { text: "Lay a square flat on the table: four rods, four corner connectors", rods: sq(0, 0, 0) },
+          { text: "Stand a rod straight up from each corner", rods: lift(corners(0, 0, 0), 0, 1) },
+          { text: "Close the top with four more rods — a perfect cube", rods: sq(0, 0, 1) },
+        ],
+        text: "Twelve rods, eight connectors, one cube. This is the atom of engineering — almost everything you build starts as a cube or a square. Now make it real, and notice something: it wobbles. Remember that.",
+      }),
+      knexPhoto("Cube photo", "Caption: what happens when you push it sideways?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Why do you think the cube wobbles when you push it sideways?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Cube photo", "The completed cube — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on the first build."),
+    ],
+  });
+
+  const k2 = await projectModule({
+    topic: KNEX,
+    title: "The Tent",
+    summary: "The unbreakable shape: why triangles hold up the world.",
+    badgeName: "Triangle Tamer",
+    badgeIcon: "⛺",
+    badgeDescription: "Built a triangular prism and discovered why triangles cannot be bent out of shape.",
+    blocks: [
+      block("heading", { text: "Build the tent" }),
+      knex({
+        kind: "build",
+        minutes: 6,
+        builds: [
+          { text: "Base rectangle: two long rods for the sides, two short for the ends", rods: loop([P(0, 0, 0), P(2, 0, 0), P(2, 0, 1), P(0, 0, 1)]) },
+          { text: "Front triangle: two rods from the front corners up to a single peak", rods: [[P(0, 0, 0), P(0, 0.87, 0.5)], [P(0, 0, 1), P(0, 0.87, 0.5)]] },
+          { text: "Back triangle: same at the other end", rods: [[P(2, 0, 0), P(2, 0.87, 0.5)], [P(2, 0, 1), P(2, 0.87, 0.5)]] },
+          { text: "The ridge: one long rod connecting the two peaks", rods: [[P(0, 0.87, 0.5), P(2, 0.87, 0.5)]] },
+        ],
+        text: "Push down on your tent — it doesn't budge. Push sideways on your cube — it folds. The triangle is the ONLY shape that can't change without breaking a side. That's why you see triangles in every bridge, crane, and roof on Earth.",
+      }),
+      knexPhoto("Tent photo", "Caption: where do you see triangles in it?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Where else have you seen triangles holding something up?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Tent photo", "The completed tent (triangular prism) — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on triangles."),
+    ],
+  });
+
+  const k3 = await projectModule({
+    topic: KNEX,
+    title: "The Watchtower",
+    summary: "Three stories tall — and bracing turns wobble into rigid.",
+    badgeName: "Tower Builder",
+    badgeIcon: "🗼",
+    badgeDescription: "Built a three-story braced tower and explained why diagonal bracing works.",
+    blocks: [
+      block("heading", { text: "Build the watchtower" }),
+      knex({
+        kind: "build",
+        minutes: 10,
+        builds: [
+          { text: "Base square on the table", rods: sq(0, 0, 0) },
+          { text: "Four uprights + the first-floor square", rods: [...lift(corners(0, 0, 0), 0, 1), ...sq(0, 0, 1)] },
+          { text: "Brace story one: a diagonal across each wall — four triangles born instantly", rods: [[P(0, 0, 0), P(1, 1, 0)], [P(1, 0, 0), P(1, 1, 1)], [P(1, 0, 1), P(0, 1, 1)], [P(0, 0, 1), P(0, 1, 0)]] },
+          { text: "Story two: uprights + square", rods: [...lift(corners(0, 0, 0), 1, 2), ...sq(0, 0, 2)] },
+          { text: "Brace story two — slant the diagonals the OTHER way", rods: [[P(1, 1, 0), P(0, 2, 0)], [P(1, 1, 1), P(1, 2, 0)], [P(0, 1, 1), P(1, 2, 1)], [P(0, 1, 0), P(0, 2, 1)]] },
+          { text: "The crow's nest: one more story on top", rods: [...lift(corners(0, 0, 0), 2, 3), ...sq(0, 0, 3)] },
+        ],
+        text: "Build story one WITHOUT the diagonal first and wiggle it. Then add the diagonals and wiggle again. Feel that? Engineers call it bracing — you just turned wobbly squares into rigid triangles. Skyscrapers do exactly this.",
+      }),
+      knexPhoto("Tower photo", "Caption: how tall is it in centimeters?"),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: strongest shape",
+        text: "Press record and answer like an engineer: which SHAPE makes structures strong, and WHY does it work? Use your tower as the example.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What changed when you added the diagonals?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Tower photo", "The completed three-story braced tower — real K'NEX or the finished 3D model."),
+      audioCriterion(1, "Voice note: strongest shape", "Explains why triangles make structures strong, using the tower as the example."),
+      wrapUpCriterion(2, "Written reflection on bracing."),
+    ],
+  });
+
+  const k4 = await projectModule({
+    topic: KNEX,
+    title: "The Truss Bridge",
+    summary: "A real Warren truss you can load-test with books.",
+    badgeName: "Bridge Engineer",
+    badgeIcon: "🌉",
+    badgeDescription: "Built a Warren truss bridge and load-tested it like a real structural engineer.",
+    blocks: [
+      block("heading", { text: "Build the bridge" }),
+      knex({
+        kind: "build",
+        minutes: 12,
+        builds: [
+          { text: "The deck: two rails of four rods each, tied with five cross rods", rods: [...chain([P(0, 0, 0), P(1, 0, 0), P(2, 0, 0), P(3, 0, 0), P(4, 0, 0)]), ...chain([P(0, 0, 1), P(1, 0, 1), P(2, 0, 1), P(3, 0, 1), P(4, 0, 1)]), ...[0, 1, 2, 3, 4].map((x) => [P(x, 0, 0), P(x, 0, 1)])] },
+          { text: "Zigzag one side: up-down-up-down between the deck and the peaks", rods: chain([P(0, 0, 0), P(0.5, 0.87, 0), P(1, 0, 0), P(1.5, 0.87, 0), P(2, 0, 0), P(2.5, 0.87, 0), P(3, 0, 0), P(3.5, 0.87, 0), P(4, 0, 0)]) },
+          { text: "Zigzag the other side to match", rods: chain([P(0, 0, 1), P(0.5, 0.87, 1), P(1, 0, 1), P(1.5, 0.87, 1), P(2, 0, 1), P(2.5, 0.87, 1), P(3, 0, 1), P(3.5, 0.87, 1), P(4, 0, 1)]) },
+          { text: "Top chords along the peaks + four roof cross rods", rods: [...chain([P(0.5, 0.87, 0), P(1.5, 0.87, 0), P(2.5, 0.87, 0), P(3.5, 0.87, 0)]), ...chain([P(0.5, 0.87, 1), P(1.5, 0.87, 1), P(2.5, 0.87, 1), P(3.5, 0.87, 1)]), ...[0.5, 1.5, 2.5, 3.5].map((x) => [P(x, 0.87, 0), P(x, 0.87, 1)])] },
+        ],
+        text: "This zigzag pattern is called a Warren truss — count the triangles you just made. Rest your bridge between two chairs and GENTLY load it with books. Guess first: how many books before it gives? Real bridges are tested exactly this way (with robots, not books).",
+      }),
+      knexPhoto("Bridge photo", "Bonus: mid-load-test with books on it!"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("How many books did it hold — and where did it start to bend first?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Bridge photo", "The completed Warren truss bridge — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on the load test."),
+    ],
+  });
+
+  const k5 = await projectModule({
+    topic: KNEX,
+    title: "The Chair",
+    summary: "Strength FOR somebody: design meets engineering.",
+    badgeName: "Furniture Designer",
+    badgeIcon: "🪑",
+    badgeDescription: "Designed a braced chair and connected structure to human-centered design.",
+    blocks: [
+      block("heading", { text: "Build the chair" }),
+      knex({
+        kind: "build",
+        minutes: 6,
+        builds: [
+          { text: "Four legs + the seat square one level up", rods: [...lift(corners(0, 0, 0), 0, 1), ...sq(0, 0, 1)] },
+          { text: "Backrest: two uprights on the back edge + a top bar", rods: [[P(0, 1, 1), P(0, 2, 1)], [P(1, 1, 1), P(1, 2, 1)], [P(0, 2, 1), P(1, 2, 1)]] },
+          { text: "One diagonal across the backrest — no wobbly chairs allowed", rods: [[P(0, 1, 1), P(1, 2, 1)]] },
+        ],
+        text: "Design isn't just strength — it's strength FOR SOMEBODY. A chair holds a person: legs take the weight, the brace stops the sway. Look at the chair you're sitting on right now. Find its braces. (They're there.)",
+      }),
+      knexPhoto("Chair photo", "Caption: what would you change to make it comfier?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Find a brace on a real chair near you — where was it hiding?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Chair photo", "The completed braced chair — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on design for people."),
+    ],
+  });
+
+  const k6 = await projectModule({
+    topic: KNEX,
+    title: "The Windmill",
+    summary: "Your first machine: a frame that stands and a rotor that spins.",
+    badgeName: "Wind Catcher",
+    badgeIcon: "🌀",
+    badgeDescription: "Built a windmill with a braced tower and a free-spinning rotor — a frame plus a moving part.",
+    blocks: [
+      block("heading", { text: "Build the windmill" }),
+      knex({
+        kind: "build",
+        minutes: 10,
+        builds: [
+          { text: "Tower base: square, uprights, square", rods: [...sq(0, 0, 0), ...lift(corners(0, 0, 0), 0, 1), ...sq(0, 0, 1)] },
+          { text: "Tower top: one more story + two diagonals for bracing", rods: [...lift(corners(0, 0, 0), 1, 2), ...sq(0, 0, 2), [P(0, 1, 0), P(1, 2, 0)], [P(1, 1, 1), P(0, 2, 1)]] },
+          { text: "Roof point: four rods to a peak · then the axle rod pointing out the front", rods: [[P(0, 2, 0), P(0.5, 2.87, 0.5)], [P(1, 2, 0), P(0.5, 2.87, 0.5)], [P(1, 2, 1), P(0.5, 2.87, 0.5)], [P(0, 2, 1), P(0.5, 2.87, 0.5)], [P(0.5, 2.87, 0.5), P(0.5, 2.87, -0.5)]] },
+          { text: "The blades: four rods in an X on the front hub", rods: [[P(0.5, 2.87, -0.5), P(1.5, 3.87, -0.5)], [P(0.5, 2.87, -0.5), P(-0.5, 3.87, -0.5)], [P(0.5, 2.87, -0.5), P(1.5, 1.87, -0.5)], [P(0.5, 2.87, -0.5), P(-0.5, 1.87, -0.5)]] },
+        ],
+        text: "Your first MACHINE — it has a frame (the tower) and a moving part (the rotor). On the real build, put the blades on a single connector so they spin free. Blow on it. You just built what powers whole countries.",
+      }),
+      knexPhoto("Windmill photo", "Bonus: catch the blades mid-spin!"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What makes the rotor different from every other part you've built so far?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Windmill photo", "The completed windmill with rotor — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on frames and moving parts."),
+    ],
+  });
+
+  const k7 = await projectModule({
+    topic: KNEX,
+    title: "The Ferris Wheel",
+    summary: "Wheels, axles, and spokes that share the load.",
+    badgeName: "Wheel Wright",
+    badgeIcon: "🎡",
+    badgeDescription: "Built a ferris wheel with hexagonal wheels, an axle, and A-frame stands.",
+    blocks: [
+      block("heading", { text: "Build the ferris wheel" }),
+      knex({
+        kind: "build",
+        minutes: 14,
+        builds: [
+          { text: "Two A-frame stands + the axle between them", rods: [[P(1, 0, 0), P(0, 1.2, 0)], [P(-1, 0, 0), P(0, 1.2, 0)], [P(1, 0, 1), P(0, 1.2, 1)], [P(-1, 0, 1), P(0, 1.2, 1)], [P(0, 1.2, 0), P(0, 1.2, 1)]] },
+          { text: "Wheel one: six spokes from the axle, six rim rods around", rods: [...hexAt(1.2, 0).map((v) => [P(0, 1.2, 0), v]), ...loop(hexAt(1.2, 0))] },
+          { text: "Wheel two: the same at the other end of the axle", rods: [...hexAt(1.2, 1).map((v) => [P(0, 1.2, 1), v]), ...loop(hexAt(1.2, 1))] },
+          { text: "Cabin bars: six rods joining rim to rim — that's where the seats hang", rods: hexAt(1.2, 0).map((v, i) => [v, hexAt(1.2, 1)[i]]) },
+        ],
+        text: "A wheel is just a polygon with lots of spokes — yours has six, a bike has 36, but it's the same idea: every spoke shares the load. On the real build, let the wheel spin on the axle and give it a push. Symmetry is what makes it turn smooth.",
+      }),
+      knexPhoto("Ferris wheel photo", "Bonus: hang tiny riders (paper clips) from the cabin bars!"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Why do more spokes make a wheel stronger?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Ferris wheel photo", "The completed ferris wheel — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on wheels and load sharing."),
+    ],
+  });
+
+  const k8 = await projectModule({
+    topic: KNEX,
+    title: "The Rocket",
+    summary: "Wide base, low center of gravity — why rockets don't tip.",
+    badgeName: "Rocket Builder",
+    badgeIcon: "🚀",
+    badgeDescription: "Built a stable rocket and tested how fins and a wide base prevent tipping.",
+    blocks: [
+      block("heading", { text: "Build the rocket" }),
+      knex({
+        kind: "build",
+        minutes: 8,
+        builds: [
+          { text: "Body stage one: square, uprights, square", rods: [...sq(0, 0, 0), ...lift(corners(0, 0, 0), 0, 1), ...sq(0, 0, 1)] },
+          { text: "Body stage two: keep stacking", rods: [...lift(corners(0, 0, 0), 1, 2), ...sq(0, 0, 2)] },
+          { text: "Nose cone: four rods meeting at the tip", rods: [[P(0, 2, 0), P(0.5, 2.87, 0.5)], [P(1, 2, 0), P(0.5, 2.87, 0.5)], [P(1, 2, 1), P(0.5, 2.87, 0.5)], [P(0, 2, 1), P(0.5, 2.87, 0.5)]] },
+          { text: "Landing fins: four rods angling from outside the base up to the first story", rods: [[P(-0.5, 0, -0.5), P(0, 1, 0)], [P(1.5, 0, -0.5), P(1, 1, 0)], [P(1.5, 0, 1.5), P(1, 1, 1)], [P(-0.5, 0, 1.5), P(0, 1, 1)]] },
+        ],
+        text: "Why don't rockets tip over on the pad? A WIDE BASE. Your fins spread the footprint and guard the center of gravity. Test it: nudge the top of your rocket. Then remove the fins and nudge again.",
+      }),
+      knexPhoto("Rocket photo", "Caption: fins on or fins off — which survived the nudge test?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What did the nudge test show about the fins?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Rocket photo", "The completed rocket with landing fins — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on stability."),
+    ],
+  });
+
+  const k9 = await projectModule({
+    topic: KNEX,
+    title: "The Catapult",
+    summary: "A lever, a fulcrum, and stored energy — ancient engineering.",
+    badgeName: "Siege Engineer",
+    badgeIcon: "🏰",
+    badgeDescription: "Built a working lever-based catapult and connected it to the six simple machines.",
+    blocks: [
+      block("heading", { text: "Build the catapult" }),
+      knex({
+        kind: "build",
+        minutes: 10,
+        builds: [
+          { text: "Base frame: two long rails + two short ends", rods: loop([P(0, 0, 0), P(2, 0, 0), P(2, 0, 1), P(0, 0, 1)]) },
+          { text: "Two triangles rising from the rails — peaks in the middle", rods: [[P(0, 0, 0), P(1, 0.87, 0)], [P(2, 0, 0), P(1, 0.87, 0)], [P(0, 0, 1), P(1, 0.87, 1)], [P(2, 0, 1), P(1, 0.87, 1)]] },
+          { text: "The axle: two short rods meeting at a center connector between the peaks", rods: [[P(1, 0.87, 0), P(1, 0.87, 0.5)], [P(1, 0.87, 0.5), P(1, 0.87, 1)]] },
+          { text: "The throwing arm: two rods through the axle — bucket end high, handle end resting low", rods: [[P(1, 0.87, 0.5), P(2.2, 1.74, 0.5)], [P(1, 0.87, 0.5), P(-0.2, 0, 0.5)]] },
+        ],
+        text: "This is a LEVER — one of the six ancient machines. The axle is the fulcrum; a short push down on the long end becomes a fast flick at the bucket end. On the real build let the arm pivot, tape a bottle cap on as the bucket, and launch something soft. Measure your record.",
+      }),
+      knexPhoto("Catapult photo", "Caption: your longest launch in centimeters."),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What made your launches go farther — and what's the fulcrum on your build?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Catapult photo", "The completed catapult — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on levers."),
+    ],
+  });
+
+  const k10 = await projectModule({
+    topic: KNEX,
+    title: "The Sky Crane",
+    summary: "Cantilevers and tension: the grand finale on every skyline.",
+    badgeName: "Crane Operator",
+    badgeIcon: "🏗️",
+    badgeDescription: "Built a tower crane with a cantilevered jib held by tension ties — the capstone K'NEX build.",
+    blocks: [
+      block("heading", { text: "Build the sky crane" }),
+      knex({
+        kind: "build",
+        minutes: 14,
+        builds: [
+          { text: "Tower story one: square, uprights, square, one diagonal", rods: [...sq(0, 0, 0), ...lift(corners(0, 0, 0), 0, 1), ...sq(0, 0, 1), [P(0, 0, 0), P(1, 1, 0)]] },
+          { text: "Stories two and three — alternate the diagonals as you go", rods: [...lift(corners(0, 0, 0), 1, 2), ...sq(0, 0, 2), [P(1, 1, 0), P(0, 2, 0)], ...lift(corners(0, 0, 0), 2, 3), ...sq(0, 0, 3), [P(0, 2, 0), P(1, 3, 0)]] },
+          { text: "The jib: two rails reaching out front + a short counterjib out back, tied with cross rods", rods: [...chain([P(1, 3, 0), P(2, 3, 0), P(3, 3, 0)]), ...chain([P(1, 3, 1), P(2, 3, 1), P(3, 3, 1)]), [P(2, 3, 0), P(2, 3, 1)], [P(3, 3, 0), P(3, 3, 1)], [P(0, 3, 0), P(-1, 3, 0)], [P(0, 3, 1), P(-1, 3, 1)], [P(-1, 3, 0), P(-1, 3, 1)]] },
+          { text: "Mast peak + tie rods — long rods hold the jib up like cables", rods: [[P(0, 3, 0), P(0.5, 3.87, 0.5)], [P(1, 3, 0), P(0.5, 3.87, 0.5)], [P(1, 3, 1), P(0.5, 3.87, 0.5)], [P(0, 3, 1), P(0.5, 3.87, 0.5)], [P(0.5, 3.87, 0.5), P(3, 3, 0)], [P(0.5, 3.87, 0.5), P(3, 3, 1)], [P(0.5, 3.87, 0.5), P(-1, 3, 0)], [P(0.5, 3.87, 0.5), P(-1, 3, 1)]] },
+        ],
+        text: "The jib sticks WAY out with nothing under it — that's a cantilever. It doesn't fall because the tie rods PULL back against the counterjib, like a see-saw frozen in balance. Every tower crane on every skyline works exactly like the one in your hands. Hang a small weight from the jib tip and find the crane's limit.",
+      }),
+      knexPhoto("Crane photo", "Bonus: mid-lift, with something hanging from the jib!"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Which build would you make BIGGER with a thousand pieces — and what would keep it from collapsing?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Crane photo", "The completed tower crane — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on cantilevers and tension."),
+    ],
+  });
+
+  const modules = [module1, module2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10];
+
+  if (UPDATE) {
+    // Sync class assignments to the seed's module list and order.
+    const klass = await prisma.class.findFirst({ where: { orgId: org.id, classCode: CLASS_CODE } });
+    if (!klass) throw new Error("Class not found — run the full seed once first.");
+    await prisma.classModule.deleteMany({
+      where: { classId: klass.id, moduleId: { notIn: modules.map((m) => m.id) } },
+    });
+    for (let i = 0; i < modules.length; i++) {
+      const existing = await prisma.classModule.findFirst({
+        where: { classId: klass.id, moduleId: modules[i].id },
+      });
+      if (existing) await prisma.classModule.update({ where: { id: existing.id }, data: { order: i } });
+      else await prisma.classModule.create({ data: { classId: klass.id, moduleId: modules[i].id, order: i } });
+    }
+  } else {
+    await prisma.class.create({
+      data: {
+        orgId: org.id,
+        name: CLASS_NAME,
+        classCode: CLASS_CODE,
+        band: "TEEN",
+        minAuthTier: 0, // open self-registration: name + selfie, like the camp
+        modules: {
+          create: modules.map((m, i) => ({ moduleId: m.id, order: i })),
+        },
       },
-    },
-  });
+    });
 
-  await prisma.instructor.create({
-    data: { ...INSTRUCTOR, orgId: org.id },
-  });
+    await prisma.instructor.create({
+      data: { ...INSTRUCTOR, orgId: org.id },
+    });
+  }
 
   // Sanity check: every checkpoint must reference an existing criterion label,
   // and every evidence-backed criterion must have a checkpoint.
@@ -975,9 +1769,9 @@ async function main() {
 
   console.log("Abaco Future Ready Academy seeded (learner-ready content).");
   console.log(`  Class: ${CLASS_NAME} — code ${CLASS_CODE}, empty roster, students self-register (name + selfie)`);
-  console.log("  Modules assigned (all 6, in weekly order):");
+  console.log(`  Modules assigned (all ${modules.length}, in order):`);
   for (const m of modules) console.log(`    ${m.badgeIcon} ${m.title} → "${m.badgeName}" badge`);
-  console.log("  Each module: 2 photo checkpoints + 1 voice note + written wrap-up (3-question reflection).");
+  console.log("  Each project module: quick checkpoints + a written wrap-up; every project earns a badge.");
   console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
 }
 

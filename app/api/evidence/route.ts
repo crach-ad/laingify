@@ -27,6 +27,15 @@ export async function POST(req: Request) {
   const url: string | null = body.dataUrl ? String(body.dataUrl) : null;
   let aiUsed = false;
 
+  // Uploads are compressed client-side; anything still over ~4 MB would fail
+  // at the platform's request cap anyway — reject with a message kids can act on.
+  if (url && url.length > 4_000_000) {
+    return NextResponse.json(
+      { error: "That file is too large. Try taking the photo again — it shrinks automatically." },
+      { status: 413 },
+    );
+  }
+
   // Transcribe audio so it can be read and assessed like text.
   if (type === "AUDIO" && body.dataBase64 && body.mimeType) {
     const { transcript, aiUsed: used } = await transcribeAudio(

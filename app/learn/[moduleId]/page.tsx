@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
 import { evaluateModule } from "@/lib/completion";
+import { slugifyTopic } from "@/lib/topics";
 import SpriteChat from "../SpriteChat";
 import ModuleWorkspace from "./ModuleWorkspace";
 import Lesson from "./Lesson";
@@ -91,11 +92,11 @@ export default async function ModulePage({
   return (
     <main className={`mx-auto w-full max-w-2xl flex-1 px-6 py-8 ${band.textScale}`}>
       <Link
-        href="/learn"
+        href={module.topic ? `/learn/topic/${slugifyTopic(module.topic)}` : "/learn"}
         className="text-sm font-medium transition-colors hover:text-[var(--text)]"
         style={{ color: "var(--faint)" }}
       >
-        ← All modules
+        ← {module.topic || "All topics"}
       </Link>
 
       <header className="animate-fade-up mt-5 flex items-start gap-4">

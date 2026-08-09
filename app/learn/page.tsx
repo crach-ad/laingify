@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
+import { slugifyTopic } from "@/lib/topics";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
@@ -50,6 +51,16 @@ export default async function Dashboard() {
   const earned = rows.filter((r) => completedModuleIds.has(r.m.id));
   const className = klass.name.replace(/\s*\(.*\)$/, "");
 
+  // Group project modules into topics, keeping the assigned order — the
+  // dashboard shows topic cards; each topic page lists its projects.
+  const topics: { name: string; rows: typeof rows }[] = [];
+  for (const row of rows) {
+    const name = row.m.topic || row.m.title;
+    const existing = topics.find((t) => t.name === name);
+    if (existing) existing.rows.push(row);
+    else topics.push({ name, rows: [row] });
+  }
+
   return (
     <main className={`mx-auto w-full max-w-4xl flex-1 px-6 py-10 ${band.textScale}`}>
       {/* Header */}
@@ -95,10 +106,10 @@ export default async function Dashboard() {
           </h1>
           <p className="muted mt-3 max-w-md text-sm">
             {inProgress > 0
-              ? `You're ${inProgress} module${inProgress === 1 ? "" : "s"} into this term. Keep the streak going.`
+              ? `You're ${inProgress} project${inProgress === 1 ? "" : "s"} deep. Keep the streak going.`
               : completed === rows.length && rows.length > 0
                 ? "Everything's done — brilliant work this term."
-                : "Pick a module below to get started."}
+                : "Pick a topic below to get started."}
           </p>
         </div>
         <div className="flex gap-3">
@@ -136,7 +147,10 @@ export default async function Dashboard() {
           </span>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          {rows.map(({ cm, m }) => {
+          {earned.length === 0 && (
+            <p className="muted text-sm">Finish your first project to earn a badge — every project has one.</p>
+          )}
+          {earned.map(({ cm, m }) => {
             const has = completedModuleIds.has(m.id);
             const chip = (
               <div
@@ -178,45 +192,57 @@ export default async function Dashboard() {
         </div>
       </section>
 
-      {/* Modules */}
+      {/* Topics — each opens a page listing that topic's project modules */}
       <section className="animate-fade-up mt-12" style={{ animationDelay: "0.16s" }}>
         <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold">Modules</h2>
+          <h2 className="text-base font-semibold">Topics</h2>
           <span className="mono-label">This term</span>
         </div>
-        <div className="mt-4 flex flex-col gap-3">
-          {rows.map(({ cm, m, done, started, pct }) => (
-            <Link key={cm.id} href={`/learn/${m.id}`} className="block">
-              <div className="card card-interactive flex items-center gap-5 p-5">
-                <span className="tile flex h-11 w-11 shrink-0 items-center justify-center text-xl">
-                  {m.badgeIcon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="display block text-base font-semibold">{m.title}</span>
-                  <span className="muted mt-1 block max-w-xl text-[13px] leading-relaxed">
-                    {m.summary}
-                  </span>
-                  <span className="mt-3 flex items-center gap-3">
-                    <span className="bar max-w-[260px] flex-1">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {topics.map((t) => {
+            const total = t.rows.length;
+            const doneCount = t.rows.filter((r) => r.done).length;
+            const startedAny = t.rows.some((r) => r.started);
+            const pct = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+            const allDone = doneCount === total && total > 0;
+            const icon = t.rows[0].m.badgeIcon;
+            return (
+              <Link key={t.name} href={`/learn/topic/${slugifyTopic(t.name)}`} className="block">
+                <div className="card card-interactive flex h-full flex-col gap-4 p-5">
+                  <div className="flex items-center gap-4">
+                    <span className="tile flex h-11 w-11 shrink-0 items-center justify-center text-xl">
+                      {icon}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="display block text-base font-semibold">{t.name}</span>
+                      <span className="muted mt-0.5 block text-[13px]">
+                        {total} project{total === 1 ? "" : "s"}
+                      </span>
+                    </span>
+                    <span
+                      className={`pill shrink-0 ${allDone ? "pill-done" : startedAny ? "pill-progress" : "pill-idle"}`}
+                    >
+                      {allDone ? "Done" : startedAny ? "In progress" : "Not started"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="bar flex-1">
                       <span
                         style={{
                           width: `${pct}%`,
-                          background: done ? "var(--accent)" : started ? "var(--info)" : "#3a3f49",
+                          background: allDone ? "var(--accent)" : startedAny ? "var(--info)" : "#3a3f49",
                         }}
                       />
                     </span>
-                    <span className="mono-label">{pct}%</span>
-                  </span>
-                </span>
-                <span
-                  className={`pill shrink-0 ${done ? "pill-done" : started ? "pill-progress" : "pill-idle"}`}
-                >
-                  {done ? "Done" : started ? "In progress" : "Not started"}
-                </span>
-              </div>
-            </Link>
-          ))}
-          {rows.length === 0 && <p className="muted">No modules assigned yet — check back soon!</p>}
+                    <span className="mono-label">
+                      {doneCount}/{total}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+          {topics.length === 0 && <p className="muted">No topics assigned yet — check back soon!</p>}
         </div>
       </section>
 
