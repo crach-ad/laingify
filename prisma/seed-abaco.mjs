@@ -1038,6 +1038,142 @@ async function main() {
     ],
   });
 
+  // Cricut sticker project (CAD & Manufacturing) — adapted from the camp's
+  // "Sticker Design Challenge" brief: design in Canva, validate with real
+  // market research, cost it out, cut it on the Cricut, price it like a boss.
+  const cad2 = await projectModule({
+    topic: "CAD & Manufacturing",
+    title: "Sticker Design Challenge",
+    summary: "Design it. Test it. Sell it! A Canva sticker, market-tested by real people, cut on the Cricut — priced like a business.",
+    badgeName: "Sticker Boss",
+    badgeIcon: "🏷️",
+    badgeDescription: "Designed a sticker to a brief, ran real market research, costed production, cut it on the Cricut, and priced it with a business case.",
+    blocks: [
+      block("heading", { text: "Design it. Test it. Sell it!" }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "Today you're not just a designer — you're a business. Real products go through exactly the journey you're about to take: a design brief, versions, customer testing, production costs, and a price. At the end you'll hold a sticker you designed, tested, manufactured, and priced.\n\nTools: Canva for design (canva.com), a Cricut for cutting.",
+        tip: "Great stickers are SIMPLE. If you can't read it from across the room, it's not done yet.",
+      }),
+
+      block("heading", { text: "The design brief — every sticker must have:" }),
+      block("text", {
+        kind: "build",
+        minutes: 10,
+        text: "Open Canva → Create a design → choose a small square (like 1080 × 1080). Your sticker must hit ALL of these:",
+        actions: [
+          "TEXT — at least one word or phrase",
+          "AN IMAGE — a Canva graphic, your own illustration, or a combination of both",
+          "TWO DIFFERENT FONTS — combine at least two fonts to create visual interest",
+          "FOUR COLOURS — choose a colour palette that works well together",
+        ],
+        tip: "A word or phrase people already FEEL something about (Dream Big, Good Vibes, your school, your island) sells better than a random one.",
+      }),
+      block("text", {
+        kind: "build",
+        minutes: 5,
+        text: "Pro move — the colour picker. Computers name every colour with a HEX code (like #00BFFF). Steal a colour you love from the real world:",
+        actions: [
+          "Search \"Color Picker\" on Google",
+          "Find one colour you love and copy its HEX code (the # number)",
+          "In Canva: colour panel → + → paste the code — that EXACT colour is now yours",
+          "Use it in your palette",
+        ],
+        tip: "Designers rarely invent colours — they collect them. Sunset photos, team jerseys, candy wrappers: all fair game.",
+      }),
+
+      block("heading", { text: "Four versions — no favourites yet" }),
+      block("text", {
+        kind: "create",
+        minutes: 12,
+        text: "One design is a guess. Four designs is an experiment. Duplicate your page in Canva three times, then make each version change AT LEAST THREE of these:",
+        actions: [
+          "Colours — different palette",
+          "Font — different type combination",
+          "Image — different graphic or illustration",
+          "Layout — different arrangement",
+        ],
+        tip: "Don't polish your favourite and phone in the rest — the version YOU like least might be the one everyone buys. It happens constantly in real design.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Four designs photo",
+        text: "Screenshot of all four sticker variations side by side in Canva. Caption: which one YOU think will win.",
+      }),
+
+      block("heading", { text: "Market research — real customers, real data" }),
+      block("text", {
+        kind: "build",
+        minutes: 15,
+        text: "Time to find out what people actually want. Show your four designs to at least 10 different people around the room and record:",
+        actions: [
+          "Which version they liked best (keep a tally!)",
+          "WHY they chose it — their words, not yours",
+          "Any suggestions for improvement",
+        ],
+        tip: "Don't defend your design while they talk — just listen and write. The customer is telling you how to make money.",
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: market results",
+        text: "Press record and report like a founder: which design won the vote, why people said they chose it, and one change you'll make because of the feedback. Did YOUR favourite win?",
+      }),
+
+      block("heading", { text: "What does it cost to make?" }),
+      block("text", {
+        kind: "build",
+        minutes: 10,
+        text: "A business that doesn't know its costs is a hobby. Research what it would actually cost to manufacture your sticker, and work out an estimated cost PER STICKER (or per sheet):",
+        actions: [
+          "Printable sticker paper — price per pack ÷ sheets per pack",
+          "Cricut materials (mats, blades wear out too)",
+          "Ink (if applicable)",
+          "Lamination (optional — waterproof costs more, sells for more)",
+          "Packaging (optional)",
+        ],
+        tip: "Write the number down: \"one sticker costs me about $___ to make.\" Every price decision starts from that number.",
+      }),
+
+      block("heading", { text: "Manufacture it — Cricut time" }),
+      block("text", {
+        kind: "build",
+        minutes: 15,
+        text: "Take the WINNING design (the market's pick — not necessarily yours) into production:",
+        actions: [
+          "In Canva: Share → Download → PNG, transparent background if you have Pro",
+          "In Cricut Design Space: New Project → Upload → your PNG → insert it",
+          "Resize to real sticker size (about 5–8 cm) · choose Print Then Cut",
+          "Print onto sticker paper, stick the sheet to the mat, load it",
+          "Let the Cricut find the cut lines and cut — then peel your sticker!",
+        ],
+        warn: "Ask an instructor before the cut — mats and blades are shared equipment, and sticker paper only feeds one way.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Finished sticker photo",
+        text: "Photo of your finished, peeled sticker — in your hand or stuck somewhere legal. Caption: what you'd improve in version two.",
+      }),
+
+      block("heading", { text: "Become the business owner" }),
+      block("text", {
+        kind: "create",
+        minutes: 5,
+        text: "Based on your production costs, your market research, and the quality of your design — choose a realistic selling price.\n\nThe test: it has to cover your cost, and a real person has to happily pay it. Too cheap and you lose money on every sale. Too expensive and the tally chart says nobody buys.\n\nWrite your price on a sticky note next to your sticker. That number is a claim: \"this is what my work is worth.\" Be ready to defend it.",
+        tip: "Sticker maths: if it costs $0.40 to make and sells for $3.00, that margin is what pays for your time, your mistakes, and your next roll of paper.",
+      }),
+
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Include your final price and the one sentence you'd use to convince a stranger to buy your sticker."),
+    ],
+    criteria: [
+      photoCriterion(0, "Four designs photo", "All four sticker design variations, each changing at least three of: colours, font, image, layout."),
+      audioCriterion(1, "Voice note: market results", "Reports the market-research results: winning design, customers' reasons, and a change based on feedback."),
+      photoCriterion(2, "Finished sticker photo", "The finished sticker, printed and cut on the Cricut."),
+      wrapUpCriterion(3, "Written reflection including the selling price and the pitch for it."),
+    ],
+  });
+
   // ==========================================================================
   // MODULE 4 — Virtual & Augmented Reality
   // Concrete missions per app, then a creation with a no-headset fallback.
@@ -1875,7 +2011,7 @@ async function main() {
     ],
   });
 
-  const modules = [module1, module2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
+  const modules = [module1, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.
