@@ -278,10 +278,19 @@ export default function KnexViewer({ steps, text }: { steps: KnexStep[]; text?: 
         </div>
 
         {buildIdx > 0 && (
-          <div className="mt-2 flex justify-center">
-            <button type="button" onClick={() => setBuildIdx(0)} className="btn-ghost h-10 px-4 text-sm">
-              ↺ Rebuild
+          <div className="mt-2 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBuildIdx((i) => Math.max(0, i - 1))}
+              className="btn-ghost h-10 px-4 text-sm"
+            >
+              ↶ Undo step
             </button>
+            {buildIdx > 1 && (
+              <button type="button" onClick={() => setBuildIdx(0)} className="btn-ghost h-10 px-4 text-sm">
+                ↺ Rebuild
+              </button>
+            )}
           </div>
         )}
       </div>

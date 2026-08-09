@@ -312,7 +312,20 @@ export default function CircuitSim({
               <span className="tabular-nums font-semibold">{temp}°C</span>
             </label>
           )}
-          {hasBuild && buildIdx > 0 && !running && (
+          {hasBuild && buildIdx > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                // Removing a piece un-completes the circuit, so stop the sim.
+                if (running) stop();
+                setBuildIdx((i) => Math.max(0, i - 1));
+              }}
+              className="btn-ghost h-11 px-4 text-sm"
+            >
+              ↶ Undo step
+            </button>
+          )}
+          {hasBuild && buildIdx > 1 && !running && (
             <button type="button" onClick={() => setBuildIdx(0)} className="btn-ghost h-11 px-4 text-sm">
               ↺ Rebuild
             </button>
