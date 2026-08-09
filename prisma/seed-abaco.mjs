@@ -1714,7 +1714,168 @@ async function main() {
     ],
   });
 
-  const modules = [module1, module2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10];
+  // --- Creatures: flat rod-drawings and 3D animals, inspired by the classic
+  // K'NEX Imagine "Creatures" models (our own simplified geometry). Flat
+  // builds sit at y=0.1 — kids build them lying on the table, like the manual.
+  const FLAT = 0.1;
+  const F = (x, z) => P(x, FLAT, z);
+
+  const k11 = await projectModule({
+    topic: KNEX,
+    title: "The Fox Face",
+    summary: "Your first creature: a fox face drawn entirely with rods, flat on the table.",
+    badgeName: "Shape Shifter",
+    badgeIcon: "🦊",
+    badgeDescription: "Drew a recognizable creature face using only straight rods and angles.",
+    blocks: [
+      block("heading", { text: "Draw with rods" }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "New kind of build: a FLAT one. You're not building up — you're drawing a picture on the table using rods as lines. Artists call this a wireframe. Every video game character starts life exactly this way.",
+        tip: "Flat builds are quick — nail this fox, then try inventing your own animal face after.",
+      }),
+      knex({
+        kind: "build",
+        minutes: 6,
+        builds: [
+          { text: "The brow: three rods straight across the top", rods: [[F(0, 4), F(1, 4)], [F(1, 4), F(3, 4)], [F(3, 4), F(4, 4)]] },
+          { text: "Ears: a rod up and a diagonal back down, each side", rods: [[F(0, 4), F(0, 5)], [F(0, 5), F(1, 4)], [F(4, 4), F(4, 5)], [F(4, 5), F(3, 4)]] },
+          { text: "Cheeks: down each side, then diagonals toward the chin", rods: [[F(0, 4), F(0, 3)], [F(0, 3), F(1, 2)], [F(4, 4), F(4, 3)], [F(4, 3), F(3, 2)]] },
+          { text: "The snout: two diagonals meeting at the nose, plus the muzzle bar", rods: [[F(1, 2), F(2, 1)], [F(3, 2), F(2, 1)], [F(1, 2), F(3, 2)]] },
+        ],
+        text: "Fourteen rods and suddenly it's a fox. Notice what your brain just did — it filled in the fur, the eyes, everything. Good design gives the eye just enough lines and lets imagination do the rest.",
+      }),
+      knexPhoto("Fox face photo", "Caption: what did YOU add to yours?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What's the fewest lines you think you'd need to draw a different animal — and which animal?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Fox face photo", "The flat fox-face rod drawing — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on drawing with lines."),
+    ],
+  });
+
+  const k12 = await projectModule({
+    topic: KNEX,
+    title: "The Butterfly",
+    summary: "Two mirror-image wings — build one side, then flip everything for the other.",
+    badgeName: "Wing Maker",
+    badgeIcon: "🦋",
+    badgeDescription: "Built a symmetric butterfly and used mirror symmetry like a designer.",
+    blocks: [
+      block("heading", { text: "Build the butterfly" }),
+      knex({
+        kind: "build",
+        minutes: 8,
+        builds: [
+          { text: "The body: three rods in a line up the middle", rods: [[F(0, 0), F(0, 1)], [F(0, 1), F(0, 2)], [F(0, 2), F(0, 3)]] },
+          { text: "Antennae: two diagonals from the head, spreading apart", rods: [[F(0, 3), F(1, 4)], [F(0, 3), F(-1, 4)]] },
+          { text: "Right wings: a big diamond up top, a twin diamond below — they share a corner", rods: [[F(0, 2), F(1, 3)], [F(1, 3), F(2, 2)], [F(2, 2), F(1, 1)], [F(1, 1), F(0, 2)], [F(0, 0), F(1, 1)], [F(1, 1), F(2, 0)], [F(2, 0), F(1, -1)], [F(1, -1), F(0, 0)]] },
+          { text: "Left wings: the exact same diamonds, MIRRORED", rods: [[F(0, 2), F(-1, 3)], [F(-1, 3), F(-2, 2)], [F(-2, 2), F(-1, 1)], [F(-1, 1), F(0, 2)], [F(0, 0), F(-1, 1)], [F(-1, 1), F(-2, 0)], [F(-2, 0), F(-1, -1)], [F(-1, -1), F(0, 0)]] },
+        ],
+        text: "Cover one half with your hand — the other half is its perfect reflection. That's MIRROR SYMMETRY, and nature is obsessed with it: butterflies, faces, airplanes. When you built the left side, your hands already knew what to do. That's why.",
+      }),
+      knexPhoto("Butterfly photo", "Caption: is anything on yours NOT symmetric?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Why do you think airplanes have to be symmetric like your butterfly?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Butterfly photo", "The symmetric butterfly — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on symmetry."),
+    ],
+  });
+
+  const k13 = await projectModule({
+    topic: KNEX,
+    title: "The Cat",
+    summary: "A sitting cat in outline — the biggest rod drawing yet, with a whisker star.",
+    badgeName: "Line Artist",
+    badgeIcon: "🐱",
+    badgeDescription: "Composed a full creature outline from head to tail using rods as lines.",
+    blocks: [
+      block("heading", { text: "Build the cat" }),
+      knex({
+        kind: "build",
+        minutes: 10,
+        builds: [
+          { text: "The head: an outline of eight rods, two ears on top", rods: [[F(0, 4), F(1, 4)], [F(1, 4), F(2, 4)], [F(2, 4), F(2, 5)], [F(2, 5), F(2, 6)], [F(2, 6), F(1, 6)], [F(1, 6), F(0, 6)], [F(0, 6), F(0, 5)], [F(0, 5), F(0, 4)], [F(0, 6), F(0, 7)], [F(0, 7), F(1, 6)], [F(2, 6), F(2, 7)], [F(2, 7), F(1, 6)]] },
+          { text: "The whisker star: four diagonals from the center of the face to its corners", rods: [[F(1, 5), F(0, 4)], [F(1, 5), F(2, 4)], [F(1, 5), F(0, 6)], [F(1, 5), F(2, 6)]] },
+          { text: "The body: chest down the front, base along the bottom, back up behind", rods: [[F(0, 4), F(0, 3)], [F(0, 3), F(0, 2)], [F(0, 2), F(0, 1)], [F(0, 1), F(0, 0)], [F(0, 0), F(1, 0)], [F(1, 0), F(2, 0)], [F(2, 0), F(3, 0)], [F(3, 0), F(3, 1)], [F(3, 1), F(3, 2)], [F(3, 2), F(3, 3)], [F(3, 3), F(2, 4)]] },
+          { text: "Front leg + tail: an inner leg line, and a tail sweeping out the back", rods: [[F(1, 0), F(1, 1)], [F(1, 1), F(1, 2)], [F(3, 0), F(4, 0)], [F(4, 0), F(5, 1)]] },
+        ],
+        text: "Thirty-one rods, one very dignified cat. The haunch — that single diagonal from the back up to the head — is what makes it read as 'sitting'. One line changed the whole pose. Try removing it and see.",
+      }),
+      knexPhoto("Cat photo", "Caption: what one line would you change about the pose?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Which single rod matters most to the cat's pose, and why?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Cat photo", "The sitting-cat rod outline — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on outlines and poses."),
+    ],
+  });
+
+  const k14 = await projectModule({
+    topic: KNEX,
+    title: "The Spider",
+    summary: "Eight legs, all alike: radial symmetry holds the body off the ground.",
+    badgeName: "Leg Engineer",
+    badgeIcon: "🕷️",
+    badgeDescription: "Built a spider whose eight identical bent legs suspend the body — radial symmetry as structure.",
+    blocks: [
+      block("heading", { text: "Build the spider" }),
+      knex({
+        kind: "build",
+        minutes: 10,
+        builds: [
+          { text: "The body: head, thorax, abdomen — a line of two rods floating at leg height", rods: [[P(-1, 0.7, 0), P(0, 0.7, 0)], [P(0, 0.7, 0), P(1, 0.7, 0)]] },
+          { text: "Fangs: two short diagonals from the head, down and apart", rods: [[P(-1, 0.7, 0), P(-1.6, 0.1, 0.4)], [P(-1, 0.7, 0), P(-1.6, 0.1, -0.4)]] },
+          { text: "Right legs: four legs from the thorax — each arches UP to a knee, then DOWN to a foot", rods: [[P(0, 0.7, 0), P(0.8, 1.1, 0.8)], [P(0.8, 1.1, 0.8), P(1.5, 0, 1.5)], [P(0, 0.7, 0), P(0.3, 1.1, 1)], [P(0.3, 1.1, 1), P(0.5, 0, 1.9)], [P(0, 0.7, 0), P(-0.3, 1.1, 1)], [P(-0.3, 1.1, 1), P(-0.5, 0, 1.9)], [P(0, 0.7, 0), P(-0.8, 1.1, 0.8)], [P(-0.8, 1.1, 0.8), P(-1.5, 0, 1.5)]] },
+          { text: "Left legs: the same four, mirrored to the other side", rods: [[P(0, 0.7, 0), P(0.8, 1.1, -0.8)], [P(0.8, 1.1, -0.8), P(1.5, 0, -1.5)], [P(0, 0.7, 0), P(0.3, 1.1, -1)], [P(0.3, 1.1, -1), P(0.5, 0, -1.9)], [P(0, 0.7, 0), P(-0.3, 1.1, -1)], [P(-0.3, 1.1, -1), P(-0.5, 0, -1.9)], [P(0, 0.7, 0), P(-0.8, 1.1, -0.8)], [P(-0.8, 1.1, -0.8), P(-1.5, 0, -1.5)]] },
+        ],
+        text: "Spin it around: the body never touches the ground — eight bent legs hold it up, each one a tiny arch. One leg is weak. Eight identical legs sharing the load? That's a structure. Same trick as the ferris wheel's spokes, wearing a costume.",
+      }),
+      knexPhoto("Spider photo", "Bonus: perch it somewhere that'll surprise someone."),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("How is the spider's leg trick like the ferris wheel's spokes?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Spider photo", "The eight-legged spider — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on radial symmetry."),
+    ],
+  });
+
+  const k15 = await projectModule({
+    topic: KNEX,
+    title: "The Giraffe",
+    summary: "Four legs, a long neck, and a balance problem to solve.",
+    badgeName: "Neck Architect",
+    badgeIcon: "🦒",
+    badgeDescription: "Built a standing giraffe and reasoned about balance when weight reaches up and out.",
+    blocks: [
+      block("heading", { text: "Build the giraffe" }),
+      knex({
+        kind: "build",
+        minutes: 10,
+        builds: [
+          { text: "Four long legs standing at the corners, joined by the body frame", rods: [[P(0, 0, 0), P(0, 2, 0)], [P(0, 0, 1), P(0, 2, 1)], [P(2, 0, 0), P(2, 2, 0)], [P(2, 0, 1), P(2, 2, 1)], [P(0, 2, 0), P(2, 2, 0)], [P(0, 2, 1), P(2, 2, 1)], [P(0, 2, 0), P(0, 2, 1)], [P(2, 2, 0), P(2, 2, 1)]] },
+          { text: "The neck: two rods from the shoulders meeting, then one more reaching higher", rods: [[P(0, 2, 0), P(-0.5, 3, 0.5)], [P(0, 2, 1), P(-0.5, 3, 0.5)], [P(-0.5, 3, 0.5), P(-1, 4, 0.5)]] },
+          { text: "The head: one rod forward — and a tail diagonal out the back", rods: [[P(-1, 4, 0.5), P(-1.7, 4, 0.5)], [P(2, 2, 0.5), P(2.7, 1.3, 0.5)]] },
+        ],
+        text: "The neck leans FORWARD, past the front legs — so why doesn't it tip? Look where the legs are: the body and tail hang back, balancing the neck like a see-saw. Real giraffes solve this exact problem. So did your sky crane. Test it: how far can you lean the neck before it wants to fall?",
+      }),
+      knexPhoto("Giraffe photo", "Caption: how far past the front legs does the head reach?"),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What did the giraffe borrow from the sky crane?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Giraffe photo", "The standing giraffe with its long neck — real K'NEX or the finished 3D model."),
+      wrapUpCriterion(1, "Written reflection on balance."),
+    ],
+  });
+
+  const modules = [module1, module2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.

@@ -140,7 +140,14 @@ export default function KnexViewer({ steps, text }: { steps: KnexStep[]; text?: 
         }
       });
 
-      camera.position.set(center.x + radius * 1.7, center.y + radius * 1.2, center.z + radius * 1.7);
+      // Flat table-drawings (cat, fox, butterfly…) read best from overhead,
+      // like a build manual; 3D structures get the classic three-quarter view.
+      const isFlat = bounds.getSize(new THREE.Vector3()).y < 0.5;
+      if (isFlat) {
+        camera.position.set(center.x + radius * 0.5, center.y + radius * 2.2, center.z + radius * 1.0);
+      } else {
+        camera.position.set(center.x + radius * 1.7, center.y + radius * 1.2, center.z + radius * 1.7);
+      }
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.target.copy(center);
       controls.enableDamping = true;
