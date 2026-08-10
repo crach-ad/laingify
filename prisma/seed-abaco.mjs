@@ -1162,6 +1162,68 @@ async function main() {
     ],
   });
 
+  // Rodocodo (Foundations of Coding) — platform-play module: short explanation,
+  // level progress captured by screenshot, and student-perspective feedback.
+  // Pattern for future platform modules: explain → play → screenshot → review.
+  const fc2 = await projectModule({
+    topic: "Foundations of Coding",
+    title: "Rodocodo Quest",
+    summary: "Puzzle your way through Rodocodo's levels — every puzzle you beat is a real program you wrote.",
+    badgeName: "Code Quester",
+    badgeIcon: "🕹️",
+    badgeDescription: "Completed Rodocodo coding levels using sequences, loops, and functions, and reviewed the platform as a critic.",
+    blocks: [
+      block("heading", { text: "Rodocodo — coding as a game" }),
+      block("text", {
+        kind: "learn",
+        minutes: 3,
+        text: "Rodocodo turns programming into puzzles: you give a character step-by-step commands to reach the goal. Every level you beat IS a program — you wrote it, the computer ran it.\n\nAs the levels climb, the game sneaks in the big ideas: SEQUENCES (steps in order), LOOPS (repeat without repeating yourself), and FUNCTIONS (name a recipe, reuse it everywhere). The same ideas from your Scratch game — new world.",
+        tip: "Stuck on a level? That's the game working. Read what your program ACTUALLY does, not what you meant it to do — that's debugging.",
+      }),
+      block("text", {
+        kind: "build",
+        minutes: 25,
+        text: "Get playing:",
+        actions: [
+          "Go to rodocodo.com and log in (your instructor has the class login)",
+          "Start from the first world and work upward — no skipping",
+          "Beat at least 10 levels (or finish your first world)",
+          "When a loop or function block appears, USE it — shorter programs beat long ones",
+        ],
+        tip: "Race a neighbour to the same level, then compare programs. Same puzzle, different code — both right. That's programming.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Rodocodo progress screenshot",
+        text: "Screenshot of your Rodocodo progress screen showing your completed levels — at least 10 levels or a finished world. Caption: the trickiest level number and why.",
+      }),
+      block("heading", { text: "Your review — the student's perspective" }),
+      block("text", {
+        kind: "reflect",
+        minutes: 4,
+        text: "Companies pay serious money for what you have right now: a student's honest opinion. Think like a reviewer:",
+        actions: [
+          "What was the most fun part — and what made it fun?",
+          "Where did it get hard? Was hard fun or frustrating?",
+          "What would you change about Rodocodo if you ran the company?",
+          "Would you recommend it to a friend learning to code? Why or why not?",
+        ],
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: Rodocodo review",
+        text: "Press record and give your honest 60-second review: most fun part, hardest part, one thing you'd change, and would you recommend it — like you're telling the people who made it.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Name one idea from Rodocodo (sequence, loop, or function) and where it showed up in a level you beat."),
+    ],
+    criteria: [
+      photoCriterion(0, "Rodocodo progress screenshot", "Rodocodo progress screen with at least 10 levels or a completed world."),
+      audioCriterion(1, "Voice note: Rodocodo review", "An honest student review: fun, difficulty, one change, recommendation."),
+      wrapUpCriterion(2, "Written reflection connecting a coding idea to a level."),
+    ],
+  });
+
   // ==========================================================================
   // MODULE 4 — Virtual & Augmented Reality
   // Concrete missions per app, then a creation with a no-headset fallback.
@@ -1999,7 +2061,7 @@ async function main() {
     ],
   });
 
-  const modules = [module1, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
+  const modules = [module1, fc2, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.
