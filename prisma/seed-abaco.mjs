@@ -1038,9 +1038,9 @@ async function main() {
     ],
   });
 
-  // Cricut sticker project (CAD & Manufacturing) — adapted from the camp's
-  // "Sticker Design Challenge" brief: design in Canva, validate with real
-  // market research, cost it out, cut it on the Cricut, price it like a boss.
+  // Cricut sticker project (CAD & Manufacturing) — Pamela's "Sticker Design
+  // Challenge" brief, visual-first: each card leads with its poster tile
+  // (public/tutorial/sticker/*), text kept to captions and checklists.
   const cad2 = await projectModule({
     topic: "CAD & Manufacturing",
     title: "Sticker Design Challenge",
@@ -1053,48 +1053,46 @@ async function main() {
       block("text", {
         kind: "learn",
         minutes: 2,
-        text: "Today you're not just a designer — you're a business. Real products go through exactly the journey you're about to take: a design brief, versions, customer testing, production costs, and a price. At the end you'll hold a sticker you designed, tested, manufactured, and priced.\n\nTools: Canva for design (canva.com), a Cricut for cutting.",
-        tip: "Great stickers are SIMPLE. If you can't read it from across the room, it's not done yet.",
+        url: "/tutorial/sticker/header.jpg",
+        text: "Today you're a designer AND a business. Design in Canva, test with real customers, manufacture on the Cricut, set a price.",
+        tip: "Great stickers are SIMPLE — if you can't read it from across the room, it's not done yet.",
       }),
 
-      block("heading", { text: "The design brief — every sticker must have:" }),
+      block("heading", { text: "The design brief" }),
       block("text", {
         kind: "build",
-        minutes: 10,
-        text: "Open Canva → Create a design → choose a small square (like 1080 × 1080). Your sticker must hit ALL of these:",
+        minutes: 12,
+        url: "/tutorial/sticker/rules.jpg",
+        text: "Open Canva → Create a design → small square (1080 × 1080). Hit all four rules:",
         actions: [
-          "TEXT — at least one word or phrase",
-          "AN IMAGE — a Canva graphic, your own illustration, or a combination of both",
-          "TWO DIFFERENT FONTS — combine at least two fonts to create visual interest",
-          "FOUR COLOURS — choose a colour palette that works well together",
+          "Text — at least one word or phrase",
+          "An image — Canva graphic, your own illustration, or both",
+          "Two different fonts",
+          "At least four colours that work together",
         ],
-        tip: "A word or phrase people already FEEL something about (Dream Big, Good Vibes, your school, your island) sells better than a random one.",
       }),
+
+      block("heading", { text: "Pro move: steal a colour" }),
       block("text", {
         kind: "build",
-        minutes: 5,
-        text: "Pro move — the colour picker. Computers name every colour with a HEX code (like #00BFFF). Steal a colour you love from the real world:",
+        minutes: 4,
+        url: "/tutorial/sticker/colorpicker.jpg",
+        text: "Computers name every colour with a HEX code.",
         actions: [
-          "Search \"Color Picker\" on Google",
-          "Find one colour you love and copy its HEX code (the # number)",
-          "In Canva: colour panel → + → paste the code — that EXACT colour is now yours",
-          "Use it in your palette",
+          "Search \"Color Picker\" on Google · find a colour you love",
+          "Copy its HEX code (the # number)",
+          "Canva → colour panel → + → paste it. That exact colour is now yours",
         ],
-        tip: "Designers rarely invent colours — they collect them. Sunset photos, team jerseys, candy wrappers: all fair game.",
+        tip: "Designers rarely invent colours — they collect them.",
       }),
 
       block("heading", { text: "Four versions — no favourites yet" }),
       block("text", {
         kind: "create",
         minutes: 12,
-        text: "One design is a guess. Four designs is an experiment. Duplicate your page in Canva three times, then make each version change AT LEAST THREE of these:",
-        actions: [
-          "Colours — different palette",
-          "Font — different type combination",
-          "Image — different graphic or illustration",
-          "Layout — different arrangement",
-        ],
-        tip: "Don't polish your favourite and phone in the rest — the version YOU like least might be the one everyone buys. It happens constantly in real design.",
+        url: "/tutorial/sticker/variations.jpg",
+        text: "One design is a guess; four is an experiment. Duplicate your page three times — each version changes at least THREE of: colours, font, image, layout.",
+        tip: "The version YOU like least might be the one everyone buys. Happens constantly in real design.",
       }),
       block("checkpoint", {
         capture: "photo",
@@ -1102,16 +1100,12 @@ async function main() {
         text: "Screenshot of all four sticker variations side by side in Canva. Caption: which one YOU think will win.",
       }),
 
-      block("heading", { text: "Market research — real customers, real data" }),
+      block("heading", { text: "Market research" }),
       block("text", {
         kind: "build",
         minutes: 15,
-        text: "Time to find out what people actually want. Show your four designs to at least 10 different people around the room and record:",
-        actions: [
-          "Which version they liked best (keep a tally!)",
-          "WHY they chose it — their words, not yours",
-          "Any suggestions for improvement",
-        ],
+        url: "/tutorial/sticker/research.jpg",
+        text: "Show your four designs to at least 10 people around the room. Keep a tally: which version, WHY (their words), and suggestions.",
         tip: "Don't defend your design while they talk — just listen and write. The customer is telling you how to make money.",
       }),
       block("checkpoint", {
@@ -1124,15 +1118,8 @@ async function main() {
       block("text", {
         kind: "build",
         minutes: 10,
-        text: "A business that doesn't know its costs is a hobby. Research what it would actually cost to manufacture your sticker, and work out an estimated cost PER STICKER (or per sheet):",
-        actions: [
-          "Printable sticker paper — price per pack ÷ sheets per pack",
-          "Cricut materials (mats, blades wear out too)",
-          "Ink (if applicable)",
-          "Lamination (optional — waterproof costs more, sells for more)",
-          "Packaging (optional)",
-        ],
-        tip: "Write the number down: \"one sticker costs me about $___ to make.\" Every price decision starts from that number.",
+        url: "/tutorial/sticker/costs.jpg",
+        text: "Research each item on the list, then write the number down: \"one sticker costs me about $___ to make.\" Every price decision starts from that number.",
       }),
 
       block("heading", { text: "Manufacture it — Cricut time" }),
@@ -1141,10 +1128,10 @@ async function main() {
         minutes: 15,
         text: "Take the WINNING design (the market's pick — not necessarily yours) into production:",
         actions: [
-          "In Canva: Share → Download → PNG, transparent background if you have Pro",
-          "In Cricut Design Space: New Project → Upload → your PNG → insert it",
-          "Resize to real sticker size (about 5–8 cm) · choose Print Then Cut",
-          "Print onto sticker paper, stick the sheet to the mat, load it",
+          "Canva: Share → Download → PNG",
+          "Cricut Design Space: New Project → Upload → your PNG",
+          "Resize to real sticker size (5–8 cm) · choose Print Then Cut",
+          "Print onto sticker paper · stick the sheet to the mat · load it",
           "Let the Cricut find the cut lines and cut — then peel your sticker!",
         ],
         warn: "Ask an instructor before the cut — mats and blades are shared equipment, and sticker paper only feeds one way.",
@@ -1159,8 +1146,9 @@ async function main() {
       block("text", {
         kind: "create",
         minutes: 5,
-        text: "Based on your production costs, your market research, and the quality of your design — choose a realistic selling price.\n\nThe test: it has to cover your cost, and a real person has to happily pay it. Too cheap and you lose money on every sale. Too expensive and the tally chart says nobody buys.\n\nWrite your price on a sticky note next to your sticker. That number is a claim: \"this is what my work is worth.\" Be ready to defend it.",
-        tip: "Sticker maths: if it costs $0.40 to make and sells for $3.00, that margin is what pays for your time, your mistakes, and your next roll of paper.",
+        url: "/tutorial/sticker/price.jpg",
+        text: "Using your costs, your research, and your quality: choose a realistic price. It must cover your cost — and a real person must happily pay it. Write it on a sticky note next to your sticker and be ready to defend it.",
+        tip: "Sticker maths: costs $0.40, sells for $3.00 — that margin pays for your time, your mistakes, and your next roll of paper.",
       }),
 
       block("heading", { text: "Reflect & share" }),

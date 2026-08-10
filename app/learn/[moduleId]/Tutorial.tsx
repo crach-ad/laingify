@@ -911,9 +911,20 @@ export default function Tutorial({
             )}
           </figure>
         ) : (
-          <p className="whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
-            {current!.block.text}
-          </p>
+          <>
+            {/* Text cards can lead with a visual — the text becomes the caption. */}
+            {current!.block.url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={current!.block.url}
+                alt=""
+                className="mb-4 w-full rounded-xl border border-[var(--border-soft)] bg-white"
+              />
+            )}
+            <p className="whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
+              {current!.block.text}
+            </p>
+          </>
         )}
         {/* v2 extras: any non-checkpoint block can carry a checklist + callouts */}
         {!isCheckpoint && current!.block.actions && current!.block.actions.length > 0 && (
