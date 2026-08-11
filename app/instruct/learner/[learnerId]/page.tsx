@@ -202,6 +202,12 @@ export default async function LearnerProfilePage({
             )}
           </p>
         </div>
+        <Link
+          href={`/instruct/learner/${learner.id}/portfolio`}
+          className="btn-primary h-11 shrink-0 px-4 text-sm"
+        >
+          📖 Full portfolio
+        </Link>
       </header>
 
       {/* Stats */}

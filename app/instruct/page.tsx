@@ -156,10 +156,10 @@ export default async function InstructorDashboard() {
                   ).length;
                   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                   return (
+                    <div key={entry.id} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-1">
                     <Link
-                      key={entry.id}
                       href={`/instruct/learner/${entry.learnerId}`}
-                      className="-mx-2 flex items-center gap-4 rounded-xl px-2 py-1 transition-colors hover:bg-[var(--card-hover)]"
+                      className="flex min-w-0 flex-1 items-center gap-4 rounded-xl transition-colors hover:bg-[var(--card-hover)]"
                     >
                       {entry.learner.photoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -191,6 +191,14 @@ export default async function InstructorDashboard() {
                         {done}/{total} done{inProgress > 0 ? ` · ${inProgress} active` : ""}
                       </span>
                     </Link>
+                    <Link
+                      href={`/instruct/learner/${entry.learnerId}/portfolio`}
+                      className="btn-ghost h-9 shrink-0 px-3 text-xs"
+                      title={`${entry.learner.displayName}'s full portfolio — all completed projects`}
+                    >
+                      📖 Portfolio
+                    </Link>
+                    </div>
                   );
                 })}
                 {klass.roster.length === 0 && <p className="muted text-sm">No learners on this roster.</p>}
