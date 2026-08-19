@@ -24,6 +24,19 @@ export type RosterRow = {
   total: number;
 };
 
+export type ModuleRow = {
+  id: string;
+  title: string;
+  topic: string;
+  summary: string;
+  badgeName: string;
+  badgeIcon: string;
+  checkpointCount: number; // photo/audio criteria
+  hasWrapUp: boolean;
+  done: number; // learners who completed it
+  inProgress: number; // learners who started it
+};
+
 export type ClassOverview = {
   id: string;
   name: string;
@@ -31,6 +44,7 @@ export type ClassOverview = {
   band: string;
   orgName: string;
   moduleCount: number;
+  modules: ModuleRow[];
   roster: RosterRow[];
   badgesEarned: number;
   activeLearners: number;
@@ -112,6 +126,26 @@ export async function loadClassOverviews(orgIds: string[], classId?: string): Pr
       }
     }
 
+    const modules: ModuleRow[] = klass.modules.map((cm) => {
+      const m = cm.module;
+      const done = klass.roster.filter((e) => completed.has(`${e.learnerId}:${m.id}`)).length;
+      const inProgress = klass.roster.filter(
+        (e) => started.has(`${e.learnerId}:${m.id}`) && !completed.has(`${e.learnerId}:${m.id}`),
+      ).length;
+      return {
+        id: m.id,
+        title: m.title,
+        topic: m.topic,
+        summary: m.summary,
+        badgeName: m.badgeName,
+        badgeIcon: m.badgeIcon,
+        checkpointCount: m.criteria.filter((c) => c.requiresEvidenceType).length,
+        hasWrapUp: m.criteria.some((c) => !c.requiresEvidenceType && c.required),
+        done,
+        inProgress,
+      };
+    });
+
     return {
       id: klass.id,
       name: klass.name,
@@ -119,6 +153,7 @@ export async function loadClassOverviews(orgIds: string[], classId?: string): Pr
       band: klass.band,
       orgName: klass.org.name,
       moduleCount: total,
+      modules,
       roster,
       badgesEarned: roster.reduce((n, r) => n + r.done, 0),
       activeLearners: roster.filter((r) => r.inProgress > 0 || r.done > 0).length,
