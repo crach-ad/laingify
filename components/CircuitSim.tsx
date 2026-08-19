@@ -17,6 +17,8 @@ import CircuitDiagram, { type DiagramPart, type DiagramWire } from "@/components
 
 export type CircuitPart = DiagramPart;
 export type CircuitWire = DiagramWire;
+// A step with an empty `add` is a real-world instruction (unplug, upload) that
+// places nothing on the diagram — it still gates the build like any other step.
 export type BuildStep = { text: string; add: string[] };
 
 type AvrModule = typeof import("avr8js");
@@ -55,14 +57,12 @@ export default function CircuitSim({
   steps = [],
   hex,
   sketch,
-  text,
 }: {
   parts?: CircuitPart[];
   wires?: CircuitWire[];
   steps?: BuildStep[];
   hex: string;
   sketch?: string;
-  text?: string;
 }) {
   const serialBox = useRef<HTMLPreElement>(null);
   // Wokwi element instances by part id (plus "board"), provided by the diagram.
@@ -265,7 +265,7 @@ export default function CircuitSim({
                     {s.text}
                     {current && (
                       <span className="ml-2 font-semibold" style={{ color: "var(--info-text)" }}>
-                        ← tap to place it
+                        {s.add.length ? "← tap to place it" : "← tap when done"}
                       </span>
                     )}
                   </span>
@@ -356,7 +356,6 @@ export default function CircuitSim({
           </pre>
         </details>
       )}
-      {text && <p className="muted text-[13px]">{text}</p>}
     </div>
   );
 }

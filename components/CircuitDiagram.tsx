@@ -234,6 +234,12 @@ export default function CircuitDiagram({
   const [ready, setReady] = useState(false);
   const [scale, setScale] = useState(1.4);
 
+  // No parts and no wires (e.g. First Blink's on-board LED): the breadboard
+  // would sit empty, so skip it and show just the Arduino, tucked to the top.
+  const bare = parts.length === 0 && wires.length === 0;
+  const unoY = bare ? 16 : UNO.y;
+  const height = bare ? unoY + UNO.h + 16 : H;
+
   const placed = useMemo(() => {
     const map = new Map<string, Placed>();
     for (const p of parts) {
@@ -267,7 +273,7 @@ export default function CircuitDiagram({
 
       const board = document.createElement("wokwi-arduino-uno");
       const boardWrap = document.createElement("div");
-      boardWrap.style.cssText = `position:absolute;left:${UNO.x}px;top:${UNO.y}px;`;
+      boardWrap.style.cssText = `position:absolute;left:${UNO.x}px;top:${unoY}px;`;
       boardWrap.appendChild(board);
       host.appendChild(boardWrap);
       onElement("board", board);
@@ -315,18 +321,18 @@ export default function CircuitDiagram({
 
   return (
     <div className="flex justify-center overflow-x-auto">
-      <div ref={canvasRef} style={{ width: W * scale, height: H * scale }}>
+      <div ref={canvasRef} style={{ width: W * scale, height: height * scale }}>
         <div
-          style={{ position: "relative", width: W, height: H, transform: `scale(${scale})`, transformOrigin: "0 0" }}
+          style={{ position: "relative", width: W, height, transform: `scale(${scale})`, transformOrigin: "0 0" }}
         >
           {/* base layer: breadboard, part legs, drawn parts, labels */}
           <svg
             width={W}
-            height={H}
-            viewBox={`0 0 ${W} ${H}`}
+            height={height}
+            viewBox={`0 0 ${W} ${height}`}
             style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
           >
-            <BreadboardSvg />
+            {!bare && <BreadboardSvg />}
             {parts.filter((p) => isVisible(p.id)).map((p) => {
               const pl = placed.get(p.id);
               if (!pl) return null;
@@ -344,8 +350,8 @@ export default function CircuitDiagram({
           {/* wire layer: above the board and parts, like real jumpers lying on top */}
           <svg
             width={W}
-            height={H}
-            viewBox={`0 0 ${W} ${H}`}
+            height={height}
+            viewBox={`0 0 ${W} ${height}`}
             style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
           >
             {wires.filter((w) => isVisible(w.id)).map((w) => {
