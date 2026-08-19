@@ -14,13 +14,13 @@ export default async function FullPortfolioPage({
   params: Promise<{ learnerId: string }>;
 }) {
   const { learnerId } = await params;
-  const { org } = await requireInstructor();
+  const { orgIds } = await requireInstructor();
 
   const learner = await prisma.learner.findUnique({
     where: { id: learnerId },
     include: { roster: { include: { class: true } } },
   });
-  const rosterEntry = learner?.roster.find((r) => r.class.orgId === org.id);
+  const rosterEntry = learner?.roster.find((r) => orgIds.includes(r.class.orgId));
   if (!learner || !rosterEntry) notFound();
 
   const [classModules, projects, progress] = await Promise.all([

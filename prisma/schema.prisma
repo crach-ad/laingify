@@ -26,6 +26,8 @@ model Org {
   classes     Class[]
   modules     Module[]
   instructors Instructor[]
+  // Additional instructors granted access to this org (beyond their home org)
+  guestInstructors Instructor[] @relation("InstructorAccess")
   createdAt   DateTime @default(now())
 }
 
@@ -35,8 +37,12 @@ model Instructor {
   email       String   @unique
   // PIN sign-in (plaintext for MVP, same caveat as Learner.pin)
   pin         String
+  // Home org (the one they were created in)
   org         Org      @relation(fields: [orgId], references: [id])
   orgId       String
+  // Other orgs this instructor can also see in the console (e.g. one coach
+  // running both the camp org and the school org)
+  accessOrgs  Org[]    @relation("InstructorAccess")
   createdAt   DateTime @default(now())
 }
 

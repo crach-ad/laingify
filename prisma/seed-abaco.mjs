@@ -23,6 +23,16 @@
 
 import { PrismaClient } from "@prisma/client";
 import { wipeOrg } from "./org-wipe.mjs";
+import {
+  block,
+  wrapUpPrompt,
+  wrapUpCriterion,
+  photoCriterion,
+  audioCriterion,
+  moduleWriter,
+  syncClassModules,
+  checkCheckpoints,
+} from "./seed-lib.mjs";
 
 const prisma = new PrismaClient();
 
@@ -38,8 +48,6 @@ const CLASS_CODE = "FUTURE";
 
 // Safe content-update mode: upsert modules in place, never touch learners.
 const UPDATE = process.argv.includes("--update");
-
-const block = (type, props) => ({ type, ...props });
 
 // Compile an Arduino sketch to AVR hex via Wokwi's free build service (the
 // real arduino-cli toolchain). Runs once per sketch at seed time, so learners'
@@ -60,41 +68,6 @@ async function compileHex(sketch) {
   return data.hex;
 }
 
-// Every module ends the same way: a written wrap-up built on the playbook's
-// three reflection questions.
-const wrapUpPrompt = (extra = "") =>
-  block("prompt", {
-    text:
-      "Last step — your written wrap-up. Answer the three questions: What worked? What challenged you? What would you improve?" +
-      (extra ? " " + extra : "") +
-      " Then your portfolio builds itself from everything you captured today.",
-  });
-
-const wrapUpCriterion = (order, description) => ({
-  label: "Written wrap-up",
-  description,
-  checkType: "AUTO",
-  required: true,
-  order,
-});
-
-const photoCriterion = (order, label, description) => ({
-  label,
-  description,
-  checkType: "AUTO",
-  requiresEvidenceType: "PHOTO",
-  required: true,
-  order,
-});
-
-const audioCriterion = (order, label, description) => ({
-  label,
-  description,
-  checkType: "AUTO",
-  requiresEvidenceType: "AUDIO",
-  required: true,
-  order,
-});
 
 async function main() {
   let org;
@@ -111,44 +84,8 @@ async function main() {
     });
   }
 
-  // Create (full seed) or upsert-by-title (content update). In update mode,
-  // criteria are matched by label: matched ones are updated, new ones added,
-  // and ones no longer in the seed are retired (required: false) rather than
-  // deleted — learner evidence and statuses reference them.
-  async function createModule(data) {
-    if (!UPDATE) return prisma.module.create({ data });
-    const { criteria, ...fields } = data;
-    const defs = criteria.create;
-    const existing = await prisma.module.findFirst({
-      where: { orgId: org.id, title: fields.title },
-      include: { criteria: true },
-    });
-    if (!existing) {
-      console.log(`  + new module: ${fields.title}`);
-      return prisma.module.create({ data });
-    }
-    await prisma.module.update({
-      where: { id: existing.id },
-      data: { ...fields, version: { increment: 1 } },
-    });
-    for (const def of defs) {
-      const match = existing.criteria.find((c) => c.label === def.label);
-      if (match) {
-        await prisma.criterion.update({ where: { id: match.id }, data: def });
-      } else {
-        await prisma.criterion.create({ data: { ...def, moduleId: existing.id } });
-        console.log(`    + new criterion "${def.label}" in ${fields.title}`);
-      }
-    }
-    for (const c of existing.criteria) {
-      if (!defs.find((d) => d.label === c.label) && c.required) {
-        await prisma.criterion.update({ where: { id: c.id }, data: { required: false } });
-        console.log(`    - retired criterion "${c.label}" in ${fields.title}`);
-      }
-    }
-    console.log(`  ~ updated: ${fields.title}`);
-    return prisma.module.findUnique({ where: { id: existing.id } });
-  }
+  // Create (full seed) or upsert-by-title (content update) — see seed-lib.mjs.
+  const createModule = moduleWriter(prisma, org, UPDATE);
 
   // ==========================================================================
   // MODULE 1 — Foundations of Coding
@@ -651,24 +588,9 @@ async function main() {
     badgeDescription: "Wired a working LED circuit on a breadboard with correct polarity and a resistor, and debugged it hands-on.",
     blocks: [
       block("heading", { text: "Wire a REAL LED" }),
-      block("text", {
-        kind: "build",
-        minutes: 10,
-        text: "Bring the blink off the board. Breadboard secret: the 5 holes in each numbered row are connected inside — two parts in the same row are wired together.",
-        actions: [
-          "UNPLUG the USB first",
-          "LED into the breadboard: long leg row 10, short leg row 12",
-          "Resistor (220 Ω): one end row 10 (with the long leg), other end row 5",
-          "Jumper from Arduino pin 8 → row 5",
-          "Jumper from Arduino GND → row 12",
-          "In your sketch change BOTH 13s to 8 · plug in · upload",
-        ],
-        tip: "The path is a circle: pin 8 → resistor → long leg → LED → short leg → GND. (Wokwi: click +, add LED and resistor, wire by dragging.)",
-      }),
-      block("heading", { text: "Build it right here, wire by wire" }),
       block("circuit", {
         kind: "build",
-        minutes: 5,
+        minutes: 12,
         parts: [
           { id: "led1", kind: "led", pin: 8, color: "red", label: "LED", at: "10a", catAt: "12a" },
           { id: "r1", kind: "resistor", at: "5b", toAt: "10b", label: "220 Ω" },
@@ -678,14 +600,17 @@ async function main() {
           { id: "w-gnd", from: "GND.1", to: "12b", color: "#1f2937" },
         ],
         steps: [
+          { text: "UNPLUG the USB first — always wire with the power off", add: [] },
           { text: "LED into the breadboard: long leg row 10, short leg row 12", add: ["led1"] },
           { text: "Resistor (220 Ω): one end row 10 (with the long leg), other end row 5", add: ["r1"] },
           { text: "Jumper from Arduino pin 8 → row 5", add: ["w-sig"] },
           { text: "Jumper from Arduino GND → row 12", add: ["w-gnd"] },
+          { text: "In your sketch change BOTH 13s to 8 · plug in · upload", add: [] },
         ],
         sketch: SKETCH.blink8,
         hex: HEX.blink8,
-        text: "Tap through the build steps to wire the circuit on screen — the same moves you'll make on the real breadboard. When it's complete, press ▶ Run. If your real build doesn't match this, jump to the debugging hunt below.",
+        text: "Bring the blink off the board. Tap through the checklist to wire the circuit on screen — the same moves, in the same order, you'll make on the real breadboard. When it's complete, press ▶ Run. If your real build doesn't match this, jump to the debugging hunt below.",
+        tip: "Breadboard secret: the 5 holes in each numbered row are connected inside — two parts in the same row are wired together. The path is a circle: pin 8 → resistor → long leg → LED → short leg → GND.",
       }),
       block("checkpoint", {
         capture: "photo",
@@ -729,26 +654,10 @@ async function main() {
     badgeIcon: "🔘",
     badgeDescription: "Read a real-world input with digitalRead and used it to control an output — the sense → decide → act loop.",
     blocks: [
-      block("heading", { text: "Inputs: read a push button" }),
-      block("text", {
-        kind: "build",
-        minutes: 10,
-        text: "Time for the other half: INPUT.",
-        actions: [
-          "Unplug!",
-          "Push the button across the breadboard's center gap (legs in rows 20 and 22)",
-          "Jumper from pin 2 → row 20",
-          "Jumper from GND → row 22",
-          "Keep the LED on pin 8, and upload the sketch on the next card",
-        ],
-      }),
-      block("code", {
-        text: SKETCH.button,
-      }),
-      block("heading", { text: "Build it — then hold the button" }),
+      block("heading", { text: "Inputs: wire a push button" }),
       block("circuit", {
         kind: "build",
-        minutes: 5,
+        minutes: 10,
         parts: [
           { id: "led1", kind: "led", pin: 8, color: "red", label: "LED", at: "10a", catAt: "12a" },
           { id: "r1", kind: "resistor", at: "5b", toAt: "10b", label: "220 Ω" },
@@ -761,14 +670,28 @@ async function main() {
           { id: "w-gnd-btn", from: "GND.1", to: "22j", color: "#1f2937" },
         ],
         steps: [
+          { text: "Unplug the USB before touching any wires", add: [] },
           { text: "Your LED circuit stays exactly as it was — pin 8, resistor, GND", add: ["led1", "r1", "w-sig8", "w-gnd-led"] },
           { text: "Push the button across the center gap — legs in rows 20 and 22", add: ["btn1"] },
           { text: "Jumper from Arduino pin 2 → row 20", add: ["w-sig2"] },
           { text: "Jumper from GND → row 22 (bottom half of the board)", add: ["w-gnd-btn"] },
+          { text: "Wiring done — plug back in. The code that reads it comes next", add: [] },
         ],
         sketch: SKETCH.button,
         hex: HEX.button,
-        text: "Wire it up, press ▶ Run, then click and HOLD the button: light. Let go: dark. That's digitalRead catching your finger 16 million times a second.",
+        text: "Time for the other half: INPUT. Hardware first, code second — wire the button step by step, the same moves you'll make on the real breadboard. Then press ▶ Run to check the circuit: click and HOLD the button: light. Let go: dark.",
+      }),
+      block("heading", { text: "Now the code that reads it" }),
+      block("code", {
+        kind: "build",
+        minutes: 5,
+        text: SKETCH.button,
+        actions: [
+          "Type this sketch into your IDE (or your Wokwi project)",
+          "Upload it to your wired-up board",
+          "Hold the button — light. Let go — dark",
+        ],
+        tip: "digitalRead(2) checks your finger 16 million times a second. INPUT_PULLUP keeps the pin HIGH until the button connects it to GND — that's why PRESSED reads LOW.",
       }),
       block("text", {
         kind: "learn",
@@ -2067,16 +1990,7 @@ async function main() {
     // Sync class assignments to the seed's module list and order.
     const klass = await prisma.class.findFirst({ where: { orgId: org.id, classCode: CLASS_CODE } });
     if (!klass) throw new Error("Class not found — run the full seed once first.");
-    await prisma.classModule.deleteMany({
-      where: { classId: klass.id, moduleId: { notIn: modules.map((m) => m.id) } },
-    });
-    for (let i = 0; i < modules.length; i++) {
-      const existing = await prisma.classModule.findFirst({
-        where: { classId: klass.id, moduleId: modules[i].id },
-      });
-      if (existing) await prisma.classModule.update({ where: { id: existing.id }, data: { order: i } });
-      else await prisma.classModule.create({ data: { classId: klass.id, moduleId: modules[i].id, order: i } });
-    }
+    await syncClassModules(prisma, klass.id, modules);
   } else {
     await prisma.class.create({
       data: {
@@ -2096,23 +2010,7 @@ async function main() {
     });
   }
 
-  // Sanity check: every checkpoint must reference an existing criterion label,
-  // and every evidence-backed criterion must have a checkpoint.
-  for (const mod of modules) {
-    const blocks = JSON.parse(mod.contentJson);
-    const criteria = await prisma.criterion.findMany({ where: { moduleId: mod.id } });
-    const labels = new Set(criteria.map((c) => c.label));
-    const checkpointLabels = blocks
-      .filter((b) => b.type === "checkpoint")
-      .map((b) => b.criterionLabel);
-    for (const l of checkpointLabels) {
-      if (!labels.has(l)) throw new Error(`"${mod.title}": checkpoint references missing criterion "${l}"`);
-    }
-    for (const c of criteria.filter((c) => c.requiresEvidenceType)) {
-      if (!checkpointLabels.includes(c.label))
-        throw new Error(`"${mod.title}": criterion "${c.label}" has no checkpoint`);
-    }
-  }
+  await checkCheckpoints(prisma, modules);
 
   console.log("Abaco Future Ready Academy seeded (learner-ready content).");
   console.log(`  Class: ${CLASS_NAME} — code ${CLASS_CODE}, empty roster, students self-register (name + selfie)`);

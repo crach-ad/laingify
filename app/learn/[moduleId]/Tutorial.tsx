@@ -641,6 +641,40 @@ export default function Tutorial({
   }
 
   // ---- Finish (reflection) card ----------------------------------------------
+  // Modules whose every criterion is evidence-based (e.g. Early-band voice +
+  // photo modules) are already complete by now — no typing, just a big
+  // finish button.
+  if (atFinish && complete) {
+    return (
+      <div className="animate-fade-up mt-8 flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-1 gap-1.5">
+            {steps.map((_, i) => (
+              <span key={i} className="h-1 flex-1 rounded-full" style={{ background: "var(--accent)" }} />
+            ))}
+          </div>
+          <span className="mono-label shrink-0">All done</span>
+        </div>
+        <div className="card p-8 text-center" style={{ borderColor: "var(--accent-border)" }}>
+          <div className="text-5xl">🎉</div>
+          <h2 className="mt-4 text-2xl font-semibold">You did every step!</h2>
+          <p className="muted mx-auto mt-2 max-w-md">Tap the button to get your badge and see your work.</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setStep(steps.length - 1)}
+              className="muted rounded-lg px-4 py-2 font-medium transition-colors hover:text-[var(--text)]"
+            >
+              ← Back
+            </button>
+            <button type="button" onClick={() => setFinished(true)} className="btn-primary h-14 px-8 text-base">
+              {badge.icon} Get my badge →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (atFinish) {
     return (
       <div className="animate-fade-up mt-8 flex flex-col gap-4">
@@ -872,14 +906,22 @@ export default function Tutorial({
             {current!.block.text && <p className="muted mt-2 text-[13px]">{current!.block.text}</p>}
           </div>
         ) : current!.block.type === "circuit" && current!.block.hex ? (
-          <CircuitSim
-            parts={current!.block.parts}
-            wires={current!.block.wires}
-            steps={current!.block.steps}
-            hex={current!.block.hex}
-            sketch={current!.block.sketch}
-            text={current!.block.text}
-          />
+          <div>
+            {/* Instructions lead, so the checklist context sits right above the
+                diagram it drives — one slide, no flipping back and forth. */}
+            {current!.block.text && (
+              <p className="mb-4 whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
+                {current!.block.text}
+              </p>
+            )}
+            <CircuitSim
+              parts={current!.block.parts}
+              wires={current!.block.wires}
+              steps={current!.block.steps}
+              hex={current!.block.hex}
+              sketch={current!.block.sketch}
+            />
+          </div>
         ) : current!.block.type === "knex" && current!.block.builds ? (
           <KnexViewer steps={current!.block.builds} text={current!.block.text} />
         ) : current!.block.type === "code" ? (

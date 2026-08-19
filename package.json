@@ -11,6 +11,9 @@
     "seed:camp": "node prisma/seed-camp.mjs",
     "seed:abaco": "node prisma/seed-abaco.mjs",
     "content:update": "node prisma/seed-abaco.mjs --update",
+    "seed:kcsb": "node prisma/seed-kcsb.mjs",
+    "content:update:kcsb": "node prisma/seed-kcsb.mjs --update",
+    "export:work": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/export-student-work.mjs",
     "postinstall": "prisma generate"
   },
   "prisma": {

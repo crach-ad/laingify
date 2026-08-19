@@ -10,15 +10,15 @@ export async function GET(
   _req: Request,
   ctx: RouteContext<"/instruct/learner/[learnerId]/portfolio/download">,
 ) {
-  const instructor = await getInstructor();
-  if (!instructor) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  const auth = await getInstructor();
+  if (!auth) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
   const { learnerId } = await ctx.params;
   const learner = await prisma.learner.findUnique({
     where: { id: learnerId },
     include: { roster: { include: { class: true } } },
   });
-  const rosterEntry = learner?.roster.find((r) => r.class.orgId === instructor.orgId);
+  const rosterEntry = learner?.roster.find((r) => auth.orgIds.includes(r.class.orgId));
   if (!learner || !rosterEntry)
     return NextResponse.json({ error: "Not found." }, { status: 404 });
 

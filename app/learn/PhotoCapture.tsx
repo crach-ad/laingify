@@ -105,7 +105,7 @@ export default function PhotoCapture({ learnerName }: { learnerName: string }) {
           <div className="overline mb-2">Finish your profile</div>
           <h2 className="text-lg font-semibold">Take a selfie, {learnerName}!</h2>
           <p className="muted mt-1.5 max-w-md text-sm">
-            It goes on your profile and the cover of the portfolio you&apos;ll build this camp.
+            It goes on your profile and the cover of every portfolio you build here.
             (You can skip it — that&apos;s okay too.)
           </p>
         </div>

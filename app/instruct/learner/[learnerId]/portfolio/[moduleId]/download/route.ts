@@ -9,8 +9,8 @@ export async function GET(
   _req: Request,
   ctx: RouteContext<"/instruct/learner/[learnerId]/portfolio/[moduleId]/download">,
 ) {
-  const instructor = await getInstructor();
-  if (!instructor) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  const auth = await getInstructor();
+  if (!auth) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
   const { learnerId, moduleId } = await ctx.params;
   const [module, learner] = await Promise.all([
@@ -20,9 +20,9 @@ export async function GET(
       include: { roster: { include: { class: true } } },
     }),
   ]);
-  if (!module || module.orgId !== instructor.orgId)
+  if (!module || !auth.orgIds.includes(module.orgId))
     return NextResponse.json({ error: "Not found." }, { status: 404 });
-  if (!learner || !learner.roster.some((r) => r.class.orgId === instructor.orgId))
+  if (!learner || !learner.roster.some((r) => auth.orgIds.includes(r.class.orgId)))
     return NextResponse.json({ error: "Not found." }, { status: 404 });
 
   const data = await buildPortfolio(learnerId, moduleId);

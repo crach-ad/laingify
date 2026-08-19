@@ -15,7 +15,7 @@ export default async function ReviewPage({
   params: Promise<{ learnerId: string; moduleId: string }>;
 }) {
   const { learnerId, moduleId } = await params;
-  const { org } = await requireInstructor();
+  const { orgIds } = await requireInstructor();
 
   const [learner, module] = await Promise.all([
     prisma.learner.findUnique({
@@ -24,9 +24,9 @@ export default async function ReviewPage({
     }),
     prisma.module.findUnique({ where: { id: moduleId } }),
   ]);
-  // Both the module and the learner (via a class roster) must belong to this org.
-  if (!module || module.orgId !== org.id) notFound();
-  if (!learner || !learner.roster.some((r) => r.class.orgId === org.id)) notFound();
+  // Both the module and the learner (via a class roster) must belong to one of the instructor's orgs.
+  if (!module || !orgIds.includes(module.orgId)) notFound();
+  if (!learner || !learner.roster.some((r) => orgIds.includes(r.class.orgId))) notFound();
 
   const [{ criteria, complete }, submissions, evidence, threads, project] = await Promise.all([
     evaluateModule(learnerId, moduleId),

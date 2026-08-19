@@ -13,13 +13,13 @@ export default async function LearnerProfilePage({
   params: Promise<{ learnerId: string }>;
 }) {
   const { learnerId } = await params;
-  const { org } = await requireInstructor();
+  const { orgIds } = await requireInstructor();
 
   const learner = await prisma.learner.findUnique({
     where: { id: learnerId },
     include: { sprite: true, roster: { include: { class: true } } },
   });
-  const entry = learner?.roster.find((r) => r.class.orgId === org.id);
+  const entry = learner?.roster.find((r) => orgIds.includes(r.class.orgId));
   if (!learner || !entry) notFound();
   const klass = entry.class;
   const band = bandConfig(klass.band);
@@ -165,11 +165,11 @@ export default async function LearnerProfilePage({
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
       <Link
-        href="/instruct"
+        href={`/instruct/class/${klass.id}`}
         className="text-sm font-medium transition-colors hover:text-[var(--text)]"
         style={{ color: "var(--faint)" }}
       >
-        ← Instructor console
+        ← {klass.name}
       </Link>
 
       {/* Identity */}

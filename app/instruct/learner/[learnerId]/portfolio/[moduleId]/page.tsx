@@ -14,7 +14,7 @@ export default async function InstructorPortfolioPage({
   params: Promise<{ learnerId: string; moduleId: string }>;
 }) {
   const { learnerId, moduleId } = await params;
-  const { org } = await requireInstructor();
+  const { orgIds } = await requireInstructor();
 
   const [learner, module] = await Promise.all([
     prisma.learner.findUnique({
@@ -23,8 +23,8 @@ export default async function InstructorPortfolioPage({
     }),
     prisma.module.findUnique({ where: { id: moduleId } }),
   ]);
-  if (!module || module.orgId !== org.id) notFound();
-  if (!learner || !learner.roster.some((r) => r.class.orgId === org.id)) notFound();
+  if (!module || !orgIds.includes(module.orgId)) notFound();
+  if (!learner || !learner.roster.some((r) => orgIds.includes(r.class.orgId))) notFound();
 
   const data = await buildPortfolio(learnerId, moduleId);
   if (!data) notFound();

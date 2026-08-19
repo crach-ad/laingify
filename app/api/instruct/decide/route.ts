@@ -7,8 +7,8 @@ import { setStatus, assembleProjectIfComplete } from "@/lib/completion";
 // drops it back to IN_PROGRESS. Either way the decision is attributed to the
 // instructor, and approval may complete the module (project + badge).
 export async function POST(req: Request) {
-  const instructor = await getInstructor();
-  if (!instructor) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  const auth = await getInstructor();
+  if (!auth) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
   const body = await req.json();
   const learnerId = String(body.learnerId || "");
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     where: { id: criterionId },
     include: { module: true },
   });
-  if (!criterion || criterion.module.orgId !== instructor.orgId) {
+  if (!criterion || !auth.orgIds.includes(criterion.module.orgId)) {
     return NextResponse.json({ error: "Criterion not found." }, { status: 404 });
   }
 

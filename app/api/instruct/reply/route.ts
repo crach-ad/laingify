@@ -4,8 +4,8 @@ import { getInstructor } from "@/lib/instructor";
 
 // Instructor reply in a learner's discussion thread (authorRole INSTRUCTOR).
 export async function POST(req: Request) {
-  const instructor = await getInstructor();
-  if (!instructor) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  const auth = await getInstructor();
+  if (!auth) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
   const body = await req.json();
   const threadId = String(body.threadId || "");
@@ -17,9 +17,9 @@ export async function POST(req: Request) {
   const thread = await prisma.discussionThread.findUnique({ where: { id: threadId } });
   if (!thread) return NextResponse.json({ error: "Thread not found." }, { status: 404 });
 
-  // The thread's module must belong to this instructor's org.
+  // The thread's module must belong to one of this instructor's orgs.
   const module = await prisma.module.findUnique({ where: { id: thread.moduleId } });
-  if (!module || module.orgId !== instructor.orgId) {
+  if (!module || !auth.orgIds.includes(module.orgId)) {
     return NextResponse.json({ error: "Thread not found." }, { status: 404 });
   }
 
