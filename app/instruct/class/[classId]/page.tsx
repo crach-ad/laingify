@@ -16,10 +16,10 @@ export default async function ClassPage({
   searchParams,
 }: {
   params: Promise<{ classId: string }>;
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; lesson?: string }>;
 }) {
   const { classId } = await params;
-  const { view } = await searchParams;
+  const { view, lesson } = await searchParams;
   const showRoster = view === "roster";
   const showInsights = view === "insights";
   const { instructor, orgs, orgIds } = await requireInstructor();
@@ -99,7 +99,7 @@ export default async function ClassPage({
       </div>
 
       {showInsights ? (
-        <Insights classId={klass.id} rosterCount={klass.roster.length} />
+        <Insights classId={klass.id} rosterCount={klass.roster.length} lessonMinutes={Math.max(10, Math.min(180, Number(lesson) || 45))} />
       ) : showRoster ? (
         <>
           {klass.queue.length > 0 && (

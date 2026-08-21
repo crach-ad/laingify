@@ -95,6 +95,8 @@ export async function weeklyActive(classId: string, weekCount = 10): Promise<Wee
 // Module funnel
 // ---------------------------------------------------------------------------
 
+export type NamedRef = { learnerId: string; displayName: string };
+
 export type FunnelRow = {
   moduleId: string;
   title: string;
@@ -105,18 +107,32 @@ export type FunnelRow = {
   wrapUp: number;
   badge: number;
   medianMinutes: number | null; // from timeOnTaskSeconds where > 0
+  // Who is parked in each gap — the analysis a teacher acts on.
+  stuck: {
+    noEvidence: NamedRef[]; // started, nothing captured yet
+    noWrapUp: NamedRef[]; // evidence in, wrap-up missing
+    noBadge: NamedRef[]; // wrap-up in, badge still not earned
+    done: NamedRef[];
+  };
 };
 
 export async function moduleFunnel(classId: string): Promise<FunnelRow[]> {
-  const [ids, assigned] = await Promise.all([
-    rosterIds(classId),
+  const [roster, assigned] = await Promise.all([
+    prisma.rosterEntry.findMany({
+      where: { classId },
+      include: { learner: { select: { id: true, displayName: true } } },
+    }),
     prisma.classModule.findMany({
       where: { classId },
       orderBy: { order: "asc" },
       include: { module: { select: { id: true, title: true, badgeIcon: true, topic: true } } },
     }),
   ]);
-  if (ids.length === 0) return assigned.map((a) => ({ moduleId: a.moduleId, title: a.module.title, badgeIcon: a.module.badgeIcon, topic: a.module.topic, started: 0, someEvidence: 0, wrapUp: 0, badge: 0, medianMinutes: null }));
+  const ids = roster.map((r) => r.learnerId);
+  const nameOf = new Map(roster.map((r) => [r.learnerId, r.learner.displayName]));
+  const ref = (id: string): NamedRef => ({ learnerId: id, displayName: nameOf.get(id) ?? id });
+  const emptyStuck = () => ({ noEvidence: [], noWrapUp: [], noBadge: [], done: [] });
+  if (ids.length === 0) return assigned.map((a) => ({ moduleId: a.moduleId, title: a.module.title, badgeIcon: a.module.badgeIcon, topic: a.module.topic, started: 0, someEvidence: 0, wrapUp: 0, badge: 0, medianMinutes: null, stuck: emptyStuck() }));
 
   const moduleIds = assigned.map((a) => a.moduleId);
   const [progress, evidence, submissions, projects] = await Promise.all([
@@ -150,6 +166,14 @@ export async function moduleFunnel(classId: string): Promise<FunnelRow[]> {
     const m = a.moduleId;
     const rows = progress.filter((p) => p.moduleId === m);
     const times = rows.map((p) => p.timeOnTaskSeconds).filter((t) => t > 0).sort((x, y) => x - y);
+    const stuck = { noEvidence: [] as NamedRef[], noWrapUp: [] as NamedRef[], noBadge: [] as NamedRef[], done: [] as NamedRef[] };
+    for (const p of rows) {
+      const k = key(p.learnerId, m);
+      if (badgeSet.has(k)) stuck.done.push(ref(p.learnerId));
+      else if (subSet.has(k)) stuck.noBadge.push(ref(p.learnerId));
+      else if (evSet.has(k)) stuck.noWrapUp.push(ref(p.learnerId));
+      else stuck.noEvidence.push(ref(p.learnerId));
+    }
     return {
       moduleId: m,
       title: a.module.title,
@@ -160,6 +184,7 @@ export async function moduleFunnel(classId: string): Promise<FunnelRow[]> {
       wrapUp: rows.filter((p) => subSet.has(key(p.learnerId, m))).length,
       badge: rows.filter((p) => badgeSet.has(key(p.learnerId, m))).length,
       medianMinutes: times.length ? Math.round(times[Math.floor(times.length / 2)] / 60) : null,
+      stuck,
     };
   });
 }
@@ -380,19 +405,226 @@ export async function needsAttention(classId: string): Promise<AttentionItem[]> 
 }
 
 // ---------------------------------------------------------------------------
+// Attendance register: one row per learner, one dot per week, grouped by
+// join-week cohort — "are kids coming back?" at name level.
+// ---------------------------------------------------------------------------
+
+export type RegisterRow = {
+  learnerId: string;
+  displayName: string;
+  joinedWeek: string;
+  weeks: boolean[]; // aligned to Register.weekKeys
+  activeWeeks: number;
+  lastActiveWeeksAgo: number | null; // null = never active
+};
+
+export type Register = {
+  weekKeys: string[];
+  cohorts: { joinedWeek: string; size: number; activeThisWeek: number; rows: RegisterRow[] }[];
+};
+
+export async function attendanceRegister(classId: string, weekCount = 10): Promise<Register> {
+  const roster = await prisma.rosterEntry.findMany({
+    where: { classId },
+    include: { learner: { select: { id: true, displayName: true, createdAt: true } } },
+  });
+  const weekKeys = lastWeekKeysPublic(weekCount);
+  const ids = roster.map((r) => r.learnerId);
+  const since = new Date(Date.now() - weekCount * 7 * 86400000);
+  const stamps = ids.length ? await activityStamps(ids, since) : [];
+  const byLearner = new Map<string, Set<string>>();
+  for (const s of stamps) {
+    const set = byLearner.get(s.learnerId) ?? new Set<string>();
+    set.add(isoWeek(s.createdAt));
+    byLearner.set(s.learnerId, set);
+  }
+
+  const rows: RegisterRow[] = roster.map((r) => {
+    const active = byLearner.get(r.learnerId) ?? new Set<string>();
+    const weeks = weekKeys.map((k) => active.has(k));
+    const lastIdx = weeks.lastIndexOf(true);
+    return {
+      learnerId: r.learnerId,
+      displayName: r.learner.displayName,
+      joinedWeek: isoWeek(r.learner.createdAt),
+      weeks,
+      activeWeeks: weeks.filter(Boolean).length,
+      lastActiveWeeksAgo: lastIdx === -1 ? null : weekKeys.length - 1 - lastIdx,
+    };
+  });
+
+  const byCohort = new Map<string, RegisterRow[]>();
+  for (const r of rows) {
+    const list = byCohort.get(r.joinedWeek) ?? [];
+    list.push(r);
+    byCohort.set(r.joinedWeek, list);
+  }
+  const thisWeek = weekKeys[weekKeys.length - 1];
+  const cohorts = [...byCohort.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([joinedWeek, list]) => ({
+      joinedWeek,
+      size: list.length,
+      activeThisWeek: list.filter((r) => r.weeks[weekKeys.indexOf(thisWeek)]).length,
+      rows: list.sort((a, b) => b.activeWeeks - a.activeWeeks || a.displayName.localeCompare(b.displayName)),
+    }));
+  return { weekKeys, cohorts };
+}
+
+function lastWeekKeysPublic(n: number): string[] {
+  const keys: string[] = [];
+  const d = new Date();
+  for (let i = 0; i < n; i++) {
+    keys.unshift(isoWeek(d));
+    d.setUTCDate(d.getUTCDate() - 7);
+  }
+  return keys;
+}
+
+// ---------------------------------------------------------------------------
+// Step analytics for one module in one class: dwell + retries + who's where.
+// Step indexes follow each learner's chosen track (they line up exactly for
+// modules without a track picker).
+// ---------------------------------------------------------------------------
+
+export type StepAnalytics = {
+  steps: { step: number; views: number; medianMin: number; p90Min: number; retries: number }[];
+  current: { step: number; learners: NamedRef[] }[]; // latest step per unfinished learner
+};
+
+export async function stepAnalytics(classId: string, moduleId: string): Promise<StepAnalytics> {
+  const roster = await prisma.rosterEntry.findMany({
+    where: { classId },
+    include: { learner: { select: { id: true, displayName: true } } },
+  });
+  const ids = roster.map((r) => r.learnerId);
+  const nameOf = new Map(roster.map((r) => [r.learnerId, r.learner.displayName]));
+  if (ids.length === 0) return { steps: [], current: [] };
+
+  const [events, done] = await Promise.all([
+    prisma.learnerEvent.findMany({
+      where: { moduleId, learnerId: { in: ids }, type: { in: ["step_view", "checkpoint_retry"] } },
+      orderBy: { createdAt: "asc" },
+      select: { learnerId: true, type: true, meta: true },
+    }),
+    prisma.moduleProgress.findMany({
+      where: { moduleId, learnerId: { in: ids }, status: "COMPLETED" },
+      select: { learnerId: true },
+    }),
+  ]);
+  const finished = new Set(done.map((d) => d.learnerId));
+
+  const dwell = new Map<number, number[]>();
+  const retries = new Map<number, number>();
+  const latest = new Map<string, number>();
+  for (const e of events) {
+    let meta: { step?: number; dwellMs?: number };
+    try {
+      meta = JSON.parse(e.meta);
+    } catch {
+      continue;
+    }
+    if (typeof meta.step !== "number") continue;
+    if (e.type === "checkpoint_retry") {
+      retries.set(meta.step, (retries.get(meta.step) ?? 0) + 1);
+      continue;
+    }
+    if (typeof meta.dwellMs === "number" && meta.dwellMs > 0) {
+      const list = dwell.get(meta.step) ?? [];
+      list.push(Math.min(meta.dwellMs, 5 * 60 * 1000));
+      dwell.set(meta.step, list);
+    }
+    // step_view logs the step being LEFT — the learner is now one past it.
+    latest.set(e.learnerId, meta.step + 1);
+  }
+
+  const pct = (xs: number[], p: number) => xs[Math.min(xs.length - 1, Math.floor(xs.length * p))];
+  const steps = [...dwell.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([step, list]) => {
+      const sorted = [...list].sort((x, y) => x - y);
+      return {
+        step,
+        views: sorted.length,
+        medianMin: Math.round((pct(sorted, 0.5) / 60000) * 10) / 10,
+        p90Min: Math.round((pct(sorted, 0.9) / 60000) * 10) / 10,
+        retries: retries.get(step) ?? 0,
+      };
+    });
+
+  const byStep = new Map<number, NamedRef[]>();
+  for (const [learnerId, step] of latest) {
+    if (finished.has(learnerId)) continue;
+    const list = byStep.get(step) ?? [];
+    list.push({ learnerId, displayName: nameOf.get(learnerId) ?? learnerId });
+    byStep.set(step, list);
+  }
+  const current = [...byStep.entries()].sort((a, b) => a[0] - b[0]).map(([step, learners]) => ({ step, learners }));
+  return { steps, current };
+}
+
+// ---------------------------------------------------------------------------
+// Lesson fit: does a module fit the teaching slot?
+// ---------------------------------------------------------------------------
+
+export type TimeFitRow = {
+  moduleId: string;
+  title: string;
+  badgeIcon: string;
+  measured: number; // learners with timing data
+  buckets: number[]; // counts for 0-15, 15-30, 30-45, 45-60, 60+ minutes
+  withinPct: number | null; // % of measured within lessonMinutes
+  medianMinutes: number | null;
+};
+
+export async function timeFit(classId: string, lessonMinutes = 45): Promise<TimeFitRow[]> {
+  const [ids, assigned] = await Promise.all([
+    rosterIds(classId),
+    prisma.classModule.findMany({
+      where: { classId },
+      orderBy: { order: "asc" },
+      include: { module: { select: { id: true, title: true, badgeIcon: true } } },
+    }),
+  ]);
+  if (ids.length === 0) return [];
+  const progress = await prisma.moduleProgress.findMany({
+    where: { learnerId: { in: ids }, moduleId: { in: assigned.map((a) => a.moduleId) }, timeOnTaskSeconds: { gt: 0 } },
+    select: { moduleId: true, timeOnTaskSeconds: true },
+  });
+  return assigned
+    .map((a) => {
+      const mins = progress.filter((p) => p.moduleId === a.moduleId).map((p) => p.timeOnTaskSeconds / 60).sort((x, y) => x - y);
+      const buckets = [0, 0, 0, 0, 0];
+      for (const m of mins) buckets[Math.min(4, Math.floor(m / 15))]++;
+      return {
+        moduleId: a.moduleId,
+        title: a.module.title,
+        badgeIcon: a.module.badgeIcon,
+        measured: mins.length,
+        buckets,
+        withinPct: mins.length ? Math.round((mins.filter((m) => m <= lessonMinutes).length / mins.length) * 100) : null,
+        medianMinutes: mins.length ? Math.round(mins[Math.floor(mins.length / 2)]) : null,
+      };
+    })
+    .filter((r) => r.measured > 0);
+}
+
+// ---------------------------------------------------------------------------
 // One call for the class insights tab / digest
 // ---------------------------------------------------------------------------
 
-export async function loadClassInsights(classId: string) {
-  const [weekly, funnel, writing, coverage, tracks, attention] = await Promise.all([
+export async function loadClassInsights(classId: string, lessonMinutes = 45) {
+  const [weekly, funnel, writing, coverage, tracks, attention, register, fit] = await Promise.all([
     weeklyActive(classId),
     moduleFunnel(classId),
     writingGrowth(classId),
     strandCoverage(classId),
     trackMix(classId),
     needsAttention(classId),
+    attendanceRegister(classId),
+    timeFit(classId, lessonMinutes),
   ]);
-  return { weekly, funnel, writing, coverage, tracks, attention };
+  return { weekly, funnel, writing, coverage, tracks, attention, register, fit };
 }
 
 // Lightweight per-class "active this week" counts for the console home.

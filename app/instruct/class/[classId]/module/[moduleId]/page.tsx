@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireInstructor } from "@/lib/instructor";
-import { stepPacing } from "@/lib/insights";
+import { stepAnalytics } from "@/lib/insights";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { ConsoleHeader } from "../../../../ConsoleParts";
 
@@ -154,10 +154,10 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
   if (!klass || !orgIds.includes(klass.orgId) || !mod || !orgIds.includes(mod.orgId) || klass.modules.length === 0) notFound();
 
   const learnerIds = klass.roster.map((r) => r.learnerId);
-  const [progress, projects, pacing] = await Promise.all([
+  const [progress, projects, analytics] = await Promise.all([
     prisma.moduleProgress.findMany({ where: { moduleId, learnerId: { in: learnerIds } } }),
     prisma.project.findMany({ where: { moduleId, learnerId: { in: learnerIds } } }),
-    stepPacing(moduleId),
+    stepAnalytics(classId, moduleId),
   ]);
   const doneIds = new Set([...projects.map((p) => p.learnerId), ...progress.filter((p) => p.status === "COMPLETED").map((p) => p.learnerId)]);
   const activeIds = new Set(progress.map((p) => p.learnerId).filter((id) => !doneIds.has(id)));
@@ -238,21 +238,64 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
         </div>
       </section>
 
-      {/* Pacing (event-based; hidden until data exists) */}
-      {pacing.length > 0 && (
+      {/* Step analytics (event-based; hidden until data exists) */}
+      {(analytics.steps.length > 0 || analytics.current.length > 0) && (
         <section className="mt-8">
           <div className="card p-5">
-            <div className="overline mb-3">Pacing · from live step timing</div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {pacing.map((s) => (
-                <span key={s.step} className="text-sm" style={{ color: "var(--body)" }}>
-                  <span className="mono-label">Step {s.step + 1}</span>{" "}
-                  <b>{s.medianMin}m</b>
-                  <span className="muted"> med · {s.p90Min}m p90 · {s.views} views</span>
-                </span>
-              ))}
-            </div>
-            <p className="muted mt-2 text-[12px]">Median visible-screen minutes per step — the slowest step is where learners need help.</p>
+            <div className="overline mb-3">Step analytics · live timing from this class</div>
+            {analytics.steps.length > 0 && (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="mono-label text-left">
+                    <th className="pb-2 font-normal">Step</th>
+                    <th className="pb-2 font-normal">Views</th>
+                    <th className="pb-2 font-normal">Median</th>
+                    <th className="pb-2 font-normal">p90</th>
+                    <th className="pb-2 font-normal">Retries</th>
+                    <th className="pb-2 font-normal">Time</th>
+                  </tr>
+                </thead>
+                <tbody style={{ color: "var(--body)" }}>
+                  {(() => {
+                    const maxMed = Math.max(...analytics.steps.map((x) => x.medianMin), 0.1);
+                    return analytics.steps.map((x) => (
+                      <tr key={x.step}>
+                        <td className="py-1 pr-3">Step {x.step + 1}</td>
+                        <td className="py-1 pr-3">{x.views}</td>
+                        <td className="py-1 pr-3 font-semibold">{x.medianMin}m</td>
+                        <td className="muted py-1 pr-3">{x.p90Min}m</td>
+                        <td className="py-1 pr-3">{x.retries > 0 ? `↻ ${x.retries}` : "—"}</td>
+                        <td className="w-1/3 py-1">
+                          <span className="bar block">
+                            <span style={{ width: `${(x.medianMin / maxMed) * 100}%`, background: x.medianMin === maxMed ? "var(--danger)" : "var(--info)" }} />
+                          </span>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+            )}
+            {analytics.current.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="mono-label">Currently on each step (not yet finished)</div>
+                {analytics.current.map((c) => (
+                  <div key={c.step} className="flex items-start gap-3 text-sm">
+                    <span className="mono-label w-16 shrink-0 pt-0.5">Step {c.step + 1}</span>
+                    <span className="flex flex-wrap gap-1.5">
+                      {c.learners.map((l) => (
+                        <Link key={l.learnerId} href={`/instruct/learner/${l.learnerId}`} className="pill pill-progress">
+                          {l.displayName}
+                        </Link>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="muted mt-3 text-[12px]">
+              Median visible-screen minutes per step; the red bar is the stall step. Step numbers follow each learner&apos;s chosen track.
+            </p>
           </div>
         </section>
       )}

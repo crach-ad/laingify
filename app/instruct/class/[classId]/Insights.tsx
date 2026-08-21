@@ -58,8 +58,29 @@ function FunnelBar({ started, someEvidence, wrapUp, badge, total }: { started: n
 
 const TREND = { up: { icon: "↑", color: "var(--accent)" }, down: { icon: "↓", color: "var(--danger)" }, flat: { icon: "→", color: "var(--faint)" } } as const;
 
-export default async function Insights({ classId, rosterCount }: { classId: string; rosterCount: number }) {
-  const { weekly, funnel, writing, coverage, tracks, attention } = await loadClassInsights(classId);
+function NameChips({ refs, tone }: { refs: { learnerId: string; displayName: string }[]; tone: "done" | "progress" | "idle" }) {
+  if (refs.length === 0) return <span className="muted text-[12px]">nobody</span>;
+  return (
+    <span className="flex flex-wrap gap-1.5">
+      {refs.map((r) => (
+        <Link key={r.learnerId} href={`/instruct/learner/${r.learnerId}`} className={`pill pill-${tone}`}>
+          {r.displayName}
+        </Link>
+      ))}
+    </span>
+  );
+}
+
+export default async function Insights({
+  classId,
+  rosterCount,
+  lessonMinutes = 45,
+}: {
+  classId: string;
+  rosterCount: number;
+  lessonMinutes?: number;
+}) {
+  const { weekly, funnel, writing, coverage, tracks, attention, register, fit } = await loadClassInsights(classId, lessonMinutes);
   const activeFunnel = funnel.filter((f) => f.started > 0);
   const hasAnyData = weekly.weeks.some((w) => w.active > 0) || activeFunnel.length > 0;
 
@@ -77,6 +98,14 @@ export default async function Insights({ classId, rosterCount }: { classId: stri
 
   return (
     <div className="flex flex-col gap-10">
+      {/* CSV escape hatch */}
+      <div className="mono-label -mb-6 mt-8 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span>⬇ CSV for Sheets:</span>
+        <a href={`/instruct/class/${classId}/export?what=engagement`} className="underline hover:text-[var(--text)]">attendance</a>
+        <a href={`/instruct/class/${classId}/export?what=funnel`} className="underline hover:text-[var(--text)]">funnel</a>
+        <a href={`/instruct/class/${classId}/export?what=times`} className="underline hover:text-[var(--text)]">time on task</a>
+      </div>
+
       {/* Weekly engagement */}
       <section className="animate-fade-up mt-8">
         <div className="overline mb-3">Engagement</div>
@@ -94,6 +123,55 @@ export default async function Insights({ classId, rosterCount }: { classId: stri
           </p>
         </div>
       </section>
+
+      {/* Attendance register */}
+      {register.cohorts.length > 0 && (
+        <section className="animate-fade-up">
+          <div className="overline mb-3">Register</div>
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">Who shows up, week by week</h2>
+            <span className="mono-label">last {register.weekKeys.length} weeks</span>
+          </div>
+          <div className="card mt-4 flex flex-col gap-5 p-5">
+            {register.cohorts.map((c) => (
+              <details key={c.joinedWeek} open={c.size <= 20} className="group">
+                <summary className="mono-label mb-2 flex cursor-pointer list-none items-center gap-2">
+                  <span className="text-xs transition-transform group-open:rotate-90">▸</span>
+                  Joined {c.joinedWeek} · {c.size} learner{c.size === 1 ? "" : "s"} · {c.activeThisWeek} active this week
+                </summary>
+                <div className="flex flex-col gap-1">
+                  {c.rows.map((r) => (
+                    <Link
+                      key={r.learnerId}
+                      href={`/instruct/learner/${r.learnerId}`}
+                      className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-0.5 transition-colors hover:bg-[var(--card-hover)]"
+                    >
+                      <span className="w-36 truncate text-[13px] font-medium" style={{ color: "var(--body)" }}>
+                        {r.displayName}
+                      </span>
+                      <span className="flex gap-1">
+                        {r.weeks.map((on, i) => (
+                          <span
+                            key={i}
+                            className="h-3 w-3 rounded-[3px]"
+                            style={{ background: on ? "var(--accent)" : "var(--tile)", opacity: on ? 0.95 : 1 }}
+                            title={register.weekKeys[i]}
+                          />
+                        ))}
+                      </span>
+                      <span className="mono-label flex-1 text-right">
+                        {r.activeWeeks}w active
+                        {r.lastActiveWeeksAgo !== null && r.lastActiveWeeksAgo >= 2 ? ` · quiet ${r.lastActiveWeeksAgo}w` : ""}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ))}
+            <p className="muted text-[12px]">One square per week, oldest → newest. Sorted most-active first within each joining cohort.</p>
+          </div>
+        </section>
+      )}
 
       {/* Needs attention */}
       {attention.length > 0 && (
@@ -124,21 +202,107 @@ export default async function Insights({ classId, rosterCount }: { classId: stri
           <p className="muted mt-1.5 text-sm">
             Grey = started · pale blue = captured evidence · blue = wrap-up in · green = badge earned.
           </p>
-          <div className="card mt-4 flex flex-col gap-4 p-5">
+          <div className="card mt-4 flex flex-col gap-2 p-5">
             {activeFunnel.map((f) => (
-              <div key={f.moduleId} className="flex items-center gap-4">
-                <span className="w-8 shrink-0 text-center text-xl">{f.badgeIcon}</span>
-                <span className="w-56 shrink-0">
-                  <span className="block truncate text-sm font-medium" style={{ color: "var(--body)" }}>{f.title}</span>
-                  <span className="mono-label">
-                    {f.badge}/{f.started} finished{f.medianMinutes !== null ? ` · ~${f.medianMinutes} min` : ""}
+              <details key={f.moduleId} className="group">
+                <summary className="-mx-2 flex cursor-pointer list-none items-center gap-4 rounded-xl px-2 py-2 transition-colors hover:bg-[var(--card-hover)]">
+                  <span className="w-8 shrink-0 text-center text-xl">{f.badgeIcon}</span>
+                  <span className="w-56 shrink-0">
+                    <span className="block truncate text-sm font-medium" style={{ color: "var(--body)" }}>{f.title}</span>
+                    <span className="mono-label">
+                      {f.badge}/{f.started} finished{f.medianMinutes !== null ? ` · ~${f.medianMinutes} min` : ""}
+                    </span>
                   </span>
-                </span>
-                <span className="flex-1">
-                  <FunnelBar started={f.started} someEvidence={f.someEvidence} wrapUp={f.wrapUp} badge={f.badge} total={Math.max(f.started, rosterCount)} />
-                </span>
-              </div>
+                  <span className="flex-1">
+                    <FunnelBar started={f.started} someEvidence={f.someEvidence} wrapUp={f.wrapUp} badge={f.badge} total={Math.max(f.started, rosterCount)} />
+                  </span>
+                  <span className="muted shrink-0 text-xs transition-transform group-open:rotate-90">▸</span>
+                </summary>
+                <div className="mb-2 ml-12 mt-2 flex flex-col gap-2.5 border-l-2 border-[var(--border-soft)] pl-4 text-sm">
+                  {f.stuck.noEvidence.length > 0 && (
+                    <div>
+                      <span className="mono-label block mb-1">Started, nothing captured yet · {f.stuck.noEvidence.length}</span>
+                      <NameChips refs={f.stuck.noEvidence} tone="idle" />
+                    </div>
+                  )}
+                  {f.stuck.noWrapUp.length > 0 && (
+                    <div>
+                      <span className="mono-label block mb-1">Evidence in, wrap-up missing · {f.stuck.noWrapUp.length}</span>
+                      <NameChips refs={f.stuck.noWrapUp} tone="progress" />
+                    </div>
+                  )}
+                  {f.stuck.noBadge.length > 0 && (
+                    <div>
+                      <span className="mono-label block mb-1">Wrap-up in, badge outstanding · {f.stuck.noBadge.length}</span>
+                      <NameChips refs={f.stuck.noBadge} tone="progress" />
+                    </div>
+                  )}
+                  {f.stuck.done.length > 0 && (
+                    <div>
+                      <span className="mono-label block mb-1">Badge earned · {f.stuck.done.length}</span>
+                      <NameChips refs={f.stuck.done} tone="done" />
+                    </div>
+                  )}
+                </div>
+              </details>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Lesson fit */}
+      {fit.length > 0 && (
+        <section className="animate-fade-up">
+          <div className="overline mb-3">Lesson fit</div>
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">Does each project fit a {lessonMinutes}-minute slot?</h2>
+            <span className="mono-label">measured time on task · ?lesson=60 to change</span>
+          </div>
+          <div className="card mt-4 flex flex-col gap-3 p-5">
+            <div className="mono-label flex items-center gap-4">
+              <span className="w-56 shrink-0" />
+              <span className="flex flex-1 gap-1">
+                {["0–15", "15–30", "30–45", "45–60", "60+"].map((b) => (
+                  <span key={b} className="flex-1 text-center">{b} min</span>
+                ))}
+              </span>
+              <span className="w-24 shrink-0 text-right">fits slot</span>
+            </div>
+            {fit.map((f) => {
+              const max = Math.max(1, ...f.buckets);
+              return (
+                <div key={f.moduleId} className="flex items-center gap-4">
+                  <span className="w-56 shrink-0 truncate text-sm font-medium" style={{ color: "var(--body)" }}>
+                    {f.badgeIcon} {f.title}
+                    <span className="mono-label ml-2">~{f.medianMinutes}m · n={f.measured}</span>
+                  </span>
+                  <span className="flex flex-1 items-end gap-1">
+                    {f.buckets.map((n, i) => (
+                      <span key={i} className="flex h-8 flex-1 items-end rounded-sm" style={{ background: "var(--tile)" }}>
+                        <span
+                          className="w-full rounded-sm"
+                          style={{
+                            height: `${(n / max) * 100}%`,
+                            background: i * 15 >= lessonMinutes ? "var(--danger)" : "var(--accent)",
+                            opacity: n === 0 ? 0 : 0.85,
+                          }}
+                          title={`${n} learner${n === 1 ? "" : "s"}`}
+                        />
+                      </span>
+                    ))}
+                  </span>
+                  <span
+                    className="w-24 shrink-0 text-right text-sm font-semibold"
+                    style={{ color: (f.withinPct ?? 0) >= 80 ? "var(--accent)" : (f.withinPct ?? 0) >= 50 ? "var(--info)" : "var(--danger)" }}
+                  >
+                    {f.withinPct}%
+                  </span>
+                </div>
+              );
+            })}
+            <p className="muted text-[12px]">
+              Timing comes from live step tracking (visible-screen time), so it grows as classes use the tutorials.
+            </p>
           </div>
         </section>
       )}

@@ -159,6 +159,24 @@ flowing); C1 right after; C2 anytime before term end.
 - **B** `lib/insights.ts` (weekly actives/retention, funnel, writing growth, coverage, pacing, track mix, needs-attention); 📊 Insights tab on the class page; "active this week" on console cards; pacing card on module preview (appears once events accrue).
 - **C** `npm run digest [-- --week 2026-W33 --org …]` → `reports/<week>/…` per class with activity; `npm run report:term -- --class CODE [--from --to]` → per-learner HTML. `reports/` + `student-work/` gitignored.
 
+## Phase D — teacher analysis workbench (designed 2026-08-21)
+
+Build out the four core questions from passive charts into drill-downs a
+teacher can act on. Rule: **every number resolves to names** — a metric you
+can't turn into "which kids?" isn't analysis. All server-rendered; drill-downs
+use native <details>/<summary>, so still zero client JS.
+
+| Question | Build-out |
+|---|---|
+| Are kids coming back? | **Attendance register**: one row per learner, a dot per week (last 10), grouped by join-week cohort with per-cohort retention; inactive-streak sorting |
+| Which projects work/stall? | **Expandable funnel**: each stage of each module opens to the named learners sitting in it (started-but-no-evidence, evidence-but-no-wrap-up, …), linking to profiles |
+| Where do they get stuck? | **Step analytics** on the module page: per step — views, median/p90 dwell, retry count, and who is currently on it (latest step_view per learner). Step numbers follow the learner's chosen track. |
+| Fits a lesson slot? | **Lesson-fit card**: time-on-task distribution buckets (0–15/15–30/30–45/45–60/60+ min) + % finishing within the slot; `?lesson=45` to change the slot length |
+
+Plus **CSV export** (`/instruct/class/[id]/export?what=engagement|funnel|times`)
+so a teacher can pivot in Sheets — the escape hatch for any analysis we didn't
+predict.
+
 ## Open questions (defaults in parentheses)
 1. Retention window for raw events — keep forever or roll up after a year? (keep; volume is tiny)
 2. Digest day for KCSB (Friday) and whether camp classes are included (yes, while active)
