@@ -13,6 +13,8 @@
     "content:update": "node prisma/seed-abaco.mjs --update",
     "seed:kcsb": "node prisma/seed-kcsb.mjs",
     "content:update:kcsb": "node prisma/seed-kcsb.mjs --update",
+    "digest": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/weekly-digest.mjs",
+    "report:term": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/term-report.mjs",
     "export:work": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/export-student-work.mjs",
     "postinstall": "prisma generate"
   },

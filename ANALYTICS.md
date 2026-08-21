@@ -153,6 +153,12 @@ flowing); C1 right after; C2 anytime before term end.
 - No third-party analytics; no new client deps; charts are server-side SVG.
 - Event rows are append-only; no PII beyond existing learner ids.
 
+## Status — shipped 2026-08-21
+
+- **A** `LearnerEvent` table live (db push), `/api/event` (batch, whitelist, 5-min dwell cap → `timeOnTaskSeconds`), `lib/track.ts` beacon, Tutorial instrumented. Verified via API tests + headless browser walk.
+- **B** `lib/insights.ts` (weekly actives/retention, funnel, writing growth, coverage, pacing, track mix, needs-attention); 📊 Insights tab on the class page; "active this week" on console cards; pacing card on module preview (appears once events accrue).
+- **C** `npm run digest [-- --week 2026-W33 --org …]` → `reports/<week>/…` per class with activity; `npm run report:term -- --class CODE [--from --to]` → per-learner HTML. `reports/` + `student-work/` gitignored.
+
 ## Open questions (defaults in parentheses)
 1. Retention window for raw events — keep forever or roll up after a year? (keep; volume is tiny)
 2. Digest day for KCSB (Friday) and whether camp classes are included (yes, while active)

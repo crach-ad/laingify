@@ -4,11 +4,13 @@ import { requireInstructor } from "@/lib/instructor";
 import { loadClassOverviews } from "@/lib/instructor-data";
 import { bandConfig } from "@/lib/bands";
 import { ConsoleHeader, ReviewQueue, RosterList } from "../../ConsoleParts";
+import Insights from "./Insights";
 
 // One class, two views switched by ?view=:
 //   projects (default) — the learning modules assigned to this class, grouped
 //                        by topic, with class-wide progress per module
 //   roster             — every learner's progress, plus the review queue
+//   insights           — weekly engagement, funnel, writing growth, coverage
 export default async function ClassPage({
   params,
   searchParams,
@@ -19,6 +21,7 @@ export default async function ClassPage({
   const { classId } = await params;
   const { view } = await searchParams;
   const showRoster = view === "roster";
+  const showInsights = view === "insights";
   const { instructor, orgs, orgIds } = await requireInstructor();
   const [klass] = await loadClassOverviews(orgIds, classId);
   if (!klass) notFound();
@@ -81,7 +84,7 @@ export default async function ClassPage({
 
       {/* View switch */}
       <div className="mt-10 flex items-center gap-1 border-b border-[var(--border-soft)] pb-3">
-        <Link href={`/instruct/class/${klass.id}`} className={tab(!showRoster)}>
+        <Link href={`/instruct/class/${klass.id}`} className={tab(!showRoster && !showInsights)}>
           📚 Projects · {klass.moduleCount}
         </Link>
         <Link href={`/instruct/class/${klass.id}?view=roster`} className={tab(showRoster)}>
@@ -90,9 +93,14 @@ export default async function ClassPage({
             <span className="pill pill-warn ml-2">{klass.queue.length}</span>
           )}
         </Link>
+        <Link href={`/instruct/class/${klass.id}?view=insights`} className={tab(showInsights)}>
+          📊 Insights
+        </Link>
       </div>
 
-      {showRoster ? (
+      {showInsights ? (
+        <Insights classId={klass.id} rosterCount={klass.roster.length} />
+      ) : showRoster ? (
         <>
           {klass.queue.length > 0 && (
             <section className="animate-fade-up mt-8">

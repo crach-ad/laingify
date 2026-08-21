@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireInstructor } from "@/lib/instructor";
+import { stepPacing } from "@/lib/insights";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { ConsoleHeader } from "../../../../ConsoleParts";
 
@@ -153,9 +154,10 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
   if (!klass || !orgIds.includes(klass.orgId) || !mod || !orgIds.includes(mod.orgId) || klass.modules.length === 0) notFound();
 
   const learnerIds = klass.roster.map((r) => r.learnerId);
-  const [progress, projects] = await Promise.all([
+  const [progress, projects, pacing] = await Promise.all([
     prisma.moduleProgress.findMany({ where: { moduleId, learnerId: { in: learnerIds } } }),
     prisma.project.findMany({ where: { moduleId, learnerId: { in: learnerIds } } }),
+    stepPacing(moduleId),
   ]);
   const doneIds = new Set([...projects.map((p) => p.learnerId), ...progress.filter((p) => p.status === "COMPLETED").map((p) => p.learnerId)]);
   const activeIds = new Set(progress.map((p) => p.learnerId).filter((id) => !doneIds.has(id)));
@@ -235,6 +237,25 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
           )}
         </div>
       </section>
+
+      {/* Pacing (event-based; hidden until data exists) */}
+      {pacing.length > 0 && (
+        <section className="mt-8">
+          <div className="card p-5">
+            <div className="overline mb-3">Pacing · from live step timing</div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              {pacing.map((s) => (
+                <span key={s.step} className="text-sm" style={{ color: "var(--body)" }}>
+                  <span className="mono-label">Step {s.step + 1}</span>{" "}
+                  <b>{s.medianMin}m</b>
+                  <span className="muted"> med · {s.p90Min}m p90 · {s.views} views</span>
+                </span>
+              ))}
+            </div>
+            <p className="muted mt-2 text-[12px]">Median visible-screen minutes per step — the slowest step is where learners need help.</p>
+          </div>
+        </section>
+      )}
 
       {/* Steps */}
       <section className="mt-10">

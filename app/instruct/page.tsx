@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireInstructor } from "@/lib/instructor";
 import { loadClassOverviews } from "@/lib/instructor-data";
+import { activeThisWeekByClass } from "@/lib/insights";
 import { bandConfig } from "@/lib/bands";
 import { ConsoleHeader, ReviewQueue } from "./ConsoleParts";
 
@@ -10,6 +11,7 @@ import { ConsoleHeader, ReviewQueue } from "./ConsoleParts";
 export default async function InstructorDashboard() {
   const { instructor, orgs, orgIds } = await requireInstructor();
   const classes = await loadClassOverviews(orgIds);
+  const weeklyActive = await activeThisWeekByClass(classes.map((c) => c.id));
   const queue = classes.flatMap((c) => c.queue);
   const multiOrg = orgs.length > 1;
 
@@ -62,9 +64,9 @@ export default async function InstructorDashboard() {
                         </span>
                         <span>
                           <span className="display text-2xl font-semibold" style={{ color: "var(--info)" }}>
-                            {c.activeLearners}
+                            {weeklyActive.get(c.id) ?? 0}
                           </span>
-                          <span className="mono-label ml-1.5">active</span>
+                          <span className="mono-label ml-1.5">active this week</span>
                         </span>
                         <span>
                           <span className="display text-2xl font-semibold">{c.badgesEarned}</span>
