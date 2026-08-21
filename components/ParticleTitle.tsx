@@ -45,12 +45,14 @@ export default function ParticleTitle({
   fontFamily = "'Instrument Serif', serif",
   color = "rgba(20,23,29,1)",
   height = 230,
+  maxFontSize = 90,
 }: {
   lines: string[];
   fontSize?: number;
   fontFamily?: string;
   color?: string;
   height?: number;
+  maxFontSize?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -76,7 +78,7 @@ export default function ParticleTitle({
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const size = fontSize ?? Math.min(w * 0.086, 90);
+      const size = fontSize ?? Math.min(w * 0.105, maxFontSize);
       const font = `italic ${size}px ${fontFamily}`;
       try {
         await document.fonts.load(font);
@@ -203,7 +205,7 @@ export default function ParticleTitle({
       canvas.removeEventListener("mouseleave", onLeave);
       ro.disconnect();
     };
-  }, [lines, fontSize, fontFamily, color, height]);
+  }, [lines, fontSize, fontFamily, color, height, maxFontSize]);
 
   return (
     <canvas
