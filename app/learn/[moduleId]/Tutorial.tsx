@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import SlideShow from "@/components/SlideShow";
 import ScratchBlocks from "@/components/ScratchBlocks";
+import { track as logEvent, flushEvents } from "@/lib/track";
 import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
 import KnexViewer, { type KnexStep } from "@/components/KnexViewer";
 import { compressImage } from "@/lib/client-image";
@@ -484,6 +485,7 @@ export default function Tutorial({
   function pickTrack(id: TrackId) {
     setTrack(id);
     localStorage.setItem("laingify-track", id);
+    logEvent("track_pick", moduleId, { track: id });
   }
 
   const steps = useMemo(
@@ -522,6 +524,33 @@ export default function Tutorial({
   });
   // Switching tracks can shrink the step list — clamp at render time.
   const step = Math.min(stepRaw, steps.length);
+
+  // --- analytics (ANALYTICS.md Phase A): session start + per-step dwell -----
+  // Dwell counts visible-tab time only; the event API caps each step_view so
+  // an abandoned open tab can't inflate time-on-task.
+  const dwellRef = useRef<{ step: number; since: number; acc: number }>({ step, since: Date.now(), acc: 0 });
+  useEffect(() => {
+    logEvent("session_start", moduleId);
+    const onVisibility = () => {
+      const d = dwellRef.current;
+      if (document.visibilityState === "hidden") {
+        d.acc += Date.now() - d.since;
+      } else {
+        d.since = Date.now();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const d = dwellRef.current;
+    if (d.step === step) return;
+    const dwellMs = d.acc + (document.visibilityState === "hidden" ? 0 : Date.now() - d.since);
+    logEvent("step_view", moduleId, { step: d.step, dwellMs: Math.max(0, Math.round(dwellMs)) });
+    dwellRef.current = { step, since: Date.now(), acc: 0 };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
   const [done, setDone] = useState(initiallyDone);
   const [media, setMedia] = useState(savedMedia);
   const [busy, setBusy] = useState(false);
@@ -550,11 +579,20 @@ export default function Tutorial({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not save — try again.");
+      logEvent(done.has(criterionId) ? "checkpoint_retry" : "checkpoint_saved", moduleId, {
+        step,
+        criterionLabel: currentCrit?.label,
+        type: String(payload.type ?? ""),
+      });
       setDone((d) => new Set(d).add(criterionId));
       if (typeof payload.dataUrl === "string") {
         setMedia((m) => new Map(m).set(criterionId, payload.dataUrl as string));
       }
-      if (data.complete) setComplete(true);
+      if (data.complete) {
+        setComplete(true);
+        logEvent("module_done", moduleId);
+      }
+      flushEvents();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save — try again.");
     } finally {
@@ -571,6 +609,7 @@ export default function Tutorial({
 
   async function onAudio(blob: Blob, mimeType: string, transcript: string) {
     if (!currentCrit) return;
+    logEvent("audio_recorded", moduleId, { bytes: blob.size, transcribed: Boolean(transcript) });
     const dataUrl = await readDataUrl(blob);
     await capture(
       {
@@ -601,6 +640,12 @@ export default function Tutorial({
       if (!res.ok) throw new Error(data.error || "Could not submit — try again.");
       setFeedback(data.feedback?.summary ?? null);
       setComplete(Boolean(data.complete));
+      logEvent("wrapup_submitted", moduleId, {
+        words: reflection.trim().split(/\s+/).filter(Boolean).length,
+        passed: Boolean(data.complete),
+      });
+      if (data.complete) logEvent("module_done", moduleId);
+      flushEvents();
       setFinished(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit — try again.");

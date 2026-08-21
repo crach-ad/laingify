@@ -136,6 +136,7 @@ model Learner {
   threads     DiscussionThread[]
   projects    Project[]
   spriteLogs  SpriteInteraction[]
+  events      LearnerEvent[]
   createdAt   DateTime @default(now())
 }
 
@@ -270,6 +271,23 @@ model SpriteInteraction {
   // Heuristic flag: did the learner appear to be fishing for the answer?
   answerSeeking Boolean @default(false)
   createdAt  DateTime @default(now())
+}
+
+// Append-only interaction log (ANALYTICS.md). First-party only, no PII
+// beyond existing ids; meta is a small JSON blob (step, track, dwellMs…).
+model LearnerEvent {
+  id        String   @id @default(cuid())
+  learner   Learner  @relation(fields: [learnerId], references: [id])
+  learnerId String
+  moduleId  String?
+  // session_start | step_view | step_done | track_pick | checkpoint_saved |
+  // checkpoint_retry | audio_recorded | wrapup_submitted | module_done
+  type      String
+  meta      String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([learnerId, createdAt])
+  @@index([moduleId, type, createdAt])
 }
 
 model Project {
