@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import Logo from "@/components/Logo";
 import ParticleTitle from "@/components/ParticleTitle";
 
 // Landing: signed-in learners go straight to their dashboard; everyone else
@@ -12,7 +11,7 @@ export default async function Home() {
   if (session) redirect("/learn");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-10">
       {/* Instrument Serif (italic) is only used by the rasterized headline. */}
       <link
         rel="stylesheet"
@@ -21,11 +20,15 @@ export default async function Home() {
       />
 
       <div className="flex w-full max-w-3xl flex-col items-center text-center">
-        <Logo />
-        <div className="overline mt-4 border-t border-[var(--accent)] pt-2">Laing Learning</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/laingify-logo-dark.png"
+          alt="laingify — Learning Management System for STEM and AI programs"
+          className="w-56 max-w-[65vw] sm:w-64"
+        />
 
-        <div className="mt-6 w-full">
-          <ParticleTitle lines={["Education Reimagined", "For Every Learner"]} color="#e7e9ee" height={230} />
+        <div className="mt-2 w-full">
+          <ParticleTitle lines={["Education Reimagined", "For Every Learner"]} color="#e7e9ee" height={200} />
         </div>
 
         <p className="muted max-w-md text-base">
