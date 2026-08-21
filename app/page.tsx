@@ -50,6 +50,26 @@ export default async function Home() {
           <span>🏅 Badges for finished work</span>
           <span>📖 Portfolios built automatically</span>
         </div>
+
+        {/* Free resources — playable without an account */}
+        <section className="mt-20 w-full max-w-3xl">
+          <div className="overline mb-3">Free resources · no account needed</div>
+          <div className="grid gap-4 text-left sm:grid-cols-1">
+            <Link href="/play/blocks" className="block">
+              <div className="card card-interactive flex items-center gap-5 p-6">
+                <span className="tile flex h-14 w-14 shrink-0 items-center justify-center text-3xl">🧩</span>
+                <span className="min-w-0 flex-1">
+                  <span className="display block text-lg font-semibold">Blockly Maze</span>
+                  <span className="muted mt-1 block text-sm">
+                    Program a robot through a maze with drag-and-drop code blocks — sequences, turns, and your
+                    first loop. Three levels, right in the browser.
+                  </span>
+                </span>
+                <span className="btn-ghost hidden h-11 shrink-0 items-center px-5 text-sm sm:flex">Play →</span>
+              </div>
+            </Link>
+          </div>
+        </section>
       </div>
     </main>
   );
