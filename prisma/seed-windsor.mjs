@@ -17,9 +17,7 @@ const prisma = new PrismaClient();
 const ORG_NAME = "Windsor School";
 const UPDATE = process.argv.includes("--update");
 
-// ⚠️ Placeholder email — swap for Pamela's real address before she signs in
-// (login is email + PIN at /instruct/login).
-const INSTRUCTOR = { displayName: "Ms. Pamela Smith", email: "pamela.smith@windsor.school", pin: "2468" };
+const INSTRUCTOR = { displayName: "Ms. Pamela Smith", email: "pamelakristinasmith@gmail.com", pin: "2468" };
 // The platform owner keeps oversight of this org too.
 const OWNER_EMAIL = "crachad.laing@gmail.com";
 
@@ -97,7 +95,7 @@ async function main() {
 
   console.log(`Windsor School ready: ${CLASSES.length} classes, ${modules.length} K'NEX modules each.`);
   console.log(`  Classes: ${CLASSES.map((c) => `${c.name} (${c.code})`).join(", ")}`);
-  console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}  ⚠️ placeholder email — update before real use`);
+  console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
   if (owner) console.log(`  Oversight: ${OWNER_EMAIL} also sees this org.`);
 }
 
