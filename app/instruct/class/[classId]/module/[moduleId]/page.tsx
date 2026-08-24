@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireInstructor } from "@/lib/instructor";
 import { stepAnalytics } from "@/lib/insights";
+import { slugifyTopic } from "@/lib/topics";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { ConsoleHeader } from "../../../../ConsoleParts";
 
@@ -178,8 +179,11 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
       <ConsoleHeader orgLabel={orgs.map((o) => o.name).join(" · ")} instructorName={instructor.displayName} />
 
-      <Link href={`/instruct/class/${klass.id}`} className="muted mt-8 inline-block text-sm transition-colors hover:text-[var(--text)]">
-        ← {klass.name} · projects
+      <Link
+        href={`/instruct/class/${klass.id}${mod.topic ? `?topic=${slugifyTopic(mod.topic)}` : ""}`}
+        className="muted mt-8 inline-block text-sm transition-colors hover:text-[var(--text)]"
+      >
+        ← {klass.name} · {mod.topic || "projects"}
       </Link>
 
       <section className="animate-fade-up mt-6 flex items-start gap-5">

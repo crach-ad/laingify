@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireInstructor } from "@/lib/instructor";
 import { loadClassOverviews } from "@/lib/instructor-data";
 import { bandConfig } from "@/lib/bands";
+import { slugifyTopic } from "@/lib/topics";
 import { ConsoleHeader, ReviewQueue, RosterList } from "../../ConsoleParts";
 import Insights from "./Insights";
 
@@ -16,10 +17,10 @@ export default async function ClassPage({
   searchParams,
 }: {
   params: Promise<{ classId: string }>;
-  searchParams: Promise<{ view?: string; lesson?: string }>;
+  searchParams: Promise<{ view?: string; lesson?: string; topic?: string }>;
 }) {
   const { classId } = await params;
-  const { view, lesson } = await searchParams;
+  const { view, lesson, topic: topicSlug } = await searchParams;
   const showRoster = view === "roster";
   const showInsights = view === "insights";
   const { instructor, orgs, orgIds } = await requireInstructor();
@@ -119,22 +120,61 @@ export default async function ClassPage({
         </>
       ) : (
         <section className="animate-fade-up mt-8">
-          <div className="overline mb-3">Learning modules</div>
-          <h2 className="text-xl font-semibold tracking-tight">What this class is working through</h2>
-          <p className="muted mt-1.5 text-sm">
-            In the order learners see them. Open a project to read every step the learner gets.
-          </p>
-          {topics.map((t, ti) => (
-            <div key={t.name} className="mt-7">
-              <div className="mb-3 flex items-baseline gap-3">
-                <span className="mono-label">{String(ti + 1).padStart(2, "0")}</span>
-                <h3 className="display text-base font-semibold">{t.name}</h3>
-                <span className="mono-label">
-                  {t.modules.length} project{t.modules.length === 1 ? "" : "s"}
-                </span>
-              </div>
-              <div className="flex flex-col gap-3">
-                {t.modules.map((m) => {
+          {(() => {
+            const openTopic = topics.find((t) => slugifyTopic(t.name) === topicSlug);
+            if (!openTopic) {
+              // Topic buttons — one per component; click to open its projects.
+              return (
+                <>
+                  <div className="overline mb-3">Learning modules</div>
+                  <h2 className="text-xl font-semibold tracking-tight">What this class is working through</h2>
+                  <p className="muted mt-1.5 text-sm">One tile per component, in the order learners see them — open one for its projects.</p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {topics.map((t, ti) => {
+                      const n = klass.roster.length;
+                      const badges = t.modules.reduce((a, m) => a + m.done, 0);
+                      const active = t.modules.reduce((a, m) => a + m.inProgress, 0);
+                      const pct = n === 0 ? 0 : Math.round((badges / (n * t.modules.length)) * 100);
+                      return (
+                        <Link key={t.name} href={`/instruct/class/${klass.id}?topic=${slugifyTopic(t.name)}`} className="block">
+                          <div className="card card-interactive flex h-full flex-col p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="flex items-center gap-3">
+                                <span className="tile flex h-11 w-11 shrink-0 items-center justify-center text-2xl">{t.modules[0].badgeIcon}</span>
+                                <span className="display text-lg font-semibold">{t.name}</span>
+                              </span>
+                              <span className="mono-label shrink-0">{String(ti + 1).padStart(2, "0")}</span>
+                            </div>
+                            <div className="muted mt-2 text-[13px]">
+                              {t.modules.length} project{t.modules.length === 1 ? "" : "s"} · {badges} badge{badges === 1 ? "" : "s"} earned
+                              {active > 0 ? ` · ${active} in progress` : ""}
+                            </div>
+                            <span className="bar mt-4 w-full">
+                              <span style={{ width: `${pct}%`, background: pct === 100 ? "var(--accent)" : active > 0 ? "var(--info)" : "#3a3f49" }} />
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            }
+            // One topic open: its projects.
+            const t = openTopic;
+            return (
+              <>
+                <Link href={`/instruct/class/${klass.id}`} className="muted inline-block text-sm transition-colors hover:text-[var(--text)]">
+                  ← All components
+                </Link>
+                <div className="mt-4 mb-3 flex items-baseline gap-3">
+                  <span className="tile flex h-10 w-10 shrink-0 items-center justify-center text-xl">{t.modules[0].badgeIcon}</span>
+                  <h2 className="text-xl font-semibold tracking-tight">{t.name}</h2>
+                  <span className="mono-label">{t.modules.length} project{t.modules.length === 1 ? "" : "s"}</span>
+                </div>
+                <p className="muted mb-4 text-sm">Open a project to read every step the learner gets.</p>
+                <div className="flex flex-col gap-3">
+                  {t.modules.map((m) => {
                   const n = klass.roster.length;
                   const pct = n === 0 ? 0 : Math.round((m.done / n) * 100);
                   return (
@@ -165,10 +205,11 @@ export default async function ClassPage({
                       </div>
                     </Link>
                   );
-                })}
-              </div>
-            </div>
-          ))}
+                  })}
+                </div>
+              </>
+            );
+          })()}
           {klass.modules.length === 0 && (
             <div className="card mt-6 p-6">
               <p className="muted text-sm">No modules assigned to this class yet.</p>
