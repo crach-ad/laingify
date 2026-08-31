@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 const AVATARS = ["✨", "🦊", "🐢", "🐙", "🦉", "🐝", "🚀", "🌟", "🐲", "🦕", "🐱", "🤖"];
@@ -89,104 +90,106 @@ export default function SpriteCustomizer({ sprite }: { sprite: Sprite }) {
         </button>
       </div>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-          onClick={() => setOpen(false)}
-        >
+      {open &&
+        createPortal(
           <div
-            className="card animate-fade-up w-full max-w-md rounded-[18px] p-6"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
           >
-            <h2 className="text-xl font-semibold">Design your Sprite</h2>
+            <div
+              className="card animate-fade-up w-full max-w-md rounded-[18px] p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-semibold">Design your Sprite</h2>
 
-            <div className="mt-5 flex items-center gap-4">
-              <span
-                className="flex h-16 w-16 items-center justify-center rounded-[15px] border text-3xl"
-                style={{ background: "#0f1712", borderColor: draft.color }}
-              >
-                {draft.avatar}
-              </span>
-              <input
-                value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                maxLength={40}
-                placeholder="Name your Sprite"
-                className="field flex-1 px-4 py-2.5 text-lg"
-              />
-            </div>
-
-            <p className="mono-label mt-6">Look</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {AVATARS.map((a) => (
-                <button
-                  key={a}
-                  onClick={() => setDraft({ ...draft, avatar: a })}
-                  className="tile flex h-11 w-11 items-center justify-center text-2xl transition-transform hover:scale-105"
-                  style={
-                    draft.avatar === a
-                      ? { borderColor: "var(--accent-border)", background: "var(--accent-soft)" }
-                      : undefined
-                  }
+              <div className="mt-5 flex items-center gap-4">
+                <span
+                  className="flex h-16 w-16 items-center justify-center rounded-[15px] border text-3xl"
+                  style={{ background: "#0f1712", borderColor: draft.color }}
                 >
-                  {a}
-                </button>
-              ))}
-            </div>
-
-            <p className="mono-label mt-6">Color</p>
-            <div className="mt-2 flex gap-2">
-              {COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setDraft({ ...draft, color: c })}
-                  style={{ background: c }}
-                  className={`h-9 w-9 rounded-full transition-transform hover:scale-105 ${
-                    draft.color === c ? "ring-2 ring-white/80" : ""
-                  }`}
+                  {draft.avatar}
+                </span>
+                <input
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                  maxLength={40}
+                  placeholder="Name your Sprite"
+                  className="field flex-1 px-4 py-2.5 text-lg"
                 />
-              ))}
-            </div>
+              </div>
 
-            <p className="mono-label mt-6">Personality</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {PERSONALITIES.map((p) => (
+              <p className="mono-label mt-6">Look</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {AVATARS.map((a) => (
+                  <button
+                    key={a}
+                    onClick={() => setDraft({ ...draft, avatar: a })}
+                    className="tile flex h-11 w-11 items-center justify-center text-2xl transition-transform hover:scale-105"
+                    style={
+                      draft.avatar === a
+                        ? { borderColor: "var(--accent-border)", background: "var(--accent-soft)" }
+                        : undefined
+                    }
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+
+              <p className="mono-label mt-6">Color</p>
+              <div className="mt-2 flex gap-2">
+                {COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setDraft({ ...draft, color: c })}
+                    style={{ background: c }}
+                    className={`h-9 w-9 rounded-full transition-transform hover:scale-105 ${
+                      draft.color === c ? "ring-2 ring-white/80" : ""
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <p className="mono-label mt-6">Personality</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {PERSONALITIES.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setDraft({ ...draft, personality: p })}
+                    className={`rounded-lg px-4 py-2 text-sm capitalize ${
+                      draft.personality === p ? "btn-primary" : "btn-ghost"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              {error && (
+                <p className="mt-5 text-sm" style={{ color: "#f87171" }}>
+                  {error}
+                </p>
+              )}
+
+              <div className="mt-7 flex justify-end gap-2">
                 <button
-                  key={p}
-                  onClick={() => setDraft({ ...draft, personality: p })}
-                  className={`rounded-lg px-4 py-2 text-sm capitalize ${
-                    draft.personality === p ? "btn-primary" : "btn-ghost"
-                  }`}
+                  onClick={() => setOpen(false)}
+                  className="muted rounded-lg px-4 py-2 font-medium transition-colors hover:text-[var(--text)]"
                 >
-                  {p}
+                  Cancel
                 </button>
-              ))}
+                <button
+                  onClick={save}
+                  disabled={busy || !draft.name.trim()}
+                  className="btn-primary px-5 py-2 text-sm"
+                >
+                  {busy ? "Saving…" : "Save"}
+                </button>
+              </div>
             </div>
-
-            {error && (
-              <p className="mt-5 text-sm" style={{ color: "#f87171" }}>
-                {error}
-              </p>
-            )}
-
-            <div className="mt-7 flex justify-end gap-2">
-              <button
-                onClick={() => setOpen(false)}
-                className="muted rounded-lg px-4 py-2 font-medium transition-colors hover:text-[var(--text)]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={save}
-                disabled={busy || !draft.name.trim()}
-                className="btn-primary px-5 py-2 text-sm"
-              >
-                {busy ? "Saving…" : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
