@@ -15,17 +15,25 @@ export default function SpriteCustomizer({ sprite }: { sprite: Sprite }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Sprite>(sprite);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function save() {
     setBusy(true);
+    setError(null);
     try {
-      await fetch("/api/sprite/customize", {
+      const res = await fetch("/api/sprite/customize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Could not save your Sprite. Please try again.");
+      }
       setOpen(false);
       router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save your Sprite. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -63,6 +71,7 @@ export default function SpriteCustomizer({ sprite }: { sprite: Sprite }) {
         <button
           onClick={() => {
             setDraft(sprite);
+            setError(null);
             setOpen(true);
           }}
           className="btn-primary shrink-0 px-4.5 py-2.5 text-sm"
@@ -153,6 +162,12 @@ export default function SpriteCustomizer({ sprite }: { sprite: Sprite }) {
                 </button>
               ))}
             </div>
+
+            {error && (
+              <p className="mt-5 text-sm" style={{ color: "#f87171" }}>
+                {error}
+              </p>
+            )}
 
             <div className="mt-7 flex justify-end gap-2">
               <button
