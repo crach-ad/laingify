@@ -8,6 +8,7 @@ import { track as logEvent, flushEvents } from "@/lib/track";
 import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
 import KnexViewer, { type KnexStep } from "@/components/KnexViewer";
 import { compressImage } from "@/lib/client-image";
+import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
 
 // Step-by-step tutorial player for checkpoint modules (camp format).
 // Content advances one card at a time; checkpoint cards ask for a photo/
@@ -114,16 +115,12 @@ function PhotoCheckpoint({
       {done ? (
         <span className="pill pill-done">Photo saved ✓</span>
       ) : (
-        <label className={`btn-primary flex h-12 cursor-pointer items-center px-6 text-sm ${busy ? "opacity-40" : ""}`}>
-          {busy ? "Uploading…" : "📸 Take / choose photo"}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            disabled={busy}
-            onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-          />
-        </label>
+        <CameraPhotoButton
+          triggerLabel="📸 Take / choose photo"
+          triggerClassName={`btn-primary flex h-12 items-center px-6 text-sm ${busy ? "opacity-40" : ""}`}
+          busy={busy}
+          onFile={onFile}
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
 
 // ---------------------------------------------------------------------------
 // Types mirror the server's evaluateModule() / route responses.
@@ -314,15 +315,13 @@ export default function ModuleWorkspace({
         </p>
 
         <div className="mt-3 flex flex-wrap gap-3">
-          <label className="btn-ghost cursor-pointer px-4 py-2 text-sm">
-            {busy === "file-PHOTO" ? "Uploading…" : "Photo"}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "PHOTO")}
-            />
-          </label>
+          <CameraPhotoButton
+            triggerLabel="Photo"
+            triggerBusyLabel="Uploading…"
+            triggerClassName="btn-ghost px-4 py-2 text-sm"
+            busy={busy === "file-PHOTO"}
+            onFile={(f) => uploadFile(f, "PHOTO")}
+          />
           <label className="btn-ghost cursor-pointer px-4 py-2 text-sm">
             {busy === "file-AUDIO" ? "Transcribing…" : "Audio"}
             <input
