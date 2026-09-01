@@ -130,7 +130,10 @@ export default function ModuleWorkspace({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not add evidence.");
-      setEvidence((e) => [...e, { id: crypto.randomUUID(), type: "TEXT", text: evidenceText, url: null, caption: null }]);
+      setEvidence((e) => [
+        ...e,
+        { id: data.evidence?.id ?? crypto.randomUUID(), type: "TEXT", text: evidenceText, url: null, caption: null },
+      ]);
       setEvidenceText("");
       applyResult(data);
     } catch (e) {
@@ -162,11 +165,39 @@ export default function ModuleWorkspace({
       if (!res.ok) throw new Error(data.error || "Could not upload.");
       setEvidence((e) => [
         ...e,
-        { id: crypto.randomUUID(), type: kind, text: null, url: kind === "PHOTO" ? dataUrl : null, caption: file.name },
+        {
+          id: data.evidence?.id ?? crypto.randomUUID(),
+          type: kind,
+          text: null,
+          url: kind === "PHOTO" ? dataUrl : null,
+          caption: file.name,
+        },
       ]);
       applyResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Lets a learner remove a wrongly-picked upload (e.g. the wrong file from
+  // Finder) so they can pick the correct one instead.
+  async function removeEvidence(id: string) {
+    setBusy(`remove-${id}`);
+    setError("");
+    try {
+      const res = await fetch("/api/evidence", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not remove — try again.");
+      setEvidence((e) => e.filter((item) => item.id !== id));
+      applyResult(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not remove — try again.");
     } finally {
       setBusy(null);
     }
@@ -352,7 +383,18 @@ export default function ModuleWorkspace({
         {evidence.length > 0 && (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {evidence.map((ev) => (
-              <div key={ev.id} className="card animate-fade-up overflow-hidden text-sm">
+              <div key={ev.id} className="card animate-fade-up relative overflow-hidden text-sm">
+                <button
+                  type="button"
+                  onClick={() => removeEvidence(ev.id)}
+                  disabled={busy === `remove-${ev.id}`}
+                  aria-label="Remove this evidence"
+                  title="Remove"
+                  className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold disabled:opacity-40"
+                  style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
+                >
+                  {busy === `remove-${ev.id}` ? "…" : "✕"}
+                </button>
                 {ev.type === "PHOTO" && ev.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={ev.url} alt={ev.caption ?? "evidence"} className="h-28 w-full object-cover" />

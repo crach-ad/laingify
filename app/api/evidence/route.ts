@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing file." }, { status: 400 });
   }
 
-  await prisma.evidence.create({
+  const created = await prisma.evidence.create({
     data: { learnerId: session.learnerId, moduleId, criterionId, type, text, url, caption },
   });
 
@@ -68,5 +68,30 @@ export async function POST(req: Request) {
     criteria,
     complete,
     project: result.complete ? result.project : null,
+    evidence: { id: created.id, type: created.type, url: created.url, text: created.text, caption: created.caption },
   });
+}
+
+// Lets a learner remove a wrongly-picked upload (e.g. the wrong file from
+// Finder) so they can immediately retake/reselect. Recomputes criteria the
+// same way POST does, so an undone checkpoint re-gates "Next" correctly.
+export async function DELETE(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const id = String(body.id || "");
+  if (!id) return NextResponse.json({ error: "Missing evidence id." }, { status: 400 });
+
+  const existing = await prisma.evidence.findUnique({ where: { id } });
+  if (!existing || existing.learnerId !== session.learnerId) {
+    return NextResponse.json({ error: "Evidence not found." }, { status: 404 });
+  }
+
+  await prisma.evidence.delete({ where: { id } });
+
+  await recomputeEvidenceCriteria(existing.learnerId, existing.moduleId);
+  const { criteria, complete } = await evaluateModule(existing.learnerId, existing.moduleId);
+
+  return NextResponse.json({ ok: true, criteria, complete });
 }

@@ -61,7 +61,7 @@ const KIND_CHIP: Record<string, { label: string; color: string }> = {
 };
 type Step = { heading?: string; block: Block };
 type Crit = { id: string; label: string; status: string };
-type EvidenceRow = { criterionId: string | null; type: string; url: string | null };
+type EvidenceRow = { id: string; criterionId: string | null; type: string; url: string | null };
 
 function buildSteps(blocks: Block[]): Step[] {
   const steps: Step[] = [];
@@ -96,11 +96,13 @@ function PhotoCheckpoint({
   preview,
   busy,
   onFile,
+  onRemove,
 }: {
   done: boolean;
   preview: string | null;
   busy: boolean;
   onFile: (f: File) => void;
+  onRemove: () => void;
 }) {
   return (
     <div className="mt-4 flex flex-col items-start gap-3">
@@ -113,7 +115,17 @@ function PhotoCheckpoint({
         />
       )}
       {done ? (
-        <span className="pill pill-done">Photo saved ✓</span>
+        <div className="flex items-center gap-3">
+          <span className="pill pill-done">Photo saved ✓</span>
+          <button
+            type="button"
+            onClick={onRemove}
+            disabled={busy}
+            className="muted text-sm font-medium underline-offset-2 hover:underline disabled:opacity-40"
+          >
+            {busy ? "Removing…" : "🗑️ Remove & retake"}
+          </button>
+        </div>
       ) : (
         <CameraPhotoButton
           triggerLabel="📸 Take / choose photo"
@@ -501,6 +513,9 @@ export default function Tutorial({
       .filter((e) => e.criterionId && e.url)
       .map((e) => [e.criterionId as string, e.url as string]),
   );
+  const savedEvidenceIds = new Map(
+    initialEvidence.filter((e) => e.criterionId).map((e) => [e.criterionId as string, e.id]),
+  );
 
   // First visit starts at step 1. Returning learners (any checkpoint already
   // captured) resume at their first incomplete checkpoint — or the wrap-up
@@ -550,6 +565,7 @@ export default function Tutorial({
   }, [step]);
   const [done, setDone] = useState(initiallyDone);
   const [media, setMedia] = useState(savedMedia);
+  const [evidenceIds, setEvidenceIds] = useState(savedEvidenceIds);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [reflection, setReflection] = useState("");
@@ -585,6 +601,9 @@ export default function Tutorial({
       if (typeof payload.dataUrl === "string") {
         setMedia((m) => new Map(m).set(criterionId, payload.dataUrl as string));
       }
+      if (data.evidence?.id) {
+        setEvidenceIds((m) => new Map(m).set(criterionId, data.evidence.id as string));
+      }
       if (data.complete) {
         setComplete(true);
         logEvent("module_done", moduleId);
@@ -602,6 +621,44 @@ export default function Tutorial({
     // Shrink client-side: raw camera photos exceed the upload size limit.
     const dataUrl = await compressImage(file);
     await capture({ type: "PHOTO", dataUrl, caption: current?.block.text?.slice(0, 120) }, currentCrit.id);
+  }
+
+  // Lets a learner clear a wrongly-picked photo (e.g. the wrong file from
+  // Finder) so the checkpoint reverts to "take / choose photo" immediately.
+  async function removePhoto(criterionId: string) {
+    const id = evidenceIds.get(criterionId);
+    if (!id) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/evidence", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not remove — try again.");
+      setDone((d) => {
+        const next = new Set(d);
+        next.delete(criterionId);
+        return next;
+      });
+      setMedia((m) => {
+        const next = new Map(m);
+        next.delete(criterionId);
+        return next;
+      });
+      setEvidenceIds((m) => {
+        const next = new Map(m);
+        next.delete(criterionId);
+        return next;
+      });
+      if (typeof data.complete === "boolean") setComplete(data.complete);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not remove — try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function onAudio(blob: Blob, mimeType: string, transcript: string) {
@@ -900,6 +957,7 @@ export default function Tutorial({
                 preview={currentCrit ? (media.get(currentCrit.id) ?? null) : null}
                 busy={busy}
                 onFile={onPhoto}
+                onRemove={() => currentCrit && removePhoto(currentCrit.id)}
               />
             )}
             {current!.block.allowModel && <ModelAttach moduleId={moduleId} />}
