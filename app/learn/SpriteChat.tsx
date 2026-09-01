@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import SpriteAvatar, { type SpriteVisual } from "./SpriteAvatar";
 
 type Turn = { role: "user" | "model"; text: string };
-type SpriteInfo = { name: string; avatar: string; color: string };
+type SpriteInfo = SpriteVisual & { name: string; color: string };
 
 // The Help Sprite: a learner's persistent companion, available on every learn
 // page. It gives insight, never answers (PRD §8). UI only — the rules live
@@ -57,20 +58,20 @@ export default function SpriteChat({
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close your Sprite" : "Ask your Sprite"}
-        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-2xl border text-2xl transition-transform hover:scale-105"
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border text-2xl transition-transform hover:scale-105"
         style={{ background: "#0f1712", borderColor: sprite.color }}
       >
-        {sprite.avatar}
+        <SpriteAvatar sprite={sprite} size={44} className="object-contain" />
       </button>
 
       {open && (
         <div className="card animate-fade-up fixed bottom-22 right-5 z-40 flex h-[28rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-[18px]">
           <div className="flex items-center gap-3 border-b border-[var(--border-soft)] px-4 py-3">
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-[10px] border text-xl"
+              className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-[10px] border text-xl"
               style={{ background: "#0f1712", borderColor: sprite.color }}
             >
-              {sprite.avatar}
+              <SpriteAvatar sprite={sprite} size={30} className="object-contain" />
             </span>
             <div>
               <p className="display font-semibold leading-tight">{sprite.name}</p>

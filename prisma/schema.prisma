@@ -148,6 +148,12 @@ model Sprite {
   personality String  @default("friendly")
   color       String  @default("#7c5cff")
   avatar      String  @default("✨")
+  // DiceBear avatar. Null until the learner customizes past the legacy
+  // emoji picker — SpriteAvatar falls back to `avatar` while these are unset.
+  avatarStyle  String?
+  avatarSeed   String?
+  avatarTraits String  @default("{}")
+  avatarColors String  @default("{}")
   createdAt   DateTime @default(now())
 }
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireInstructor } from "@/lib/instructor";
 import { bandConfig } from "@/lib/bands";
+import SpriteAvatar from "@/app/learn/SpriteAvatar";
 
 // One learner, whole-program view for instructors: progress across every
 // assigned module, badges and assembled projects (the portfolio), and a trail
@@ -197,7 +198,13 @@ export default async function LearnerProfilePage({
             {learner.sprite && (
               <>
                 {" "}
-                · Sprite: {learner.sprite.avatar} {learner.sprite.name}
+                · Sprite:{" "}
+                <SpriteAvatar
+                  sprite={learner.sprite}
+                  size={18}
+                  className="inline-block rounded align-[-3px]"
+                />{" "}
+                {learner.sprite.name}
               </>
             )}
           </p>

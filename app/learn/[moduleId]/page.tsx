@@ -143,7 +143,15 @@ export default async function ModulePage({
       )}
 
       <SpriteChat
-        sprite={{ name: sprite.name, avatar: sprite.avatar, color: sprite.color }}
+        sprite={{
+          name: sprite.name,
+          avatar: sprite.avatar,
+          color: sprite.color,
+          avatarStyle: sprite.avatarStyle,
+          avatarSeed: sprite.avatarSeed,
+          avatarTraits: sprite.avatarTraits,
+          avatarColors: sprite.avatarColors,
+        }}
         moduleId={moduleId}
       />
     </main>

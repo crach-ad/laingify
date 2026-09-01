@@ -246,7 +246,17 @@ export default async function Dashboard() {
         </div>
       </section>
 
-      <SpriteChat sprite={{ name: sprite.name, avatar: sprite.avatar, color: sprite.color }} />
+      <SpriteChat
+        sprite={{
+          name: sprite.name,
+          avatar: sprite.avatar,
+          color: sprite.color,
+          avatarStyle: sprite.avatarStyle,
+          avatarSeed: sprite.avatarSeed,
+          avatarTraits: sprite.avatarTraits,
+          avatarColors: sprite.avatarColors,
+        }}
+      />
     </main>
   );
 }
