@@ -30,7 +30,7 @@ type Block = {
   hex?: string; // precompiled AVR hex (built at seed time via hexi.wokwi.com)
   // --- knex blocks: an interactive 3D build guide assembled step by step ---
   builds?: KnexStep[]; // each step adds rods ([[x,y,z],[x,y,z]] pairs)
-  capture?: "photo" | "audio";
+  capture?: "photo" | "audio" | "text";
   criterionLabel?: string;
   // Photo checkpoints can optionally accept the design file itself (.stl) so
   // the portfolio gets an interactive 3D model alongside the screenshot.
@@ -61,7 +61,13 @@ const KIND_CHIP: Record<string, { label: string; color: string }> = {
 };
 type Step = { heading?: string; block: Block };
 type Crit = { id: string; label: string; status: string };
-type EvidenceRow = { id: string; criterionId: string | null; type: string; url: string | null };
+type EvidenceRow = {
+  id: string;
+  criterionId: string | null;
+  type: string;
+  url: string | null;
+  text: string | null;
+};
 
 function buildSteps(blocks: Block[]): Step[] {
   const steps: Step[] = [];
@@ -133,6 +139,76 @@ function PhotoCheckpoint({
           busy={busy}
           onFile={onFile}
         />
+      )}
+    </div>
+  );
+}
+
+function TextCheckpoint({
+  done,
+  savedText,
+  busy,
+  onSubmit,
+  minLength = 15,
+}: {
+  done: boolean;
+  savedText: string | null;
+  busy: boolean;
+  onSubmit: (text: string) => void;
+  minLength?: number;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(savedText ?? "");
+
+  useEffect(() => {
+    if (done) setEditing(false);
+  }, [done]);
+
+  const showForm = !done || editing;
+
+  return (
+    <div className="mt-4 flex flex-col items-start gap-3">
+      {done && !editing && (
+        <>
+          <p
+            className="card w-full whitespace-pre-wrap p-4 text-sm"
+            style={{ color: "var(--body)" }}
+          >
+            {savedText}
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="pill pill-done">Reflection saved ✓</span>
+            <button
+              type="button"
+              onClick={() => {
+                setValue(savedText ?? "");
+                setEditing(true);
+              }}
+              className="muted text-sm font-medium underline-offset-2 hover:underline"
+            >
+              ✏️ Edit answer
+            </button>
+          </div>
+        </>
+      )}
+      {showForm && (
+        <>
+          <textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            rows={4}
+            placeholder="Type your answer here…"
+            className="field w-full px-4 py-3 text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => onSubmit(value.trim())}
+            disabled={busy || value.trim().length < minLength}
+            className="btn-primary px-5 py-2 text-sm"
+          >
+            {busy ? "Saving…" : "Save answer"}
+          </button>
+        </>
       )}
     </div>
   );
@@ -516,6 +592,11 @@ export default function Tutorial({
   const savedEvidenceIds = new Map(
     initialEvidence.filter((e) => e.criterionId).map((e) => [e.criterionId as string, e.id]),
   );
+  const savedTextAnswers = new Map(
+    initialEvidence
+      .filter((e) => e.criterionId && e.type === "TEXT" && e.text)
+      .map((e) => [e.criterionId as string, e.text as string]),
+  );
 
   // First visit starts at step 1. Returning learners (any checkpoint already
   // captured) resume at their first incomplete checkpoint — or the wrap-up
@@ -565,6 +646,7 @@ export default function Tutorial({
   }, [step]);
   const [done, setDone] = useState(initiallyDone);
   const [media, setMedia] = useState(savedMedia);
+  const [textAnswers, setTextAnswers] = useState(savedTextAnswers);
   const [evidenceIds, setEvidenceIds] = useState(savedEvidenceIds);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -601,6 +683,9 @@ export default function Tutorial({
       if (typeof payload.dataUrl === "string") {
         setMedia((m) => new Map(m).set(criterionId, payload.dataUrl as string));
       }
+      if (payload.type === "TEXT" && typeof payload.text === "string") {
+        setTextAnswers((m) => new Map(m).set(criterionId, payload.text as string));
+      }
       if (data.evidence?.id) {
         setEvidenceIds((m) => new Map(m).set(criterionId, data.evidence.id as string));
       }
@@ -621,6 +706,11 @@ export default function Tutorial({
     // Shrink client-side: raw camera photos exceed the upload size limit.
     const dataUrl = await compressImage(file);
     await capture({ type: "PHOTO", dataUrl, caption: current?.block.text?.slice(0, 120) }, currentCrit.id);
+  }
+
+  async function onText(text: string) {
+    if (!currentCrit) return;
+    await capture({ type: "TEXT", text }, currentCrit.id);
   }
 
   // Lets a learner clear a wrongly-picked photo (e.g. the wrong file from
@@ -941,7 +1031,11 @@ export default function Tutorial({
         ) : isCheckpoint ? (
           <>
             <span className="overline">
-              {current!.block.capture === "audio" ? "🎙️ Say it out loud" : "📸 Show your work"}
+              {current!.block.capture === "audio"
+                ? "🎙️ Say it out loud"
+                : current!.block.capture === "text"
+                  ? "✍️ Reflect"
+                  : "📸 Show your work"}
             </span>
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
             {current!.block.capture === "audio" ? (
@@ -950,6 +1044,13 @@ export default function Tutorial({
                 savedUrl={currentCrit ? (media.get(currentCrit.id) ?? null) : null}
                 busy={busy}
                 onRecorded={onAudio}
+              />
+            ) : current!.block.capture === "text" ? (
+              <TextCheckpoint
+                done={currentDone}
+                savedText={currentCrit ? (textAnswers.get(currentCrit.id) ?? null) : null}
+                busy={busy}
+                onSubmit={onText}
               />
             ) : (
               <PhotoCheckpoint

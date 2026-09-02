@@ -43,6 +43,15 @@ export const audioCriterion = (order, label, description) => ({
   order,
 });
 
+export const textCriterion = (order, label, description) => ({
+  label,
+  description,
+  checkType: "AUTO",
+  requiresEvidenceType: "TEXT",
+  required: true,
+  order,
+});
+
 // Build a createModule(data) bound to a prisma client, an org and a mode.
 // Full seed: plain create. Update mode: upsert by title; criteria are matched
 // by label — matched ones are updated, new ones added, and ones no longer in

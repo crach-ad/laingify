@@ -116,7 +116,7 @@ export default async function ModulePage({
           badge={{ name: module.badgeName, icon: module.badgeIcon }}
           blocks={blocks}
           criteria={criteria.map((c) => ({ id: c.id, label: c.label, status: c.status }))}
-          evidence={evidence.map((e) => ({ id: e.id, criterionId: e.criterionId, type: e.type, url: e.url }))}
+          evidence={evidence.map((e) => ({ id: e.id, criterionId: e.criterionId, type: e.type, url: e.url, text: e.text }))}
           initialComplete={complete}
           hasSubmission={!!lastSubmission}
         />

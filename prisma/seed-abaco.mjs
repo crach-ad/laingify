@@ -24,7 +24,7 @@
 import { PrismaClient } from "@prisma/client";
 import { wipeOrg } from "./org-wipe.mjs";
 import { createKnexModules } from "./knex-modules.mjs";
-import { createRodocodoModule } from "./coding-modules.mjs";
+import { createRodocodoModule, createComputeItModule } from "./coding-modules.mjs";
 import {
   block,
   wrapUpPrompt,
@@ -1088,6 +1088,7 @@ async function main() {
   });
 
   const fc2 = await createRodocodoModule(projectModule);
+  const fc3 = await createComputeItModule(projectModule);
 
   // ==========================================================================
   // MODULE 4 — Virtual & Augmented Reality
@@ -1422,7 +1423,7 @@ async function main() {
   });
   const [k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15] = await createKnexModules(projectModule);
 
-  const modules = [module1, fc2, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
+  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.
