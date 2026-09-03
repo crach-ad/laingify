@@ -31,15 +31,28 @@ export async function GET(req: Request) {
   const klass = await authorizedClass(auth.orgIds, classId);
   if (!klass) return NextResponse.json({ error: "Class not found." }, { status: 404 });
 
-  const [roster, records] = await Promise.all([
-    prisma.rosterEntry.findMany({
-      where: { classId },
-      include: { learner: { select: { id: true, displayName: true, photoUrl: true } } },
-      orderBy: { learner: { displayName: "asc" } },
-    }),
+  const roster = await prisma.rosterEntry.findMany({
+    where: { classId },
+    include: { learner: { select: { id: true, displayName: true, photoUrl: true } } },
+    orderBy: { learner: { displayName: "asc" } },
+  });
+  const learnerIds = roster.map((r) => r.learnerId);
+  const dayEnd = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+  const [records, activeEvents] = await Promise.all([
     prisma.attendanceRecord.findMany({ where: { classId, date } }),
+    // Best-effort "logged in today" signal (from the fire-and-forget event
+    // pipeline in lib/track.ts) — a hint to speed up marking, never the
+    // source of truth: a learner can be in the room without generating an
+    // event yet (hands-on/offline work), or log in without being present.
+    prisma.learnerEvent.findMany({
+      where: { learnerId: { in: learnerIds }, createdAt: { gte: date, lt: dayEnd } },
+      select: { learnerId: true },
+      distinct: ["learnerId"],
+    }),
   ]);
   const byLearner = new Map(records.map((r) => [r.learnerId, r]));
+  const activeToday = new Set(activeEvents.map((e) => e.learnerId));
 
   return NextResponse.json({
     roster: roster.map((r) => ({
@@ -48,6 +61,7 @@ export async function GET(req: Request) {
       photoUrl: r.learner.photoUrl,
       status: byLearner.get(r.learner.id)?.status ?? null,
       note: byLearner.get(r.learner.id)?.note ?? null,
+      activeToday: activeToday.has(r.learner.id),
     })),
   });
 }

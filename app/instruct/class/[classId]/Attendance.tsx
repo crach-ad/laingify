@@ -8,6 +8,7 @@ type Row = {
   photoUrl: string | null;
   status: string | null;
   note: string | null;
+  activeToday: boolean;
 };
 
 const STATUSES: { key: string; label: string; color: string; soft: string; border: string }[] = [
@@ -78,10 +79,15 @@ export default function Attendance({ classId }: { classId: string }) {
     save([{ learnerId, status }]);
   }
 
-  function markAllPresent() {
-    const targets = rows.filter((r) => !r.status).map((r) => r.learnerId);
+  // Login activity (lib/track.ts's session_start/etc. events) pre-suggests
+  // Present for anyone who's touched the platform today, but only a real
+  // record counts — this just confirms the suggestion in one click, leaving
+  // everyone with no signal (hands-on work, or genuinely absent) for the
+  // instructor to check by hand.
+  function confirmSuggested() {
+    const targets = rows.filter((r) => !r.status && r.activeToday).map((r) => r.learnerId);
     if (targets.length === 0) return;
-    setRows((r) => r.map((row) => (row.status ? row : { ...row, status: "PRESENT" })));
+    setRows((r) => r.map((row) => (!row.status && row.activeToday ? { ...row, status: "PRESENT" } : row)));
     save(targets.map((learnerId) => ({ learnerId, status: "PRESENT" })));
   }
 
@@ -90,6 +96,7 @@ export default function Attendance({ classId }: { classId: string }) {
     return acc;
   }, {});
   const unmarked = rows.filter((r) => !r.status).length;
+  const suggested = rows.filter((r) => !r.status && r.activeToday).length;
 
   return (
     <section className="animate-fade-up mt-8">
@@ -104,7 +111,7 @@ export default function Attendance({ classId }: { classId: string }) {
               ? "No learners on this roster yet."
               : [
                   ...STATUSES.filter((s) => counts[s.key] > 0).map((s) => `${counts[s.key]} ${s.label.toLowerCase()}`),
-                  unmarked > 0 ? `${unmarked} unmarked` : null,
+                  unmarked > 0 ? `${unmarked} unmarked${suggested > 0 ? ` (${suggested} logged in)` : ""}` : null,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -117,8 +124,8 @@ export default function Attendance({ classId }: { classId: string }) {
             onChange={(e) => setDate(e.target.value)}
             className="field px-3 py-2 text-sm"
           />
-          <button onClick={markAllPresent} disabled={unmarked === 0} className="btn-ghost px-4 py-2 text-sm">
-            ✓ Mark all present
+          <button onClick={confirmSuggested} disabled={suggested === 0} className="btn-ghost px-4 py-2 text-sm">
+            ✓ Confirm {suggested > 0 ? `${suggested} ` : ""}logged in as present
           </button>
         </div>
       </div>
@@ -159,6 +166,15 @@ export default function Attendance({ classId }: { classId: string }) {
                 <span className="min-w-0 flex-1 truncate text-sm font-medium" style={{ color: "var(--body)" }}>
                   {r.displayName}
                 </span>
+                {!r.status && r.activeToday && (
+                  <span
+                    className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium"
+                    style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+                    title="Has activity on the platform today — a hint, not a confirmed record"
+                  >
+                    🟢 logged in
+                  </span>
+                )}
                 <div className="flex shrink-0 gap-1.5">
                   {STATUSES.map((s) => {
                     const active = r.status === s.key;
