@@ -6,11 +6,13 @@ import { bandConfig } from "@/lib/bands";
 import { slugifyTopic } from "@/lib/topics";
 import { ConsoleHeader, ReviewQueue, RosterList } from "../../ConsoleParts";
 import Insights from "./Insights";
+import Attendance from "./Attendance";
 
-// One class, two views switched by ?view=:
+// One class, four views switched by ?view=:
 //   projects (default) — the learning modules assigned to this class, grouped
 //                        by topic, with class-wide progress per module
 //   roster             — every learner's progress, plus the review queue
+//   attendance         — mark present/late/absent/excused per session date
 //   insights           — weekly engagement, funnel, writing growth, coverage
 export default async function ClassPage({
   params,
@@ -22,6 +24,7 @@ export default async function ClassPage({
   const { classId } = await params;
   const { view, lesson, topic: topicSlug } = await searchParams;
   const showRoster = view === "roster";
+  const showAttendance = view === "attendance";
   const showInsights = view === "insights";
   const { instructor, orgs, orgIds } = await requireInstructor();
   const [klass] = await loadClassOverviews(orgIds, classId);
@@ -85,7 +88,7 @@ export default async function ClassPage({
 
       {/* View switch */}
       <div className="mt-10 flex items-center gap-1 border-b border-[var(--border-soft)] pb-3">
-        <Link href={`/instruct/class/${klass.id}`} className={tab(!showRoster && !showInsights)}>
+        <Link href={`/instruct/class/${klass.id}`} className={tab(!showRoster && !showAttendance && !showInsights)}>
           📚 Projects · {klass.moduleCount}
         </Link>
         <Link href={`/instruct/class/${klass.id}?view=roster`} className={tab(showRoster)}>
@@ -94,6 +97,9 @@ export default async function ClassPage({
             <span className="pill pill-warn ml-2">{klass.queue.length}</span>
           )}
         </Link>
+        <Link href={`/instruct/class/${klass.id}?view=attendance`} className={tab(showAttendance)}>
+          🗓️ Attendance
+        </Link>
         <Link href={`/instruct/class/${klass.id}?view=insights`} className={tab(showInsights)}>
           📊 Insights
         </Link>
@@ -101,6 +107,8 @@ export default async function ClassPage({
 
       {showInsights ? (
         <Insights classId={klass.id} rosterCount={klass.roster.length} lessonMinutes={Math.max(10, Math.min(180, Number(lesson) || 45))} />
+      ) : showAttendance ? (
+        <Attendance classId={klass.id} />
       ) : showRoster ? (
         <>
           {klass.queue.length > 0 && (

@@ -43,6 +43,7 @@ model Instructor {
   // Other orgs this instructor can also see in the console (e.g. one coach
   // running both the camp org and the school org)
   accessOrgs  Org[]    @relation("InstructorAccess")
+  attendanceRecords AttendanceRecord[]
   createdAt   DateTime @default(now())
 }
 
@@ -58,7 +59,29 @@ model Class {
   minAuthTier Int      @default(0)
   roster      RosterEntry[]
   modules     ClassModule[]
+  attendance  AttendanceRecord[]
   createdAt   DateTime @default(now())
+}
+
+// One row per learner x class x calendar date. Any instructor who can see the
+// class's roster can mark attendance for it — no extra permission tier, unlike
+// the safeguarding-restricted IncidentReport model planned as a follow-up.
+model AttendanceRecord {
+  id           String     @id @default(cuid())
+  class        Class      @relation(fields: [classId], references: [id])
+  classId      String
+  learner      Learner    @relation(fields: [learnerId], references: [id])
+  learnerId    String
+  date         DateTime   // session date, stored at UTC midnight
+  // PRESENT | ABSENT | LATE | EXCUSED
+  status       String
+  note         String?
+  recordedBy   Instructor @relation(fields: [recordedById], references: [id])
+  recordedById String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([classId, learnerId, date])
 }
 
 // ---------------------------------------------------------------------------
@@ -137,6 +160,7 @@ model Learner {
   projects    Project[]
   spriteLogs  SpriteInteraction[]
   events      LearnerEvent[]
+  attendance  AttendanceRecord[]
   createdAt   DateTime @default(now())
 }
 
