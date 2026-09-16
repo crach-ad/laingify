@@ -6,6 +6,7 @@ import SlideShow from "@/components/SlideShow";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { track as logEvent, flushEvents } from "@/lib/track";
 import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
+import MicrobitSim, { type MicrobitPart, type MicrobitProgram } from "@/components/MicrobitSim";
 import KnexViewer, { type KnexStep } from "@/components/KnexViewer";
 import { compressImage } from "@/lib/client-image";
 import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
@@ -18,16 +19,20 @@ import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
 type TrackId = "beginner" | "intermediate" | "advanced";
 
 type Block = {
-  type: string; // heading | text | code | scratch | embed | circuit | prompt | video | image | slides | checkpoint | trackpick
+  type: string; // heading | text | code | scratch | embed | link | circuit | microbit | prompt | video | image | slides | checkpoint | trackpick
   text?: string;
   url?: string;
   urls?: string[];
   // --- circuit blocks: an in-page Arduino simulator running an authored sketch ---
-  parts?: CircuitPart[]; // LEDs / buttons / sensors placed at breadboard holes
+  // --- microbit blocks: an in-page micro:bit simulator running one canned,
+  // authored behavior (`program`) — same "one fixed program per block" model
+  // as circuit blocks, just without a CPU to emulate ---
+  parts?: (CircuitPart | MicrobitPart)[]; // LEDs/buttons/sensors at breadboard holes, or LEDs on microbit pins
   wires?: CircuitWire[]; // jumpers from Arduino pins to breadboard holes
   steps?: BuildStep[]; // guided build: each step places parts/wires by id
   sketch?: string; // the Arduino source (shown collapsible under the sim)
   hex?: string; // precompiled AVR hex (built at seed time via hexi.wokwi.com)
+  program?: MicrobitProgram; // the microbit block's canned behavior
   // --- knex blocks: an interactive 3D build guide assembled step by step ---
   builds?: KnexStep[]; // each step adds rods ([[x,y,z],[x,y,z]] pairs)
   capture?: "photo" | "audio" | "text";
@@ -1096,6 +1101,17 @@ export default function Tutorial({
           </div>
         ) : current!.block.type === "scratch" && current!.block.text ? (
           <ScratchBlocks code={current!.block.text} />
+        ) : current!.block.type === "link" && current!.block.url ? (
+          <div>
+            <a
+              href={current!.block.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary inline-flex h-12 items-center px-6 text-sm"
+            >
+              {current!.block.text || "Open link"} ↗
+            </a>
+          </div>
         ) : current!.block.type === "embed" && current!.block.url ? (
           <div>
             <iframe
@@ -1116,11 +1132,26 @@ export default function Tutorial({
               </p>
             )}
             <CircuitSim
-              parts={current!.block.parts}
+              parts={current!.block.parts as CircuitPart[] | undefined}
               wires={current!.block.wires}
               steps={current!.block.steps}
               hex={current!.block.hex}
               sketch={current!.block.sketch}
+            />
+          </div>
+        ) : current!.block.type === "microbit" && current!.block.program ? (
+          <div>
+            {/* Same split as circuit blocks: instructions lead, the sim sits
+                right below. */}
+            {current!.block.text && (
+              <p className="mb-4 whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
+                {current!.block.text}
+              </p>
+            )}
+            <MicrobitSim
+              parts={current!.block.parts as MicrobitPart[] | undefined}
+              steps={current!.block.steps}
+              program={current!.block.program}
             />
           </div>
         ) : current!.block.type === "knex" && current!.block.builds ? (

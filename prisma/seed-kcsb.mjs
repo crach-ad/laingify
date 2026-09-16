@@ -47,19 +47,33 @@ async function main() {
   const createModule = moduleWriter(prisma, org, UPDATE);
 
   for (const year of selected) {
-    let defs;
+    let defs, toolbeltModules;
     try {
-      ({ modules: defs } = await import(`./kcsb/${year.key}.mjs`));
+      ({ modules: defs, toolbeltModules = [] } = await import(`./kcsb/${year.key}.mjs`));
     } catch (e) {
       if (e.code !== "ERR_MODULE_NOT_FOUND") throw e;
       console.log(`\n${year.name}: ⚠️  prisma/kcsb/${year.key}.mjs not authored yet — skipped`);
       continue;
     }
     if (defs.length !== STRAND_ORDER.length)
-      throw new Error(`${year.name}: expected ${STRAND_ORDER.length} modules (one per strand), got ${defs.length}`);
+      throw new Error(`${year.name}: expected ${STRAND_ORDER.length} strand modules, got ${defs.length}`);
+
+    // Toolbelt modules are extra, non-strand modules (e.g. a hardware-onboarding
+    // sequence) inserted right before the strand module they build up to, so
+    // they land next to it both in class order and in its topic's project list
+    // (app/learn/topic/[slug]/page.tsx groups/orders strictly by ClassModule.order).
+    const orderedDefs = [];
+    for (const def of defs) {
+      for (const { leadsTo, ...t } of toolbeltModules.filter((t) => t.leadsTo === def.topic)) orderedDefs.push(t);
+      orderedDefs.push(def);
+    }
+    const unplaced = toolbeltModules.filter((t) => !defs.some((d) => d.topic === t.leadsTo));
+    if (unplaced.length > 0)
+      throw new Error(`${year.name}: toolbelt module(s) with unknown leadsTo: ${unplaced.map((t) => t.title).join(", ")}`);
+
     console.log(`\n${year.name} (${year.code}, ${year.band})`);
     const modules = [];
-    for (const def of defs) modules.push(await createModule(def));
+    for (const def of orderedDefs) modules.push(await createModule(def));
     await checkCheckpoints(prisma, modules);
 
     let klass = await prisma.class.findFirst({ where: { orgId: org.id, classCode: year.code } });

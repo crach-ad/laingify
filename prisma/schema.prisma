@@ -97,6 +97,10 @@ model Module {
   // Content area this project belongs to — the dashboard groups by topic and
   // each topic page lists its project modules.
   topic       String   @default("")
+  // Hardware track within a topic (e.g. "arduino" | "microbit"). Only
+  // consulted when a topic actually contains more than one distinct value —
+  // see app/learn/topic/[slug]/page.tsx's board-picker.
+  board       String   @default("arduino")
   version     Int      @default(1)
   // Ordered content blocks: [{type:"text"|"heading"|"video"|"prompt", ...}]
   contentJson String   @default("[]")

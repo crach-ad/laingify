@@ -494,10 +494,14 @@ async function main() {
   );
 
   // A small project module: one project, its own badge, its own checkpoints.
-  const projectModule = ({ topic, title, summary, badgeName, badgeIcon, badgeDescription, blocks, criteria }) =>
+  // `board` only matters for topics that span more than one hardware track
+  // (Programmable Electronics: arduino vs microbit) — everything else can
+  // leave it at the default.
+  const projectModule = ({ topic, board = "arduino", title, summary, badgeName, badgeIcon, badgeDescription, blocks, criteria }) =>
     createModule({
       orgId: org.id,
       topic,
+      board,
       title,
       summary,
       badgeName,
@@ -545,7 +549,9 @@ async function main() {
         tip: "That blink means the board is running YOUR instructions. You are now programming hardware.",
       }),
       block("code", {
+        kind: "learn",
         text: SKETCH.blink13,
+        tip: "This is the exact sketch the simulator below runs — read it over before you press ▶.",
       }),
       block("text", {
         kind: "build",
@@ -953,6 +959,469 @@ async function main() {
         capture: "photo",
         criterionLabel: "Heat alarm photo",
         text: "Photo of your alarm FLASHING with the temperature reading visible — real or simulated. Caption: your danger threshold.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What other alarms could this same sense → decide → act loop build?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Heat alarm photo", "The heat alarm triggering above the threshold — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on thresholds and decisions."),
+    ],
+  });
+
+  // ==========================================================================
+  // MODULE 3, micro:bit track — same eight-project spine as e1–e8, adapted to
+  // what the micro:bit does well: an onboard 5×5 LED matrix, buttons A/B, and
+  // a temperature sensor mean several projects need no external wiring at
+  // all. `microbit` blocks run on an in-page simulator (components/MicrobitSim
+  // .tsx) — same "one fixed, authored program per block" model as the Arduino
+  // circuit blocks above, just without a CPU to emulate. Real code-writing
+  // happens externally at makecode.microbit.org or a real board, named in the
+  // instructions the same way the Arduino IDE and wokwi.com are named above.
+  // Titles are deliberately distinct from e1–e8's (moduleWriter upserts by
+  // title, so a same-named module would silently merge with the Arduino one).
+  // ==========================================================================
+
+  const m1 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "First Flash",
+    summary: "Take control of the micro:bit's 5×5 LED matrix — your first code that touches hardware.",
+    badgeName: "First Spark",
+    badgeIcon: "🔆",
+    badgeDescription: "Programmed real hardware for the first time: built a MakeCode program and lit the on-board LED matrix.",
+    blocks: [
+      block("heading", { text: "Code you can touch" }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "So far your code lived on a screen. Today it controls electricity.\n\nA micro:bit is a tiny computer the size of a matchbox. It reads INPUTS (buttons, sensors) and switches OUTPUTS (LEDs, sound, radio). Your microwave, a game controller, a traffic light — inside, they all work exactly like what you build today. And the micro:bit already has an OUTPUT built right in: a 5×5 grid of LEDs.",
+        tip: "No micro:bit at your station? The in-page simulator (and makecode.microbit.org) behaves exactly like the real thing — every step works there too.",
+      }),
+      block("heading", { text: "First flash (no wiring needed)" }),
+      block("text", {
+        kind: "build",
+        minutes: 8,
+        text: "Take control of one LED in the built-in grid:",
+        actions: [
+          "Open makecode.microbit.org — or your own micro:bit editor",
+          "From the Basic drawer: forever → show leds (light the center dot) → pause 1000 → clear screen → pause 1000",
+          "Click ▶ in MakeCode's simulator, or flash it to a real board",
+          "Or skip straight to the simulator below — it's running that exact program",
+        ],
+        tip: "That blink means the board is running YOUR instructions. You are now programming hardware.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    basic.showLeds(`\n        . . . . .\n        . . . . .\n        . # . . .\n        . . . . .\n        . . . . .\n        `)\n    basic.pause(1000)\n    basic.clearScreen()\n    basic.pause(1000)\n})",
+        tip: "This is the exact MakeCode JavaScript for the blink above — the block editor builds this same program. The simulator below runs it.",
+      }),
+      block("text", {
+        kind: "build",
+        minutes: 5,
+        text: "Now OWN it — change the numbers and re-run:",
+        actions: [
+          "pause(100) → panic blink",
+          "pause(2000) → lighthouse",
+          "Make a heartbeat: two quick flashes, then a long pause (hint: an extra showLeds/pause pair)",
+        ],
+        tip: "Notice: 'forever' runs, well, forever — the same 'forever' loop from your game. pause(1000) is a variable you're tuning. Same ideas, new hardware.",
+      }),
+      block("heading", { text: "See it run RIGHT HERE" }),
+      block("microbit", {
+        kind: "build",
+        minutes: 3,
+        text: "This is a live micro:bit simulator running the exact program above. Press ▶ Run and watch the center LED blink once per second.",
+        program: { kind: "matrix-blink", cells: [[2, 2]], onMs: 1000, offMs: 1000 },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Flash photo",
+        text: "Photo of the blinking LED — your real board's matrix, or a screenshot of the simulator running right here. Caption: which pause numbers you tried.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What did changing the pause numbers teach you about how the code runs?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Flash photo", "The on-board LED matrix flashing — real board or the in-page simulator."),
+      wrapUpCriterion(1, "Written reflection on running code on hardware for the first time."),
+    ],
+  });
+
+  const m2 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Light It Up",
+    summary: "Bring the flash off the matrix: edge connector, resistor, polarity — and the debugging hunt every engineer runs.",
+    badgeName: "Circuit Builder",
+    badgeIcon: "💡",
+    badgeDescription: "Wired a working LED circuit to the micro:bit's edge connector with correct polarity and a resistor, and debugged it hands-on.",
+    blocks: [
+      block("heading", { text: "Wire a REAL LED" }),
+      block("text", {
+        kind: "build",
+        minutes: 12,
+        text: "Bring the flash off the built-in grid and onto a wired LED. Three crocodile clips, one resistor, one rule: current flows from a HIGH pin to GND, and an LED only lets it through one way.",
+        actions: [
+          "LED long leg (+, anode) → a 220 Ω resistor → crocodile clip → pin P0",
+          "LED short leg (−, cathode) → crocodile clip → GND",
+          "Double-check the clips aren't touching each other before you run any code",
+          "Build the blink below, then press ▶ in the simulator to check the LOGIC — then try it on your real board",
+        ],
+        tip: "Edge-connector secret: the big pads (P0, P1, P2, 3V, GND) are made for crocodile clips — no breadboard needed for a simple on/off LED.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    pins.digitalWritePin(DigitalPin.P0, 1)\n    basic.pause(1000)\n    pins.digitalWritePin(DigitalPin.P0, 0)\n    basic.pause(1000)\n})",
+        tip: "The exact MakeCode program for the P0 blink — this is what the wiring diagram below is running.",
+      }),
+      block("microbit", {
+        kind: "build",
+        minutes: 10,
+        text: "Tap through the checklist to wire the circuit on screen — the same moves you'll make with real crocodile clips. When it's complete, press ▶ Run.",
+        parts: [{ id: "led1", pin: "P0", color: "#ef4444", label: "LED" }],
+        steps: [
+          { text: "Unplug the USB first — always wire with the power off", add: [] },
+          { text: "Clip the LED's long leg, through a 220 Ω resistor, to pin P0", add: ["led1"] },
+          { text: "Clip the LED's short leg to GND", add: [] },
+          { text: "Wiring done — plug back in and run it", add: [] },
+        ],
+        program: { kind: "pin-blink", pin: "P0", onMs: 1000, offMs: 1000 },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Working circuit photo",
+        text: "Photo of your circuit with the LED lit or mid-blink — wiring visible. Simulator screenshots count! Caption: which pin you used.",
+      }),
+      block("heading", { text: "When it doesn't work (and it won't)" }),
+      block("text", {
+        kind: "learn",
+        minutes: 4,
+        text: "Circuits fail in honest ways. When yours does, DON'T shotgun random changes — run the hunt in order, one check at a time:",
+        actions: [
+          "Power: is the board plugged in and the code actually running?",
+          "Polarity: long leg toward the resistor/pin side? (Backwards LED = nothing, forever)",
+          "Contact: is each crocodile clip really biting metal, not just plastic insulation?",
+          "Code: does the pin number in your program match the pin the clip is actually on?",
+          "The part: swap in a different LED — parts do die",
+        ],
+        tip: "That patient hunt is the actual skill. Engineers call it debugging — it's most of the job.",
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: debugging story",
+        text: "Press record and tell today's debugging story: what didn't work, and how you tracked it down step by step? (Nothing broke? Then explain which of the five checks you'd run first and why.)",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Include the moment something finally worked — what fixed it?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Working circuit photo", "A powered, working LED circuit wired to the edge connector — real or simulated."),
+      audioCriterion(1, "Voice note: debugging story", "A debugging story: what failed and the step-by-step hunt that found it."),
+      wrapUpCriterion(2, "Written reflection on building and debugging the circuit."),
+    ],
+  });
+
+  const m3 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Press A to Light",
+    summary: "Read the world with the built-in button: press A controls the LED grid — sense, decide, act.",
+    badgeName: "Input Master",
+    badgeIcon: "👆",
+    badgeDescription: "Read a real-world input with a button-A poll and used it to control an output — the sense → decide → act loop, with zero wiring.",
+    blocks: [
+      block("heading", { text: "Inputs: the button that's already there" }),
+      block("text", {
+        kind: "build",
+        minutes: 8,
+        text: "No wiring today — the micro:bit has two buttons built in. You'll read button A continuously and light the grid for exactly as long as it's held down.",
+        actions: [
+          "On makecode.microbit.org (or a real micro:bit): forever → if button A is pressed → show leds, else → clear screen",
+          "Press ▶ in MakeCode's simulator, or flash it to a real board",
+          "Or skip straight to the simulator below — click and HOLD button A: light. Let go: dark",
+        ],
+        tip: "'button is pressed' checks your finger continuously, the same way digitalRead does on other boards — no wiring needed because the button is already soldered to the chip.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    if (input.buttonIsPressed(Button.A)) {\n        basic.showLeds(`\n            . . . . .\n            . . . . .\n            . # . . .\n            . . . . .\n            . . . . .\n            `)\n    } else {\n        basic.clearScreen()\n    }\n})",
+        tip: "The exact MakeCode program for reading button A — the simulator below runs it.",
+      }),
+      block("microbit", {
+        kind: "build",
+        minutes: 5,
+        text: "This is a live micro:bit simulator running the logic above. Press ▶ Run, then click and HOLD button A to test it.",
+        program: { kind: "button-hold-matrix", button: "A", cells: [[2, 2]] },
+      }),
+      block("text", {
+        kind: "learn",
+        minutes: 2,
+        text: "Hold the button: light. Release: dark. You've built the complete loop every smart device runs: sense → decide → act — and this time, zero crocodile clips.",
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Working button photo",
+        text: "Photo of your button build working — real or simulated. Caption: what happens when you hold button A.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Explain in your own words why we check the button inside a forever loop instead of just once."),
+    ],
+    criteria: [
+      photoCriterion(0, "Working button photo", "Button A controlling the LED grid — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on reading inputs."),
+    ],
+  });
+
+  const m4 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Traffic Light, Wired",
+    summary: "Three LEDs, one sequence: green, yellow, red — forever, wired to the edge connector.",
+    badgeName: "Traffic Controller",
+    badgeIcon: "🚦",
+    badgeDescription: "Sequenced multiple outputs with digital-write-pin and pause to run a real traffic-light cycle.",
+    blocks: [
+      block("heading", { text: "🚦 Build the full circuit" }),
+      block("text", {
+        kind: "build",
+        minutes: 6,
+        text: "Red, yellow, green LEDs on P0, P1, P2 — each with its own resistor and its own GND clip. The program sequences them: green 5 s → yellow 2 s → red 5 s, forever.",
+        actions: [
+          "Red LED: long leg → resistor → P0 · short leg → GND",
+          "Yellow LED: long leg → resistor → P1 · short leg → GND",
+          "Green LED: long leg → resistor → P2 · short leg → GND",
+        ],
+        tip: "It's the LED circuit you already know, three times over. Build one color at a time and test as you go.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    pins.digitalWritePin(DigitalPin.P2, 1) // green\n    basic.pause(5000)\n    pins.digitalWritePin(DigitalPin.P2, 0)\n    pins.digitalWritePin(DigitalPin.P1, 1) // yellow\n    basic.pause(2000)\n    pins.digitalWritePin(DigitalPin.P1, 0)\n    pins.digitalWritePin(DigitalPin.P0, 1) // red\n    basic.pause(5000)\n    pins.digitalWritePin(DigitalPin.P0, 0)\n})",
+        tip: "The exact MakeCode program for the traffic-light sequence — this is what the wiring diagram below is running.",
+      }),
+      block("microbit", {
+        kind: "create",
+        minutes: 6,
+        text: "Tap through the wiring checklist, then press ▶ Run: green 5 s → yellow 2 s → red 5 s, forever.",
+        parts: [
+          { id: "led-r", pin: "P0", color: "#ef4444", label: "red" },
+          { id: "led-y", pin: "P1", color: "#eab308", label: "yellow" },
+          { id: "led-g", pin: "P2", color: "#22c55e", label: "green" },
+        ],
+        steps: [
+          { text: "RED LED: long leg through a resistor to P0 · short leg to GND", add: ["led-r"] },
+          { text: "YELLOW LED: long leg through a resistor to P1 · short leg to GND", add: ["led-y"] },
+          { text: "GREEN LED: long leg through a resistor to P2 · short leg to GND", add: ["led-g"] },
+        ],
+        program: {
+          kind: "pin-cycle",
+          steps: [
+            { pin: "P2", ms: 5000 },
+            { pin: "P1", ms: 2000 },
+            { pin: "P0", ms: 5000 },
+          ],
+        },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Traffic light photo",
+        text: "Photo of your traffic light mid-cycle — real or simulated. Caption: which color was lit when you snapped it.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("How would you add a flashing-yellow night mode?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Traffic light photo", "The three-LED traffic light running its sequence — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on sequencing outputs."),
+    ],
+  });
+
+  const m5 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Built-In Thermometer",
+    summary: "The micro:bit's onboard temperature sensor + the MakeCode console: watch live data stream from your code, no wiring.",
+    badgeName: "Data Logger",
+    badgeIcon: "🌡️",
+    badgeDescription: "Read the onboard temperature sensor, streamed live data over serial, and read it on a live-plotted graph.",
+    blocks: [
+      block("heading", { text: "🌡️ Be the experiment" }),
+      block("text", {
+        kind: "build",
+        minutes: 5,
+        text: "No sensor to wire this time — the micro:bit has a temperature sensor built into its chip. Read it with input.temperature(), stream it with serial.writeValue(), and watch it live in the Console.",
+        actions: [
+          'On makecode.microbit.org (or a real micro:bit): forever → serial write value "Temp" = temperature (°C) → pause 500',
+          "Press ▶ in MakeCode's simulator and open its Console tab, or flash it to a real board",
+          "Or skip straight to the simulator below — drag its temperature slider to test",
+        ],
+        tip: "Cup your hand around the real board (or, in the simulator, drag the temperature slider) and watch the number rise — you're the experiment!",
+      }),
+      block("code", {
+        kind: "learn",
+        text: 'basic.forever(function () {\n    serial.writeValue("Temp", input.temperature())\n    basic.pause(500)\n})',
+        tip: "The exact MakeCode program for logging the temperature — the simulator below runs it.",
+      }),
+      block("microbit", {
+        kind: "create",
+        minutes: 5,
+        text: "Press ▶ Run, then drag the temperature slider — that's you cupping the sensor. The readout below is exactly what you'll see in MakeCode's Console tab from a real board.",
+        program: { kind: "temperature-log" },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Sensor build photo",
+        text: "Photo of your program with the Console graph showing readings — real or simulated. Caption: the temperature it read.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What was the highest temperature you measured, and how did you make it climb?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Sensor build photo", "The onboard sensor streaming readings to the Console — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on reading sensor data."),
+    ],
+  });
+
+  const m6 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Police Flasher, Wired",
+    summary: "Two LEDs taking turns at 150 ms — patterns and timing, wired to the edge connector.",
+    badgeName: "Flash Master",
+    badgeIcon: "🚨",
+    badgeDescription: "Built an alternating two-LED flasher on the edge connector and tuned its timing pattern.",
+    blocks: [
+      block("heading", { text: "🚨 Red, blue, red, blue" }),
+      block("text", {
+        kind: "create",
+        minutes: 8,
+        text: "Two LEDs, two pins: red on P0, blue on P1 — same wiring recipe as the traffic light, just two colors taking turns every 150 ms.",
+        actions: [
+          "Red LED: long leg → resistor → P0 · short leg → GND",
+          "Blue LED: long leg → resistor → P1 · short leg → GND",
+        ],
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    pins.digitalWritePin(DigitalPin.P0, 1)\n    pins.digitalWritePin(DigitalPin.P1, 0)\n    basic.pause(150)\n    pins.digitalWritePin(DigitalPin.P0, 0)\n    pins.digitalWritePin(DigitalPin.P1, 1)\n    basic.pause(150)\n})",
+        tip: "The exact MakeCode program for the two-LED flasher — this is what the wiring diagram below is running.",
+      }),
+      block("microbit", {
+        kind: "create",
+        minutes: 6,
+        text: "Tap through the wiring, then press ▶ Run: red, blue, red, blue, every 150 ms. Challenge for your real build: make it strobe (two quick red flashes, then two quick blue).",
+        parts: [
+          { id: "led-r", pin: "P0", color: "#ef4444", label: "red" },
+          { id: "led-b", pin: "P1", color: "#3b82f6", label: "blue" },
+        ],
+        steps: [
+          { text: "RED LED: long leg through a resistor to P0 · short leg to GND", add: ["led-r"] },
+          { text: "BLUE LED: long leg through a resistor to P1 · short leg to GND", add: ["led-b"] },
+        ],
+        program: {
+          kind: "pin-cycle",
+          steps: [
+            { pin: "P0", ms: 150 },
+            { pin: "P1", ms: 150 },
+          ],
+        },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Flasher photo",
+        text: "Photo of your flasher mid-flash — real or simulated. Caption: your pause numbers.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("What pattern did you invent when you changed the pauses?"),
+    ],
+    criteria: [
+      photoCriterion(0, "Flasher photo", "The alternating two-LED flasher running — real or simulated."),
+      wrapUpCriterion(1, "Written reflection on timing patterns."),
+    ],
+  });
+
+  const m7 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Toggle Light",
+    summary: "Press B once, LED stays on. Press again, off. One variable that remembers — that's state.",
+    badgeName: "Switch Wizard",
+    badgeIcon: "🔦",
+    badgeDescription: "Used a state variable and a button-press event to turn a momentary press into a real on/off switch.",
+    blocks: [
+      block("heading", { text: "🔦 Same button, brand-new brain" }),
+      block("text", {
+        kind: "create",
+        minutes: 8,
+        text: "No wiring — button B is already there. This time we react to the EVENT of a press, not whether it's currently held, and remember the light's state in a variable.",
+        actions: [
+          "On makecode.microbit.org (or a real micro:bit): variable lightOn = false, then on button B pressed → flip lightOn → show leds or clear screen",
+          "Press ▶ in MakeCode's simulator, or flash it to a real board",
+          "Or skip straight to the simulator below — click button B to test",
+        ],
+        tip: "Click the button once: light stays ON. Click again: off. The magic is one variable that remembers — how every light switch, TV remote, and power button works.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "let lightOn = false\ninput.onButtonPressed(Button.B, function () {\n    lightOn = !lightOn\n    if (lightOn) {\n        basic.showLeds(`\n            . . . . .\n            . . . . .\n            . # . . .\n            . . . . .\n            . . . . .\n            `)\n    } else {\n        basic.clearScreen()\n    }\n})",
+        tip: "The exact MakeCode program for the toggle switch — the simulator below runs it.",
+      }),
+      block("microbit", {
+        kind: "create",
+        minutes: 6,
+        text: "Press ▶ Run, then click button B: on, off, on, off. Notice we didn't need any debounce delay here — 'on button pressed' already fires exactly once per press.",
+        program: { kind: "button-toggle-matrix", button: "B", cells: [[2, 2]] },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Toggle light photo",
+        text: "Photo of your toggle light ON with your finger OFF the button — that's the proof it remembers. Real or simulated.",
+      }),
+      block("heading", { text: "Reflect & share" }),
+      wrapUpPrompt("Explain lightOn = !lightOn to a friend who's never coded."),
+    ],
+    criteria: [
+      photoCriterion(0, "Toggle light photo", "The toggle light holding its state — LED on with the button released."),
+      wrapUpCriterion(1, "Written reflection on state and memory."),
+    ],
+  });
+
+  const m8 = await projectModule({
+    topic: ELECTRONICS,
+    board: "microbit",
+    title: "Onboard Heat Alarm",
+    summary: "Onboard sensor + LED grid + a decision: flash the alarm when it gets too hot, no wiring.",
+    badgeName: "Alarm Engineer",
+    badgeIcon: "🔥",
+    badgeDescription: "Combined the onboard temperature sensor with an output and a threshold decision — a complete sense → decide → act device.",
+    blocks: [
+      block("heading", { text: "🔥 Sense → decide → act" }),
+      block("text", {
+        kind: "create",
+        minutes: 8,
+        text: "Same sensor as the thermometer project, but this time it DECIDES: above 30°C, flash the whole grid as an alarm. Under 30, silence.",
+        actions: [
+          "Read input.temperature() every loop, log it with serial.writeValue like before",
+          "If the reading is above 30: flash the full grid on/off every 200 ms",
+          "Otherwise: keep the grid clear",
+        ],
+        tip: "Heads up: the onboard sensor reads the chip's own temperature, which runs a little warmer than the room — that's fine, we only care about the CHANGE when you cup your hand around the board (or drag the simulator's slider).",
+      }),
+      block("code", {
+        kind: "learn",
+        text: 'basic.forever(function () {\n    let tempC = input.temperature()\n    serial.writeValue("Temp", tempC)\n    if (tempC > 30) {\n        basic.showLeds(`\n            # # # # #\n            # # # # #\n            # # # # #\n            # # # # #\n            # # # # #\n            `)\n        basic.pause(200)\n        basic.clearScreen()\n        basic.pause(200)\n    } else {\n        basic.clearScreen()\n        basic.pause(200)\n    }\n})',
+        tip: "The exact MakeCode program for the heat alarm — the simulator below runs it.",
+      }),
+      block("microbit", {
+        kind: "create",
+        minutes: 6,
+        text: "Press ▶ Run, then drag the temperature slider past 30°C — the grid starts flashing. Challenge: change the danger line to 35.",
+        program: { kind: "temperature-alarm", thresholdC: 30 },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Heat alarm photo",
+        text: "Photo of your alarm FLASHING with the temperature reading visible in the Console — real or simulated. Caption: your danger threshold.",
       }),
       block("heading", { text: "Reflect & share" }),
       wrapUpPrompt("What other alarms could this same sense → decide → act loop build?"),
@@ -1421,9 +1890,136 @@ async function main() {
         ],
       },
   });
+  // ==========================================================================
+  // "Human in the Loop" — a growing topic that hosts every AI module. Builds
+  // on MODULE 5's safety/prompting basics with focused, hands-on AI-building
+  // projects. First one: prompt engineering by building a real playable game
+  // with v0. More modules land under this same topic over time.
+  // ==========================================================================
+  const HITL = "Human in the Loop";
+
+  const hitl1 = await createModule({
+      orgId: org.id,
+      topic: HITL,
+      title: "Prompt Engineer a Game",
+      summary:
+        "Build a real playable game by prompting v0 — write a strong first prompt, playtest it like an engineer, then iterate your way to something good.",
+      badgeName: "Prompt Engineer",
+      badgeIcon: "🕹️",
+      badgeDescription:
+        "Wrote a structured prompt to generate a working game with v0, playtested it, and iterated with specific follow-up prompts until it worked.",
+      contentJson: JSON.stringify([
+        block("heading", { text: "You're still the engineer" }),
+        block("text", {
+          kind: "learn",
+          minutes: 3,
+          text: "AI can now write working software from a description. That doesn't remove you from the loop — it changes your job. You're not typing every line anymore; you're the one deciding WHAT to build, judging what's wrong, and steering it there. That's PROMPT ENGINEERING, and it's a real skill, not luck.\n\nToday you'll build a real, playable game — not with blocks or by hand, but by prompting.",
+          tip: "'Human in the loop' means a person stays in charge of checking and directing the AI's work, every step. You're that person today.",
+        }),
+
+        block("heading", { text: "Meet v0" }),
+        block("text", {
+          kind: "learn",
+          minutes: 2,
+          text: "v0.dev (by Vercel) turns a written description into a real, running web app — you type what you want, it writes the code and shows you a live preview you can click and play, right in the browser. No setup, no install.",
+          tip: "You can always ask v0 to show you the code it wrote — you don't have to read it today, but it's there.",
+        }),
+
+        block("heading", { text: "Anatomy of a game prompt" }),
+        block("text", {
+          kind: "learn",
+          minutes: 5,
+          text: "Compare:\n\n❌ WEAK: \"make me a game\" → something generic, half-broken, not what you pictured.\n\n✅ STRONG: \"A whack-a-mole game. 9 holes in a 3x3 grid. A mole pops up in a random hole every 800ms and disappears after 1 second. Click a mole before it disappears to score a point. Show the score at the top. 30-second timer; when it hits 0, show 'Game Over' and a Restart button. Bright, cartoonish style.\" → something you can actually play.\n\nFive ingredients for a game prompt:\n1. WHAT — the exact mechanic (whack-a-mole, dodge the falling blocks, memory-match cards…)\n2. RULES — how you score, win, or lose\n3. CONTROLS — click, tap, arrow keys?\n4. STYLE — colors, mood, theme\n5. MUST-INCLUDES — score display, restart button, timer, title screen",
+          tip: "Specific numbers beat vague words. '800ms' beats 'fast'. '9 holes in a 3x3 grid' beats 'some holes'.",
+        }),
+
+        block("heading", { text: "Step 1 — Prompt your first draft" }),
+        block("text", {
+          kind: "create",
+          minutes: 15,
+          text: "Go to v0.dev. Pick ONE small game you can realistically get working today:",
+          actions: [
+            "Ideas: whack-a-mole, a reaction-time clicker, a memory-match card flip, a simple dodge-the-obstacle game",
+            "Write your prompt using all five ingredients — WHAT, RULES, CONTROLS, STYLE, MUST-INCLUDES",
+            "Generate, and watch it build in the live preview pane",
+            "Play it once. DON'T fix anything yet — we want the raw first draft for your portfolio",
+          ],
+          tip: "Keep the game idea SMALL. A tiny game that fully works beats an ambitious one that's half broken.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "First draft screenshot",
+          text: "Screenshot v0's first generated game running in the preview pane. In the caption, paste the exact prompt you used.",
+        }),
+
+        block("heading", { text: "Playtest like an engineer" }),
+        block("text", {
+          kind: "build",
+          minutes: 8,
+          text: "Play your own game three times, hunting for problems — exactly like debugging a circuit or a sketch, just at a different layer.",
+          actions: [
+            "Play it 3 times. Make a short list of what's broken, missing, or confusing",
+            "Rank your list — pick the TOP 2 problems to fix first",
+            "For each one, describe EXACTLY what's wrong ('the score doesn't reset on Restart') — not just 'it's buggy'",
+          ],
+          tip: "A precise bug description IS most of the fix — for a human debugging OR an AI fixing it for you.",
+        }),
+
+        block("heading", { text: "Iterate — the real skill" }),
+        block("text", {
+          kind: "create",
+          minutes: 15,
+          text: "Fix your top problems one at a time. After each prompt, re-test before moving to the next:",
+          actions: [
+            "Send one specific follow-up prompt per fix: 'The score doesn't reset when I click Restart — fix that so it goes back to 0'",
+            "Play again. Did it actually fix it, or just change something else?",
+            "Repeat for your second problem",
+            "Time allowing: ask for one enhancement, not just a fix — 'add a high score that persists between rounds'",
+          ],
+          tip: "A good first prompt is a lucky guess. A good FIFTH prompt — built on what you learned from playtesting — is a skill. That's the part that transfers to every AI tool you'll ever use.",
+        }),
+        block("checkpoint", {
+          capture: "audio",
+          criterionLabel: "Voice note: what you iterated and why",
+          text: "Press record: describe one specific bug or gap you found playtesting, the follow-up prompt you used to fix it, and whether it actually worked on the first try.",
+        }),
+
+        block("heading", { text: "Make it yours" }),
+        block("text", {
+          kind: "create",
+          minutes: 8,
+          text: "v0 doesn't know you. Add the part it couldn't have generated on its own.",
+          actions: [
+            "Give it a real title and theme — not the generic one v0 picked",
+            "Change one visual detail so it looks like YOUR game, not a template",
+            "Set yourself a target score and try to beat it",
+          ],
+          tip: "The test: you should be able to point at exactly what YOU added or fixed, and why — that's your thinking on top of the AI's draft.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Final playable game screenshot",
+          text: "Screenshot your finished game mid-play — score and your title/theme visible.",
+        }),
+
+        block("heading", { text: "Reflect & share" }),
+        wrapUpPrompt(
+          "Which prompt made the biggest difference — your very first one, or a later fix? What does that tell you about how AI-assisted building actually works?",
+        ),
+      ]),
+      criteria: {
+        create: [
+          photoCriterion(0, "First draft screenshot", "v0's first generated game, with the five-ingredient prompt used to create it."),
+          audioCriterion(1, "Voice note: what you iterated and why", "A specific bug found playtesting, the fix prompt used, and whether it worked."),
+          photoCriterion(2, "Final playable game screenshot", "The finished, playable game with the student's own title/theme and a visible score."),
+          wrapUpCriterion(3, "Written reflection on which prompt mattered most and why."),
+        ],
+      },
+  });
+
   const [k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15] = await createKnexModules(projectModule);
 
-  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, module4, module5, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
+  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, module5, hitl1, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.

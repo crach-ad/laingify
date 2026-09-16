@@ -140,6 +140,7 @@ export const modules = [
   // P — Selection and variables; sensor coding
   {
     topic: STRAND.P,
+    board: "microbit",
     title: `${Y} · micro:bit Sensor Gadget`,
     summary: "Code a micro:bit that reacts to the real world: a step counter with a variable, then a temperature or light alarm that uses IF to decide.",
     badgeName: "Sensor Coder",
@@ -490,6 +491,240 @@ export const modules = [
       create: [
         photoCriterion(1, "Timeline & news slide photo", "Communication timeline plus a slide/poster for a technology that helps society."),
         audioCriterion(2, "Voice note: one-minute news report", "Reports on a helpful technology with a benefit, how it works, and a downside."),
+        wrapUpCriterion(3, "What worked, what challenged you, what you'd improve."),
+      ],
+    },
+  },
+];
+
+// P — toolbelt: hardware onboarding for the micro:bit track, seeded right
+// before "micro:bit Sensor Gadget" (leadsTo: STRAND.P — see seed-kcsb.mjs).
+// Three short projects with zero external wiring: pair the board over USB
+// and flash a first script, build a multi-frame animation, then read the
+// built-in button — the exact skills the Sensor Gadget module assumes.
+const HEART_CELLS = [
+  [0, 1], [0, 3],
+  [1, 0], [1, 1], [1, 2], [1, 3], [1, 4],
+  [2, 0], [2, 1], [2, 2], [2, 3], [2, 4],
+  [3, 1], [3, 2], [3, 3],
+  [4, 2],
+];
+const TICK_CELLS = [
+  [0, 4], [1, 3], [2, 0], [2, 2], [3, 1],
+];
+
+export const toolbeltModules = [
+  {
+    topic: STRAND.P,
+    board: "microbit",
+    leadsTo: STRAND.P,
+    title: `${Y} · Connect & First Script`,
+    summary: "Open MakeCode, build a heart-flash program, then pair a real micro:bit over USB and flash it for the first time.",
+    badgeName: "First Connection",
+    badgeIcon: "🔌",
+    badgeDescription: "Built a first MakeCode program, paired a micro:bit over USB, and downloaded a real script onto real hardware.",
+    contentJson: JSON.stringify([
+      block("heading", { text: "Meet MakeCode" }),
+      block("text", {
+        kind: "learn",
+        minutes: 3,
+        text: "MakeCode is a free block-code editor that runs in your browser — nothing to install. Drag blocks together, and behind the scenes MakeCode writes real code and turns it into a .hex file the micro:bit can run.\n\nTo get that file ONTO the board you connect it with a USB cable, then either drag the file across by hand, or PAIR once so every future Download flashes it straight across.",
+        tip: "No micro:bit at your station yet? Everything below also works in MakeCode's own simulator and the one further down this page.",
+      }),
+      block("heading", { text: "Step 1 — Build your first script" }),
+      block("text", {
+        kind: "build",
+        minutes: 8,
+        text: `Open makecode.microbit.org (below) → New Project → name it "myfirstscript":`,
+        actions: [
+          "Basic drawer → drag 'forever' into the workspace",
+          "Inside it: 'show leds' — click squares to draw a heart",
+          "Then 'pause (ms) 1000' → 'clear screen' → 'pause (ms) 500'",
+          "Click ▶ in MakeCode's own simulator (top-left) — check the heart flashes before touching real hardware",
+        ],
+        tip: "'forever' runs your blocks over and over, exactly like the forever loop in your game code — same idea, new hardware.",
+      }),
+      block("embed", { url: MAKECODE }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    basic.showLeds(`\n        . # . # .\n        # # # # #\n        # # # # #\n        . # # # .\n        . . # . .\n        `)\n    basic.pause(1000)\n    basic.clearScreen()\n    basic.pause(500)\n})",
+        tip: "This is the exact MakeCode JavaScript for the heart flash — the block editor builds this same program.",
+      }),
+      block("heading", { text: "Step 2 — Connect & pair over USB" }),
+      block("text", {
+        kind: "build",
+        minutes: 8,
+        text: "Now put it on real hardware:",
+        actions: [
+          "Plug your micro:bit into the computer with a USB cable — a drive named 'MICROBIT' should appear",
+          "Click the yellow 'Download' button at the bottom of MakeCode. The first time, a 'Pair device' window pops up",
+          "In that window, click 'BBC micro:bit CMSIS-DAP' in the list, then click 'Connect'",
+          "Watch the yellow light on the BACK of the micro:bit flicker, then stop — that means the download finished and your heart is running",
+        ],
+        warn: "Only click Connect on YOUR OWN micro:bit — if more than one shows up in the list, check the name sticker on the back of the board.",
+        tip: "Paired once? Every Download after this flashes straight away — no more dragging the .hex file onto the MICROBIT drive by hand.",
+      }),
+      block("microbit", {
+        kind: "build",
+        minutes: 3,
+        text: "This is a live micro:bit simulator running the exact program above. Press ▶ Run and watch the heart flash once per second.",
+        program: { kind: "matrix-blink", cells: HEART_CELLS, onMs: 1000, offMs: 500 },
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Paired & flashing photo",
+        text: "Photo of the 'Pair device' window (or the flickering yellow light) next to your micro:bit showing the heart — or a screenshot of the simulator running right here.",
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: what pairing does",
+        text: "Record yourself: what happens when you click Download the first time, what does the 'Pair device' window ask you to do, and what does the little yellow light on the back mean?",
+      }),
+      wrapUpPrompt("What surprised you about turning a block program into something a real board runs?"),
+    ]),
+    criteria: {
+      create: [
+        photoCriterion(1, "Paired & flashing photo", "The MakeCode pairing window or a flickering/flashed micro:bit, or the in-page simulator running the heart flash."),
+        audioCriterion(2, "Voice note: what pairing does", "Explains what Download + Pair device does and what the status light means."),
+        wrapUpCriterion(3, "What worked, what challenged you, what you'd improve."),
+      ],
+    },
+  },
+
+  {
+    topic: STRAND.P,
+    board: "microbit",
+    leadsTo: STRAND.P,
+    title: `${Y} · Animate the Matrix`,
+    summary: "Chain several showLeds + pause blocks into a real animation — the flip-book trick behind every micro:bit game.",
+    badgeName: "Animator",
+    badgeIcon: "🎞️",
+    badgeDescription: "Built a multi-frame animation from showLeds and pause blocks and explained how a program plays frames in order.",
+    contentJson: JSON.stringify([
+      block("heading", { text: "One picture isn't a movie" }),
+      block("text", {
+        kind: "learn",
+        minutes: 3,
+        text: "A cartoon is just still pictures — FRAMES — shown one after another, fast. Your micro:bit does the same trick: draw a frame with 'show leds', PAUSE a moment, draw the next frame, pause again. Loop that inside 'forever' and it looks like movement.",
+        tip: "More frames + a shorter pause = smoother movement. Fewer frames + a longer pause = a slideshow, not an animation.",
+      }),
+      block("heading", { text: "Step 1 — Build a falling dot" }),
+      block("text", {
+        kind: "build",
+        minutes: 10,
+        text: `New MakeCode project "animate":`,
+        actions: [
+          "Inside 'forever': 'show leds' with a single dot lit in the top-middle square, then 'pause (ms) 200'",
+          "Add four more show-leds/pause pairs, moving the dot down one row each time, until it reaches the bottom row",
+          "Run it in MakeCode's simulator — the dot should fall down the middle column, then jump back to the top and repeat",
+          "You already paired last time — just click Download to flash it straight to your board",
+        ],
+        tip: "Copy-paste your first showLeds/pause pair and just move the dot — much faster than rebuilding each frame from scratch.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    basic.showLeds(`\n        . . # . .\n        . . . . .\n        . . . . .\n        . . . . .\n        . . . . .\n        `)\n    basic.pause(200)\n    basic.showLeds(`\n        . . . . .\n        . . # . .\n        . . . . .\n        . . . . .\n        . . . . .\n        `)\n    basic.pause(200)\n    basic.showLeds(`\n        . . . . .\n        . . . . .\n        . . # . .\n        . . . . .\n        . . . . .\n        `)\n    basic.pause(200)\n    basic.showLeds(`\n        . . . . .\n        . . . . .\n        . . . . .\n        . . # . .\n        . . . . .\n        `)\n    basic.pause(200)\n    basic.showLeds(`\n        . . . . .\n        . . . . .\n        . . . . .\n        . . . . .\n        . . # . .\n        `)\n    basic.pause(200)\n})",
+        tip: "Five frames, each one dot lower, each followed by the same pause — that's the whole animation.",
+      }),
+      block("microbit", {
+        kind: "build",
+        minutes: 3,
+        text: "A live simulator running the exact animation above. Press ▶ Run and watch the dot fall and repeat.",
+        program: {
+          kind: "matrix-sequence",
+          frames: [[[0, 2]], [[1, 2]], [[2, 2]], [[3, 2]], [[4, 2]]],
+          ms: 200,
+        },
+      }),
+      block("text", {
+        kind: "build",
+        minutes: 5,
+        text: "Now OWN it — change the pause and re-run:",
+        actions: [
+          "pause(60) → a blur",
+          "pause(600) → a slow drip",
+          "Extension: add frames to make it bounce back UP the column instead of jumping to the top",
+        ],
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Animation running photo",
+        text: "Photo or screenshot of your animation mid-flow — real board or the in-page simulator. Caption which pause value you tried.",
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: frames and pauses",
+        text: "Record yourself: what is one 'frame' in your animation, and what does the pause between frames control?",
+      }),
+      wrapUpPrompt(),
+    ]),
+    criteria: {
+      create: [
+        photoCriterion(1, "Animation running photo", "A multi-frame animation running — real board or the in-page simulator."),
+        audioCriterion(2, "Voice note: frames and pauses", "Explains a frame and what the pause between frames does."),
+        wrapUpCriterion(3, "What worked, what challenged you, what you'd improve."),
+      ],
+    },
+  },
+
+  {
+    topic: STRAND.P,
+    board: "microbit",
+    leadsTo: STRAND.P,
+    title: `${Y} · Press A to Play`,
+    summary: "Read the micro:bit's built-in button as an input and use it to control the LED matrix live — no wiring needed.",
+    badgeName: "Input Master",
+    badgeIcon: "👆",
+    badgeDescription: "Read button A continuously inside a forever loop and used it to control an output in real time.",
+    contentJson: JSON.stringify([
+      block("heading", { text: "Buttons are already wired for you" }),
+      block("text", {
+        kind: "build",
+        minutes: 8,
+        text: "No wiring today — the micro:bit has two buttons built right in. You'll check button A continuously and light the grid for exactly as long as it's held down.",
+        actions: [
+          `New project "pressplay": inside 'forever' → 'if button A is pressed' → 'show leds' (draw a checkmark) → 'else' → 'clear screen'`,
+          "Run it in MakeCode's simulator — click and HOLD the on-screen A button",
+          "You're already paired — click Download to try it on your real board",
+        ],
+        tip: "'button A is pressed' checks your finger continuously, the same way a sensor reading gets checked — no wiring needed because the button is already soldered to the chip.",
+      }),
+      block("code", {
+        kind: "learn",
+        text: "basic.forever(function () {\n    if (input.buttonIsPressed(Button.A)) {\n        basic.showLeds(`\n            . . . . #\n            . . . # .\n            # . # . .\n            . # . . .\n            . . . . .\n            `)\n    } else {\n        basic.clearScreen()\n    }\n})",
+        tip: "The exact MakeCode program for reading button A — the simulator below runs it.",
+      }),
+      block("microbit", {
+        kind: "build",
+        minutes: 3,
+        text: "A live simulator running the exact program above. Press ▶ Run, then click and HOLD button A: checkmark. Let go: dark.",
+        program: { kind: "button-hold-matrix", button: "A", cells: TICK_CELLS },
+      }),
+      block("text", {
+        kind: "build",
+        minutes: 4,
+        text: "Now OWN it:",
+        actions: [
+          "Swap Button.A for Button.B — does it still work the same way?",
+          "Extension: instead of 'is pressed' (hold), try an 'on button A pressed' event with a variable that flips true/false each press — that's a TOGGLE instead of a hold",
+        ],
+      }),
+      block("checkpoint", {
+        capture: "photo",
+        criterionLabel: "Button input photo",
+        text: "Photo of the checkmark lit while holding button A — real board or the in-page simulator.",
+      }),
+      block("checkpoint", {
+        capture: "audio",
+        criterionLabel: "Voice note: reading a button",
+        text: "Record yourself: what does 'if button A is pressed' check, and what happens the instant you let go?",
+      }),
+      wrapUpPrompt("Which would suit a real gadget better — holding a button, or pressing to toggle? Why?"),
+    ]),
+    criteria: {
+      create: [
+        photoCriterion(1, "Button input photo", "The LED pattern lit while button A is held — real board or the in-page simulator."),
+        audioCriterion(2, "Voice note: reading a button", "Explains the continuous button check and what release does."),
         wrapUpCriterion(3, "What worked, what challenged you, what you'd improve."),
       ],
     },

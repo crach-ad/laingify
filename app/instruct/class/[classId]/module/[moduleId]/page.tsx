@@ -78,10 +78,11 @@ function StepCard({ b }: { b: Block }) {
       </div>
     );
   }
-  if (b.type === "embed" || b.type === "video") {
+  if (b.type === "embed" || b.type === "video" || b.type === "link") {
     return (
       <div className="card p-5">
-        <div className="mono-label">{b.type === "video" ? "🎬 Video" : "🔗 Embedded tool"}</div>
+        <div className="mono-label">{b.type === "video" ? "🎬 Video" : b.type === "link" ? "🔗 Link button" : "🔗 Embedded tool"}</div>
+        {b.type === "link" && b.text && <p className="mt-2 text-sm" style={{ color: "var(--body)" }}>{b.text}</p>}
         {b.url && (
           <a href={b.url} target="_blank" rel="noreferrer" className="mt-2 block break-all text-sm underline" style={{ color: "var(--accent)" }}>
             {b.url}
@@ -106,11 +107,13 @@ function StepCard({ b }: { b: Block }) {
       </div>
     );
   }
-  if (b.type === "circuit" || b.type === "knex") {
-    const n = b.type === "circuit" ? b.steps?.length : b.builds?.length;
+  if (b.type === "circuit" || b.type === "knex" || b.type === "microbit") {
+    const n = b.type === "circuit" ? b.steps?.length : b.type === "knex" ? b.builds?.length : undefined;
+    const label =
+      b.type === "circuit" ? "⚡ Interactive circuit build" : b.type === "knex" ? "🧱 Interactive K'NEX 3D build" : "🔗 micro:bit build";
     return (
       <div className="card p-5">
-        <div className="mono-label">{b.type === "circuit" ? "⚡ Interactive circuit build" : "🧱 Interactive K'NEX 3D build"}{n ? ` · ${n} guided steps` : ""}</div>
+        <div className="mono-label">{label}{n ? ` · ${n} guided steps` : ""}</div>
         {b.text && <p className="mt-2 whitespace-pre-wrap text-sm" style={{ color: "var(--body)" }}>{b.text}</p>}
         {b.sketch && <pre className="mt-3 max-h-64 overflow-auto rounded-lg bg-[var(--tile)] p-4 font-mono text-[12px] leading-relaxed">{b.sketch}</pre>}
       </div>

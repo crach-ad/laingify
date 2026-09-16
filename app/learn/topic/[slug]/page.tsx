@@ -7,8 +7,34 @@ import { slugifyTopic } from "@/lib/topics";
 
 // One topic's project list: every module in this content area, in order, with
 // the learner's progress. Projects open the normal tutorial player.
-export default async function TopicPage({ params }: { params: Promise<{ slug: string }> }) {
+//
+// A topic can span more than one hardware `board` (e.g. Programmable
+// Electronics has an Arduino track and a micro:bit track) — in that case,
+// opening the topic shows a board picker first, and `?board=` filters the
+// project list. Single-board topics are unaffected.
+
+const BOARD_META: Record<string, { name: string; icon: string; blurb: string }> = {
+  arduino: {
+    name: "Arduino",
+    icon: "🔌",
+    blurb: "Breadboard circuits and C/C++ — an in-page Arduino simulator, no hardware required.",
+  },
+  microbit: {
+    name: "micro:bit",
+    icon: "📟",
+    blurb: "The onboard LED matrix, buttons, and sensors — built and run in the MakeCode editor.",
+  },
+};
+
+export default async function TopicPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ board?: string }>;
+}) {
   const { slug } = await params;
+  const { board: boardParam } = await searchParams;
   const { learner, klass } = await requireLearner();
   const band = bandConfig(klass.band);
 
@@ -38,15 +64,53 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
   const completedModuleIds = new Set(projects.map((p) => p.moduleId));
   const metCriterionIds = new Set(statuses.filter((s) => s.status === "MET").map((s) => s.criterionId));
 
-  const rows = inTopic.map((cm) => {
-    const m = cm.module;
-    const done = completedModuleIds.has(m.id) || m.progress[0]?.status === "COMPLETED";
-    const started = m.progress.length > 0;
-    const required = m.criteria.filter((c) => c.required);
-    const met = required.filter((c) => metCriterionIds.has(c.id)).length;
-    const pct = done ? 100 : required.length === 0 ? 0 : Math.round((met / required.length) * 100);
-    return { cm, m, done, started, pct };
-  });
+  const boards = Array.from(new Set(inTopic.map((cm) => cm.module.board)));
+  const selectedBoard = boardParam && boards.includes(boardParam) ? boardParam : null;
+
+  if (boards.length > 1 && !selectedBoard) {
+    return (
+      <main className={`mx-auto w-full max-w-4xl flex-1 px-6 py-10 ${band.textScale}`}>
+        <Link href="/learn" className="muted text-sm transition-colors hover:text-[var(--text)]">
+          ← All topics
+        </Link>
+
+        <header className="animate-fade-up mt-6">
+          <div className="overline mb-1.5">Topic</div>
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight">{topicName}</h1>
+          <p className="muted mt-1.5 text-sm">Which board are you building with?</p>
+        </header>
+
+        <section className="animate-fade-up mt-8 grid gap-3 sm:grid-cols-2" style={{ animationDelay: "0.08s" }}>
+          {boards.map((b) => {
+            const meta = BOARD_META[b] ?? { name: b, icon: "🔧", blurb: "" };
+            return (
+              <Link key={b} href={`/learn/topic/${slug}?board=${encodeURIComponent(b)}`} className="block">
+                <div className="card card-interactive flex h-full flex-col gap-3 p-6">
+                  <span className="tile flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl">
+                    {meta.icon}
+                  </span>
+                  <span className="display block text-lg font-semibold">{meta.name}</span>
+                  <span className="muted text-[13px] leading-relaxed">{meta.blurb}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </section>
+      </main>
+    );
+  }
+
+  const rows = (selectedBoard ? inTopic.filter((cm) => cm.module.board === selectedBoard) : inTopic).map(
+    (cm) => {
+      const m = cm.module;
+      const done = completedModuleIds.has(m.id) || m.progress[0]?.status === "COMPLETED";
+      const started = m.progress.length > 0;
+      const required = m.criteria.filter((c) => c.required);
+      const met = required.filter((c) => metCriterionIds.has(c.id)).length;
+      const pct = done ? 100 : required.length === 0 ? 0 : Math.round((met / required.length) * 100);
+      return { cm, m, done, started, pct };
+    },
+  );
   const doneCount = rows.filter((r) => r.done).length;
 
   return (
@@ -60,11 +124,21 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
           {rows[0].m.badgeIcon}
         </span>
         <div>
-          <div className="overline mb-1.5">Topic</div>
+          <div className="overline mb-1.5">
+            Topic{selectedBoard ? ` · ${BOARD_META[selectedBoard]?.name ?? selectedBoard}` : ""}
+          </div>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight">{topicName}</h1>
           <p className="muted mt-1.5 text-sm">
             {doneCount} of {rows.length} project{rows.length === 1 ? "" : "s"} completed — each one
             earns its own badge.
+            {boards.length > 1 && (
+              <>
+                {" "}
+                <Link href={`/learn/topic/${slug}`} className="underline transition-colors hover:text-[var(--text)]">
+                  Switch board
+                </Link>
+              </>
+            )}
           </p>
         </div>
       </header>
