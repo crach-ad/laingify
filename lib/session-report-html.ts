@@ -77,9 +77,10 @@ function css(b: Branding): string {
   .foot { margin-top: 40px; padding-top: 28px; border-top: 1px solid ${b.hairline}; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: ${b.inkMuted}; }
   .download-btn { position: fixed; top: 20px; right: 20px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: none; background: ${b.ink}; color: ${b.paper}; font-family: 'Public Sans', -apple-system, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
   .download-btn:hover { opacity: .9; }
+  @page { margin: 0.5in; }
   @media print {
     body { padding: 0; }
-    .wrap { max-width: 100%; margin: 0; padding: 0; }
+    .wrap { max-width: 100%; width: 100%; margin: 0 auto; padding: 0; }
     .download-btn { display: none; }
   }
 `;
