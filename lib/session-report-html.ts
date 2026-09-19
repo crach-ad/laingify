@@ -77,10 +77,14 @@ function css(b: Branding): string {
   .foot { margin-top: 40px; padding-top: 28px; border-top: 1px solid ${b.hairline}; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: ${b.inkMuted}; }
   .download-btn { position: fixed; top: 20px; right: 20px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: none; background: ${b.ink}; color: ${b.paper}; font-family: 'Public Sans', -apple-system, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
   .download-btn:hover { opacity: .9; }
-  @page { margin: 0.4in; }
+  @page { margin: 0.2in; }
   @media print {
     body { padding: 0; font-size: 13px; }
-    .wrap { max-width: 100%; width: 100%; margin: 0 auto; padding: 0; }
+    /* Margin is baked into .wrap's own padding, not left to @page — @page
+       margin support is inconsistent outside Chrome (Safari in particular),
+       so this guarantees real whitespace regardless of what print engine
+       renders it. */
+    .wrap { max-width: 100%; width: 100%; margin: 0; padding: 0.3in; }
     .logo { width: 160px; }
     h1 { font-size: 28px; }
     header.cover { padding-bottom: 18px; gap: 10px; }
