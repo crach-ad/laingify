@@ -4,18 +4,10 @@
 // headlines, Public Sans body, IBM Plex Mono labels/meta). Branded per org
 // where we have brand assets (IgniteHer); a neutral palette otherwise.
 
-import type { SessionParticipant } from "@/lib/gemini";
 import IGNITE_HER_LOGO_BASE64 from "@/lib/ignite-her-logo";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-const STATUS_LABEL: Record<string, string> = {
-  PRESENT: "Present",
-  LATE: "Late",
-  ABSENT: "Absent",
-  EXCUSED: "Excused",
-};
 
 type Branding = {
   logo?: { base64: string; mime: string }; // bare base64, no data: prefix
@@ -68,28 +60,36 @@ function css(b: Branding): string {
   .muted { color: ${b.inkMuted}; font-size: 13px; }
   header.cover { padding-bottom: 28px; border-bottom: 1px solid ${b.hairline}; display: flex; flex-direction: column; gap: 16px; }
   .meta-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px; }
-  .statsbar { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 32px; padding: 28px 0; border-bottom: 1px solid ${b.hairline}; }
+  .statsbar { display: flex; gap: 48px; padding: 28px 0; border-bottom: 1px solid ${b.hairline}; }
   .stat b { display: block; font-family: 'Spectral', Georgia, serif; font-size: 42px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
   section { margin-top: 34px; }
   .kicker { font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 14px; font-weight: 500; }
   .narrative { font-size: 16px; line-height: 1.68; color: ${b.inkBody}; white-space: pre-wrap; max-width: 660px; }
   .fallback-note { margin-top: 14px; font-size: 12.5px; font-style: italic; color: ${b.inkMuted}; }
-  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  th { text-align: left; font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: ${b.inkMuted}; font-weight: 500; padding: 0 12px 10px 0; border-bottom: 1.5px solid ${b.ink}; }
-  td { padding: 14px 12px 14px 0; border-bottom: 1px solid ${b.hairline}; font-size: 13.5px; color: ${b.inkMuted}; vertical-align: top; }
-  td.name { font-size: 14.5px; font-weight: 600; color: ${b.ink}; }
-  td.quote { font-style: italic; }
-  tr:last-child td { border-bottom: none; }
-  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .highlights { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 28px; }
+  figure.highlight { margin: 0; break-inside: avoid; }
+  figure.highlight img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; border: 1px solid ${b.hairline}; display: block; background: ${b.hairline}; }
+  figure.highlight figcaption { margin-top: 10px; }
+  figure.highlight .quote { font-size: 14px; font-style: italic; line-height: 1.5; color: ${b.inkBody}; }
+  figure.highlight .quote.empty { color: ${b.inkMuted}; }
+  figure.highlight .name { margin-top: 6px; font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 12px; letter-spacing: .04em; color: ${b.inkMuted}; }
+  .no-highlights { font-size: 14px; color: ${b.inkMuted}; font-style: italic; }
   .foot { margin-top: 40px; padding-top: 28px; border-top: 1px solid ${b.hairline}; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: ${b.inkMuted}; }
+  .download-btn { position: fixed; top: 20px; right: 20px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: none; background: ${b.ink}; color: ${b.paper}; font-family: 'Public Sans', -apple-system, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+  .download-btn:hover { opacity: .9; }
   @media print {
     body { padding: 0; }
-    .wrap { max-width: none; padding: 0; }
-    table { break-inside: avoid; }
+    .wrap { max-width: 100%; margin: 0; padding: 0; }
+    .download-btn { display: none; }
   }
 `;
 }
+
+export type SessionHighlight = {
+  displayName: string;
+  photoUrl: string; // stored evidence photo, typically a data: URL
+  quote?: string;
+};
 
 export type SessionReportData = {
   orgName: string;
@@ -100,29 +100,22 @@ export type SessionReportData = {
   aiUsed: boolean;
   preparedBy: string;
   totals: { present: number; badgesEarned: number; submissions: number };
-  participants: SessionParticipant[];
+  highlights: SessionHighlight[];
 };
-
-function statusVisual(b: Branding, status: string | null): { color: string; text: string } {
-  if (!status) return { color: b.inkMuted, text: "No record" };
-  if (status === "PRESENT") return { color: b.accentA, text: "Present" };
-  if (status === "LATE") return { color: b.accentB, text: "Late" };
-  return { color: b.inkMuted, text: STATUS_LABEL[status] ?? status };
-}
 
 export function renderSessionReportHtml(data: SessionReportData): string {
   const b = brandingFor(data.orgName);
 
-  const rows = data.participants
-    .map((p) => {
-      const status = statusVisual(b, p.attendanceStatus);
-      return `<tr>
-      <td class="name">${esc(p.displayName)}</td>
-      <td><span class="pill" style="color:${status.color}"><span class="dot" style="background:${status.color}"></span>${esc(status.text)}</span></td>
-      <td>${p.badgesToday.length ? esc(p.badgesToday.join(", ")) : "—"}</td>
-      <td class="quote">${p.submissionExcerpts.length ? `"${esc(p.submissionExcerpts[0])}"` : "—"}</td>
-    </tr>`;
-    })
+  const highlightCards = data.highlights
+    .map(
+      (h) => `<figure class="highlight">
+      <img src="${h.photoUrl}" alt="${esc(h.displayName)}'s work">
+      <figcaption>
+        <div class="quote${h.quote ? "" : " empty"}">${h.quote ? `"${esc(h.quote)}"` : "No written reflection captured."}</div>
+        <div class="name">${esc(h.displayName)}</div>
+      </figcaption>
+    </figure>`,
+    )
     .join("");
 
   const logoHtml = b.logo
@@ -139,6 +132,7 @@ export function renderSessionReportHtml(data: SessionReportData): string {
 <style>${css(b)}</style>
 </head>
 <body>
+<button class="download-btn" onclick="window.print()" type="button">⬇ Download PDF</button>
 <div class="wrap">
   <header class="cover">
     ${logoHtml}
@@ -151,23 +145,21 @@ export function renderSessionReportHtml(data: SessionReportData): string {
 
   <div class="statsbar">
     <div class="stat"><b style="color:${b.accentA}">${data.totals.present}</b><span class="label">Present</span></div>
-    <div class="stat"><b style="color:${b.accentB}">${data.totals.badgesEarned}</b><span class="label">Badge${data.totals.badgesEarned === 1 ? "" : "s"} Earned</span></div>
-    <div class="stat"><b style="color:${b.accentA}">${data.totals.submissions}</b><span class="label">Submission${data.totals.submissions === 1 ? "" : "s"} Written</span></div>
   </div>
 
   <section>
     <div class="kicker" style="color:${b.accentB}">01 — Session Summary</div>
     <div class="narrative">${esc(data.narrative)}</div>
-    ${!data.aiUsed ? `<p class="fallback-note">Generated from program data only — AI narrative assistance was unavailable for this report.</p>` : `<p class="fallback-note">Narrative drafted with AI assistance from program data.</p>`}
+    ${data.aiUsed ? `<p class="fallback-note">Narrative drafted with AI assistance from program data.</p>` : ""}
   </section>
 
   <section>
-    <div class="kicker" style="color:${b.accentB}">02 — Participant Activity</div>
-    <table>
-      <colgroup><col style="width:20%"><col style="width:15%"><col style="width:24%"><col style="width:41%"></colgroup>
-      <thead><tr><th>Participant</th><th>Attendance</th><th>Badges Earned</th><th>From Their Work</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="kicker" style="color:${b.accentB}">02 — Session Highlights</div>
+    ${
+      data.highlights.length > 0
+        ? `<div class="highlights">${highlightCards}</div>`
+        : `<p class="no-highlights">No photos were captured for this session yet.</p>`
+    }
   </section>
 
   <footer class="foot">

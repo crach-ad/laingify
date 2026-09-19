@@ -46,7 +46,7 @@ export async function GET(req: Request) {
   const dayEnd = new Date(date.getTime() + 24 * 60 * 60 * 1000);
   const dayWindow = { gte: date, lt: dayEnd };
 
-  const [attendance, activeEvents, projects, submissions] = await Promise.all([
+  const [attendance, activeEvents, projects, submissions, photos] = await Promise.all([
     prisma.attendanceRecord.findMany({ where: { classId, date } }),
     prisma.learnerEvent.findMany({
       where: { learnerId: { in: learnerIds }, createdAt: dayWindow },
@@ -55,6 +55,10 @@ export async function GET(req: Request) {
     }),
     prisma.project.findMany({ where: { learnerId: { in: learnerIds }, createdAt: dayWindow } }),
     prisma.submission.findMany({ where: { learnerId: { in: learnerIds }, createdAt: dayWindow }, orderBy: { createdAt: "asc" } }),
+    prisma.evidence.findMany({
+      where: { learnerId: { in: learnerIds }, type: "PHOTO", createdAt: dayWindow },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
 
   const moduleIds = [...new Set(projects.map((p) => p.moduleId))];
@@ -89,6 +93,28 @@ export async function GET(req: Request) {
     submissions: submissions.length,
   };
 
+  // One photo per learner (their earliest that day) paired with their own
+  // reflection, if they wrote one — the visual "highlights" section. Only
+  // learners who actually captured a photo that day appear here.
+  const firstSubmissionByLearner = new Map<string, string>();
+  for (const s of submissions) {
+    if (!firstSubmissionByLearner.has(s.learnerId)) firstSubmissionByLearner.set(s.learnerId, s.content);
+  }
+  const firstPhotoByLearner = new Map<string, string>();
+  for (const p of photos) {
+    if (p.url && !firstPhotoByLearner.has(p.learnerId)) firstPhotoByLearner.set(p.learnerId, p.url);
+  }
+  const highlights = roster
+    .filter((r) => firstPhotoByLearner.has(r.learnerId))
+    .map((r) => {
+      const quote = firstSubmissionByLearner.get(r.learnerId);
+      return {
+        displayName: r.learner.displayName,
+        photoUrl: firstPhotoByLearner.get(r.learnerId)!,
+        quote: quote ? (quote.length > EXCERPT_MAX ? quote.slice(0, EXCERPT_MAX) + "…" : quote) : undefined,
+      };
+    });
+
   const band = (klass.band as Band) || "YOUTH";
   const dateLabel = DATE_LABEL.format(date);
 
@@ -111,7 +137,7 @@ export async function GET(req: Request) {
     aiUsed,
     preparedBy: auth.instructor.displayName,
     totals,
-    participants,
+    highlights,
   });
 
   return new NextResponse(html, {
