@@ -191,6 +191,10 @@ model RosterEntry {
   classId   String
   learner   Learner @relation(fields: [learnerId], references: [id])
   learnerId String
+  // Bearer token for tap-to-login: written as a URL (/nfc/<token>) onto a
+  // physical NFC tag for this student's enrollment in this class. Null until
+  // a tag is provisioned; regenerate to invalidate a lost tag.
+  nfcToken  String? @unique
 
   @@unique([classId, learnerId])
 }

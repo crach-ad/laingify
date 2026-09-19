@@ -1,10 +1,11 @@
 // Google Gemini integration for Laing Learning.
 //
-// Two capabilities, both server-only:
-//   - spriteReply():  the Help Sprite. INSIGHT, NEVER ANSWERS (PRD §8).
-//   - autoFeedback(): structured assessment of a submission (PRD §9).
+// Three capabilities, all server-only:
+//   - spriteReply():    the Help Sprite. INSIGHT, NEVER ANSWERS (PRD §8).
+//   - autoFeedback():   structured assessment of a submission (PRD §9).
+//   - sessionReport():  narrative for a stakeholder/funder session report.
 //
-// If GEMINI_API_KEY is unset, both fall back to deterministic canned output so
+// If GEMINI_API_KEY is unset, all fall back to deterministic canned output so
 // the whole product still works for demos/offline development.
 
 const API_KEY = process.env.GEMINI_API_KEY?.trim();
@@ -299,4 +300,79 @@ function fallbackFeedback(params: {
       : "Try to expand your answer with specific details and examples so it fully addresses each criterion.",
     aiUsed: false,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Session report — narrative for a stakeholder/funder program-update report
+// ---------------------------------------------------------------------------
+
+export type SessionParticipant = {
+  displayName: string;
+  attendanceStatus: string | null;
+  badgesToday: string[];
+  submissionExcerpts: string[];
+};
+
+export type SessionReportResult = { narrative: string; aiUsed: boolean };
+
+export async function sessionReport(params: {
+  orgName: string;
+  className: string;
+  band: Band;
+  dateLabel: string;
+  lessonDescription: string;
+  participants: SessionParticipant[];
+  totals: { present: number; badgesEarned: number; submissions: number };
+}): Promise<SessionReportResult> {
+  if (!API_KEY) return { narrative: fallbackSessionReport(params), aiUsed: false };
+
+  const participantLines = params.participants
+    .map((p) => {
+      const bits = [
+        p.attendanceStatus ? p.attendanceStatus.toLowerCase() : "no attendance record",
+        p.badgesToday.length ? `earned: ${p.badgesToday.join(", ")}` : null,
+        p.submissionExcerpts.length ? `wrote: "${p.submissionExcerpts.join('" / "')}"` : null,
+      ].filter(Boolean);
+      return `- ${p.displayName} (${bits.join("; ")})`;
+    })
+    .join("\n");
+
+  const system = `You are writing one short section of a program activity report for ${params.orgName}, sent to stakeholders and funders. ${BAND_GUIDANCE[params.band]}
+
+GROUND STRICTLY IN THE FACTS GIVEN. Never invent a participant, a number, a badge, an achievement, or a quote that isn't in the data below. If the data is thin, write a shorter, honest paragraph rather than padding it out. Funders value accuracy over hype — no exaggeration, no marketing tone.
+
+Write 2–3 short paragraphs (plain prose, no headings, no bullet points) that:
+1. Summarize what the class did that session, using the instructor's own lesson description as the anchor.
+2. Connect it to concrete outcomes from the data (attendance, badges, what participants produced) — cite specifics, not vague praise.
+3. Close with one honest, forward-looking sentence about the program's trajectory (only if the data supports it — otherwise omit).`;
+
+  const user = `Class: ${params.className}
+Session date: ${params.dateLabel}
+Instructor's lesson description: "${params.lessonDescription}"
+
+Totals: ${params.totals.present} participants present, ${params.totals.badgesEarned} badges earned, ${params.totals.submissions} written submissions.
+
+Participants:
+${participantLines || "(no participant data recorded for this session)"}`;
+
+  try {
+    const narrative = await generate({
+      system,
+      turns: [{ role: "user", text: user }],
+      temperature: 0.4,
+      maxOutputTokens: 500,
+    });
+    return { narrative, aiUsed: true };
+  } catch {
+    return { narrative: fallbackSessionReport(params), aiUsed: false };
+  }
+}
+
+function fallbackSessionReport(params: {
+  className: string;
+  dateLabel: string;
+  lessonDescription: string;
+  totals: { present: number; badgesEarned: number; submissions: number };
+}): string {
+  return `On ${params.dateLabel}, ${params.className} met for the following session: ${params.lessonDescription.trim()}\n\n${params.totals.present} participant${params.totals.present === 1 ? "" : "s"} attended. ${params.totals.badgesEarned} badge${params.totals.badgesEarned === 1 ? " was" : "s were"} earned during the session, and ${params.totals.submissions} written submission${params.totals.submissions === 1 ? "" : "s"} ${params.totals.submissions === 1 ? "was" : "were"} recorded. See the participant breakdown below for details.`;
 }

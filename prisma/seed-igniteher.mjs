@@ -1,25 +1,26 @@
-// Abaco Future Ready Academy STEM & AI Camp — learner-ready seed.
-// Built from the Volunteer & Instructor Playbook v1.0 (the outline), expanded
-// into step-by-step tutorials a student can follow on their own device:
-// exact clicks, exact measurements, real code, concrete missions.
+// IgniteHer STEM Program — learner-ready seed.
+// Forked from prisma/seed-abaco.mjs: same content library (Abaco Future Ready
+// Academy's STEM & AI Camp curriculum), ported wholesale to a new org so
+// IgniteHer gets its own instructors, class, and roster from day one. Content
+// blocks below are intentionally identical to seed-abaco.mjs — if you're
+// updating curriculum content, consider whether it should change in both.
 //
 // Six modules matching the weekly learning journey:
 //   1 Foundations of Coding      → interactive programs
 //   2 CAD & Manufacturing        → 3D-printed object
-//   3 Programmable Electronics   → working Arduino project
+//   3 Programmable Electronics   → working Arduino or micro:bit project
 //   4 VR & AR                    → immersive experience
 //   5 AI & Digital Safety        → AI-assisted project
 //   6 Final Showcase             → Shark Tank presentation
 //
-// ONLY touches the Abaco org (and removes the retired "Winners Camp" org on
-// first run) — the PDI demo org is left alone.
+// ONLY touches the IgniteHer org — every other org is left alone.
 //
 // Two modes:
-//   npm run seed:abaco      — full reset. ⚠️  DELETES all student work. Never mid-camp.
-//   npm run content:update  — SAFE content update: modules are upserted in place
+//   npm run seed:igniteher           — full reset. ⚠️  DELETES all student work. Never mid-program.
+//   npm run content:update:igniteher — SAFE content update: modules are upserted in place
 //                             (matched by title), learners and their work untouched.
 //                             Renaming a module's title creates a NEW module —
-//                             keep titles stable once camp starts.
+//                             keep titles stable once the program starts.
 
 import { PrismaClient } from "@prisma/client";
 import { wipeOrg } from "./org-wipe.mjs";
@@ -38,15 +39,14 @@ import {
 
 const prisma = new PrismaClient();
 
-const INSTRUCTOR = {
-  displayName: "Coach Crachad",
-  email: "crachad.laing@gmail.com",
-  pin: "4321",
-};
+const INSTRUCTORS = [
+  { displayName: "Coach Crachad", email: "crachad@lainglaing.com", pin: "1234" },
+  { displayName: "Coach Pam", email: "pam@lainglaing.com", pin: "5678" },
+];
 
-const ORG_NAME = "Abaco Future Ready Academy";
-const CLASS_NAME = "STEM & AI Camp";
-const CLASS_CODE = "FUTURE";
+const ORG_NAME = "IgniteHer";
+const CLASS_NAME = "IgniteHer STEM Program";
+const CLASS_CODE = "IGNITE";
 
 // Safe content-update mode: upsert modules in place, never touch learners.
 const UPDATE = process.argv.includes("--update");
@@ -75,11 +75,10 @@ async function main() {
   let org;
   if (UPDATE) {
     org = await prisma.org.findFirst({ where: { name: ORG_NAME } });
-    if (!org) throw new Error("Org not found — run the full seed once first: npm run seed:abaco");
+    if (!org) throw new Error("Org not found — run the full seed once first: npm run seed:igniteher");
     console.log("Content-update mode: upserting modules in place — learners and their work are untouched.");
   } else {
-    console.log("Seeding Abaco Future Ready Academy (org-scoped — other orgs untouched)…");
-    await wipeOrg(prisma, "Winners Camp"); // retire the old camp org + its users
+    console.log("Seeding IgniteHer (org-scoped — other orgs untouched)…");
     await wipeOrg(prisma, ORG_NAME);
     org = await prisma.org.create({
       data: { name: ORG_NAME, context: "community" },
@@ -347,12 +346,18 @@ async function main() {
         }),
 
         block("heading", { text: "Step 1 — Get set up in Tinkercad" }),
+        block("link", {
+          kind: "build",
+          minutes: 1,
+          text: "Join our Tinkercad class",
+          url: "https://www.tinkercad.com/joinclass/JA9N6AAZE",
+          tip: "This takes you straight into IgniteHer's Tinkercad class — no separate account setup needed.",
+        }),
         block("text", {
           kind: "build",
           minutes: 3,
           text: "Get into the workshop:",
           actions: [
-            "Go to tinkercad.com and sign in (class login if your coach gave one)",
             "Click + Create → 3D Design — the blue workplane is the printer's bed",
             "Learn the camera: RIGHT-drag to orbit, scroll to zoom, press F to frame — try all three now",
           ],
@@ -1783,118 +1788,12 @@ async function main() {
   });
 
   // ==========================================================================
-  // MODULE 6 — Final Showcase (Shark Tank)
-  // Slide-by-slide deck template, fill-in-the-blank pitch, rehearsal drill.
-  // ==========================================================================
-  const module6 = await createModule({
-      orgId: org.id,
-      topic: "Shark Tank Showcase",
-      title: "Pitch Your Project",
-      summary:
-        "Turn the week into a pitch: a five-slide deck, a 30-second hook, a live demo — presented Shark Tank style to real judges.",
-      badgeName: "Shark Tank Star",
-      badgeIcon: "🦈",
-      badgeDescription:
-        "Presented a complete project — problem, solution, prototype, and business pitch — at the final showcase.",
-      contentJson: JSON.stringify([
-        block("heading", { text: "Showcase day" }),
-        block("text", {
-          kind: "learn",
-          minutes: 3,
-          text: "This week you coded, designed, wired, explored, and created with AI. Today your team puts it together and pitches it to judges — Shark Tank style.\n\nEvery pitch must cover six things:\n1. The PROBLEM you chose\n2. Your SOLUTION\n3. Your CAD model\n4. Your prototype\n5. The AI tools you used — and what YOU added on top\n6. The BUSINESS pitch — who needs this, and why would they pay?",
-          tip: "Format: 3–5 minutes, every teammate speaks, then judges' questions. Judges name one thing that worked and one to improve — that's how feedback is supposed to sound.",
-        }),
-
-        block("heading", { text: "Build the deck — five slides, no more" }),
-        block("text", {
-          kind: "build",
-          minutes: 30,
-          text: "Open Canva → Presentation. Big pictures, few words — YOU are the show, slides are the backdrop. Build them in order:",
-          actions: [
-            "🎬 SLIDE 1 · TEAM & NAME — product name, team name, one strong image (CAD render or prototype photo), one line on what it is",
-            "😫 SLIDE 2 · THE PROBLEM — make the judges FEEL it: a photo, a true story, or one hard-hitting number. End with the question your product answers",
-            "💡 SLIDE 3 · THE SOLUTION — your product, big. What it does in 2–3 bullets, and what makes it different",
-            "🛠️ SLIDE 4 · HOW WE BUILT IT — the week in one slide: CAD screenshot, circuit photo, AI draft vs. YOUR final",
-            "💰 SLIDE 5 · THE BUSINESS — who buys it (be specific!), cost to make, your price, and your ask ('We're seeking $200 to print our first 50 units')",
-          ],
-          tip: "Judges love seeing the journey — slide 4 is where your checkpoint photos from all week become pitch material.",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Pitch materials screenshot",
-          text: "Screenshot your strongest slide — usually the problem or solution slide. Caption: your team name and the problem you chose.",
-        }),
-
-        block("heading", { text: "The 30-second hook" }),
-        block("text", {
-          kind: "create",
-          minutes: 10,
-          text: "If the whole pitch had to fit in 30 seconds, what survives? Nail the short version and the long version gets sharper. Fill in the blanks:\n\n\"Have you ever ___[the problem, as a question they'll say YES to]___?\nWe're ___[team name]___, and we built ___[product name]___ — a ___[what it is in five words]___.\nIt ___[the one thing it does best]___.\nWe made it real this week with ___[CAD / 3D printing / code / AI]___,\nand we believe every ___[who needs it]___ in Abaco should have one.\"",
-          actions: [
-            "Fill in every blank with your team",
-            "Say it out loud three times",
-            "Cut every word you stumble on",
-          ],
-          tip: "Investors — and judges — remember the team that can say it simply.",
-        }),
-        block("checkpoint", {
-          capture: "audio",
-          criterionLabel: "Voice note: 30-second pitch",
-          text: "Press record and deliver your 30-second pitch — problem, product, why it matters. One take is fine; real beats perfect. (Bonus: this recording IS practice for the stage.)",
-        }),
-
-        block("heading", { text: "The demo — nothing beats a real thing" }),
-        block("text", {
-          kind: "build",
-          minutes: 15,
-          text: "Judges holding your 3D print beats any slide. Plan the demo like a pit crew:",
-          actions: [
-            "WHAT: pick the single best 60 seconds — print in hand, circuit responding, game playing, website live",
-            "WHO: one teammate DRIVES the demo, another NARRATES — decide now, not on stage",
-            "BACKUP: screenshot everything now, in case the live demo dies",
-            "HANDOFF: practice physically passing the prototype to the judges",
-          ],
-          warn: "Tech fails on stage — it's a law of nature. When it does, you calmly show the photos and keep talking. That recovery impresses judges more than a perfect demo.",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Prototype photo",
-          text: "Photo of your prototype demo-ready — or your full team with prototype in hand. This is the cover shot of your camp portfolio!",
-        }),
-
-        block("heading", { text: "Rehearse like it's real" }),
-        block("text", {
-          kind: "build",
-          minutes: 20,
-          text: "Two full run-throughs, minimum. The drill:",
-          actions: [
-            "⏱️ Time it — under 5 minutes or judges cut you off",
-            "🗣️ Every teammate speaks — hand off with names ('…and Maya will show you how we built it')",
-            "👀 Eyes up — talk to the judges, not the screen. Notes = one card, bullet words only",
-            "❓ Prep the three questions judges always ask: cost to make? who did what? what's next?",
-          ],
-          tip: "Then breathe. You built something real this week. The pitch is just showing it.",
-        }),
-
-        block("heading", { text: "After the pitch — reflect on the week" }),
-        wrapUpPrompt(
-          "This one's about the WHOLE week: what you built, the moment you're proudest of, and what you want to learn next.",
-        ),
-      ]),
-      criteria: {
-        create: [
-          photoCriterion(0, "Pitch materials screenshot", "A key slide from the five-slide deck: team, problem, or solution."),
-          audioCriterion(1, "Voice note: 30-second pitch", "The team's 30-second pitch: problem, solution, why it matters."),
-          photoCriterion(2, "Prototype photo", "The physical or on-screen prototype, demo-ready."),
-          wrapUpCriterion(3, "Written reflection on the whole week of camp."),
-        ],
-      },
-  });
   // ==========================================================================
   // "Human in the Loop" — a growing topic that hosts every AI module. Builds
   // on MODULE 5's safety/prompting basics with focused, hands-on AI-building
   // projects. First one: prompt engineering by building a real playable game
   // with v0. More modules land under this same topic over time.
+  // (Kept in sync with the same module in seed-abaco.mjs.)
   // ==========================================================================
   const HITL = "Human in the Loop";
 
@@ -2037,6 +1936,113 @@ async function main() {
       },
   });
 
+  // MODULE 6 — Final Showcase (Shark Tank)
+  // Slide-by-slide deck template, fill-in-the-blank pitch, rehearsal drill.
+  // ==========================================================================
+  const module6 = await createModule({
+      orgId: org.id,
+      topic: "Shark Tank Showcase",
+      title: "Pitch Your Project",
+      summary:
+        "Turn the week into a pitch: a five-slide deck, a 30-second hook, a live demo — presented Shark Tank style to real judges.",
+      badgeName: "Shark Tank Star",
+      badgeIcon: "🦈",
+      badgeDescription:
+        "Presented a complete project — problem, solution, prototype, and business pitch — at the final showcase.",
+      contentJson: JSON.stringify([
+        block("heading", { text: "Showcase day" }),
+        block("text", {
+          kind: "learn",
+          minutes: 3,
+          text: "This week you coded, designed, wired, explored, and created with AI. Today your team puts it together and pitches it to judges — Shark Tank style.\n\nEvery pitch must cover six things:\n1. The PROBLEM you chose\n2. Your SOLUTION\n3. Your CAD model\n4. Your prototype\n5. The AI tools you used — and what YOU added on top\n6. The BUSINESS pitch — who needs this, and why would they pay?",
+          tip: "Format: 3–5 minutes, every teammate speaks, then judges' questions. Judges name one thing that worked and one to improve — that's how feedback is supposed to sound.",
+        }),
+
+        block("heading", { text: "Build the deck — five slides, no more" }),
+        block("text", {
+          kind: "build",
+          minutes: 30,
+          text: "Open Canva → Presentation. Big pictures, few words — YOU are the show, slides are the backdrop. Build them in order:",
+          actions: [
+            "🎬 SLIDE 1 · TEAM & NAME — product name, team name, one strong image (CAD render or prototype photo), one line on what it is",
+            "😫 SLIDE 2 · THE PROBLEM — make the judges FEEL it: a photo, a true story, or one hard-hitting number. End with the question your product answers",
+            "💡 SLIDE 3 · THE SOLUTION — your product, big. What it does in 2–3 bullets, and what makes it different",
+            "🛠️ SLIDE 4 · HOW WE BUILT IT — the week in one slide: CAD screenshot, circuit photo, AI draft vs. YOUR final",
+            "💰 SLIDE 5 · THE BUSINESS — who buys it (be specific!), cost to make, your price, and your ask ('We're seeking $200 to print our first 50 units')",
+          ],
+          tip: "Judges love seeing the journey — slide 4 is where your checkpoint photos from all week become pitch material.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Pitch materials screenshot",
+          text: "Screenshot your strongest slide — usually the problem or solution slide. Caption: your team name and the problem you chose.",
+        }),
+
+        block("heading", { text: "The 30-second hook" }),
+        block("text", {
+          kind: "create",
+          minutes: 10,
+          text: "If the whole pitch had to fit in 30 seconds, what survives? Nail the short version and the long version gets sharper. Fill in the blanks:\n\n\"Have you ever ___[the problem, as a question they'll say YES to]___?\nWe're ___[team name]___, and we built ___[product name]___ — a ___[what it is in five words]___.\nIt ___[the one thing it does best]___.\nWe made it real this week with ___[CAD / 3D printing / code / AI]___,\nand we believe every ___[who needs it]___ in Abaco should have one.\"",
+          actions: [
+            "Fill in every blank with your team",
+            "Say it out loud three times",
+            "Cut every word you stumble on",
+          ],
+          tip: "Investors — and judges — remember the team that can say it simply.",
+        }),
+        block("checkpoint", {
+          capture: "audio",
+          criterionLabel: "Voice note: 30-second pitch",
+          text: "Press record and deliver your 30-second pitch — problem, product, why it matters. One take is fine; real beats perfect. (Bonus: this recording IS practice for the stage.)",
+        }),
+
+        block("heading", { text: "The demo — nothing beats a real thing" }),
+        block("text", {
+          kind: "build",
+          minutes: 15,
+          text: "Judges holding your 3D print beats any slide. Plan the demo like a pit crew:",
+          actions: [
+            "WHAT: pick the single best 60 seconds — print in hand, circuit responding, game playing, website live",
+            "WHO: one teammate DRIVES the demo, another NARRATES — decide now, not on stage",
+            "BACKUP: screenshot everything now, in case the live demo dies",
+            "HANDOFF: practice physically passing the prototype to the judges",
+          ],
+          warn: "Tech fails on stage — it's a law of nature. When it does, you calmly show the photos and keep talking. That recovery impresses judges more than a perfect demo.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          criterionLabel: "Prototype photo",
+          text: "Photo of your prototype demo-ready — or your full team with prototype in hand. This is the cover shot of your camp portfolio!",
+        }),
+
+        block("heading", { text: "Rehearse like it's real" }),
+        block("text", {
+          kind: "build",
+          minutes: 20,
+          text: "Two full run-throughs, minimum. The drill:",
+          actions: [
+            "⏱️ Time it — under 5 minutes or judges cut you off",
+            "🗣️ Every teammate speaks — hand off with names ('…and Maya will show you how we built it')",
+            "👀 Eyes up — talk to the judges, not the screen. Notes = one card, bullet words only",
+            "❓ Prep the three questions judges always ask: cost to make? who did what? what's next?",
+          ],
+          tip: "Then breathe. You built something real this week. The pitch is just showing it.",
+        }),
+
+        block("heading", { text: "After the pitch — reflect on the week" }),
+        wrapUpPrompt(
+          "This one's about the WHOLE week: what you built, the moment you're proudest of, and what you want to learn next.",
+        ),
+      ]),
+      criteria: {
+        create: [
+          photoCriterion(0, "Pitch materials screenshot", "A key slide from the five-slide deck: team, problem, or solution."),
+          audioCriterion(1, "Voice note: 30-second pitch", "The team's 30-second pitch: problem, solution, why it matters."),
+          photoCriterion(2, "Prototype photo", "The physical or on-screen prototype, demo-ready."),
+          wrapUpCriterion(3, "Written reflection on the whole week of camp."),
+        ],
+      },
+  });
   const [k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15] = await createKnexModules(projectModule);
 
   const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, module5, hitl1, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
@@ -2060,19 +2066,21 @@ async function main() {
       },
     });
 
-    await prisma.instructor.create({
-      data: { ...INSTRUCTOR, orgId: org.id },
-    });
+    for (const instructor of INSTRUCTORS) {
+      await prisma.instructor.create({
+        data: { ...instructor, orgId: org.id },
+      });
+    }
   }
 
   await checkCheckpoints(prisma, modules);
 
-  console.log("Abaco Future Ready Academy seeded (learner-ready content).");
+  console.log("IgniteHer seeded (learner-ready content).");
   console.log(`  Class: ${CLASS_NAME} — code ${CLASS_CODE}, empty roster, students self-register (name + selfie)`);
   console.log(`  Modules assigned (all ${modules.length}, in order):`);
   for (const m of modules) console.log(`    ${m.badgeIcon} ${m.title} → "${m.badgeName}" badge`);
   console.log("  Each project module: quick checkpoints + a written wrap-up; every project earns a badge.");
-  console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
+  for (const instructor of INSTRUCTORS) console.log(`  Instructor: ${instructor.email} / PIN ${instructor.pin}`);
 }
 
 main()
