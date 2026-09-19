@@ -77,10 +77,25 @@ function css(b: Branding): string {
   .foot { margin-top: 40px; padding-top: 28px; border-top: 1px solid ${b.hairline}; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; font-family: ui-monospace, 'IBM Plex Mono', Menlo, monospace; font-size: 12px; color: ${b.inkMuted}; }
   .download-btn { position: fixed; top: 20px; right: 20px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: none; background: ${b.ink}; color: ${b.paper}; font-family: 'Public Sans', -apple-system, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
   .download-btn:hover { opacity: .9; }
-  @page { margin: 0.5in; }
+  @page { margin: 0.4in; }
   @media print {
-    body { padding: 0; }
+    body { padding: 0; font-size: 13px; }
     .wrap { max-width: 100%; width: 100%; margin: 0 auto; padding: 0; }
+    .logo { width: 160px; }
+    h1 { font-size: 28px; }
+    header.cover { padding-bottom: 18px; gap: 10px; }
+    .statsbar { gap: 32px; padding: 16px 0; }
+    .stat b { font-size: 28px; margin-bottom: 2px; }
+    section { margin-top: 18px; }
+    .kicker { margin-bottom: 8px; }
+    .narrative { font-size: 12.5px; line-height: 1.5; max-width: none; }
+    .fallback-note { margin-top: 8px; }
+    .highlights { gap: 14px; }
+    figure.highlight img { aspect-ratio: 16 / 10; border-radius: 6px; }
+    figure.highlight figcaption { margin-top: 6px; }
+    figure.highlight .quote { font-size: 11px; line-height: 1.4; }
+    figure.highlight .name { margin-top: 3px; font-size: 10px; }
+    .foot { margin-top: 20px; padding-top: 14px; }
     .download-btn { display: none; }
   }
 `;
