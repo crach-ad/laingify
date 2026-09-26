@@ -8,6 +8,7 @@ import { track as logEvent, flushEvents } from "@/lib/track";
 import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
 import MicrobitSim, { type MicrobitPart, type MicrobitProgram } from "@/components/MicrobitSim";
 import KnexViewer, { type KnexStep } from "@/components/KnexViewer";
+import StlViewer from "@/components/StlViewer";
 import { compressImage } from "@/lib/client-image";
 import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
 
@@ -19,7 +20,7 @@ import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
 type TrackId = "beginner" | "intermediate" | "advanced";
 
 type Block = {
-  type: string; // heading | text | code | scratch | embed | link | circuit | microbit | prompt | video | image | slides | checkpoint | trackpick
+  type: string; // heading | text | code | scratch | embed | link | circuit | microbit | prompt | video | image | model | slides | checkpoint | trackpick
   text?: string;
   url?: string;
   urls?: string[];
@@ -40,6 +41,8 @@ type Block = {
   // Photo checkpoints can optionally accept the design file itself (.stl) so
   // the portfolio gets an interactive 3D model alongside the screenshot.
   allowModel?: boolean;
+  // Checkpoints backed by a non-required criterion can be skipped.
+  optional?: boolean;
   // --- v2 flow layout ---
   kind?: string; // learn | build | create | reflect — step-type chip on the card
   minutes?: number; // pacing chip: "~N min"
@@ -611,6 +614,7 @@ export default function Tutorial({
   const firstPending = steps.findIndex(
     (s) =>
       s.block.type === "checkpoint" &&
+      !s.block.optional &&
       !initiallyDone.has(critByLabel.get(s.block.criterionLabel ?? "")?.id ?? ""),
   );
   const wrapUpStep =
@@ -667,6 +671,7 @@ export default function Tutorial({
       ? critByLabel.get(current.block.criterionLabel ?? "")
       : undefined;
   const currentDone = currentCrit ? done.has(currentCrit.id) : true;
+  const canSkip = !currentDone && current?.block.type === "checkpoint" && !!current.block.optional;
 
   async function capture(payload: Record<string, unknown>, criterionId: string) {
     setBusy(true);
@@ -1041,6 +1046,7 @@ export default function Tutorial({
                 : current!.block.capture === "text"
                   ? "✍️ Reflect"
                   : "📸 Show your work"}
+              {current!.block.optional && " · optional"}
             </span>
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
             {current!.block.capture === "audio" ? (
@@ -1172,6 +1178,15 @@ export default function Tutorial({
           <video controls src={current!.block.url} className="w-full rounded-xl" />
         ) : current!.block.type === "slides" && current!.block.urls?.length ? (
           <SlideShow urls={current!.block.urls} caption={current!.block.text} />
+        ) : current!.block.type === "model" && current!.block.url ? (
+          <figure>
+            <StlViewer url={current!.block.url} />
+            {current!.block.text && (
+              <figcaption className="mt-3 whitespace-pre-wrap leading-relaxed" style={{ color: "var(--body)" }}>
+                {current!.block.text}
+              </figcaption>
+            )}
+          </figure>
         ) : current!.block.type === "image" && current!.block.url ? (
           <figure>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1227,11 +1242,11 @@ export default function Tutorial({
         ) : (
           <button
             onClick={() => setStep((s) => s + 1)}
-            disabled={!currentDone}
+            disabled={!currentDone && !canSkip}
             className="btn-primary px-5 py-2.5 text-sm disabled:opacity-40"
-            title={currentDone ? undefined : "Complete this step to continue"}
+            title={currentDone || canSkip ? undefined : "Complete this step to continue"}
           >
-            Next →
+            {canSkip ? "Skip →" : "Next →"}
           </button>
         )}
       </div>

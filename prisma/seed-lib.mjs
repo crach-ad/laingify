@@ -111,7 +111,8 @@ export async function syncClassModules(prisma, classId, modules) {
 }
 
 // Sanity check: every checkpoint must reference an existing criterion label,
-// and every evidence-backed criterion must have a checkpoint.
+// and every required evidence-backed criterion must have a checkpoint (retired
+// criteria are kept as required: false and no longer have one).
 export async function checkCheckpoints(prisma, modules) {
   for (const mod of modules) {
     const blocks = JSON.parse(mod.contentJson);
@@ -123,7 +124,7 @@ export async function checkCheckpoints(prisma, modules) {
     for (const l of checkpointLabels) {
       if (!labels.has(l)) throw new Error(`"${mod.title}": checkpoint references missing criterion "${l}"`);
     }
-    for (const c of criteria.filter((c) => c.requiresEvidenceType)) {
+    for (const c of criteria.filter((c) => c.requiresEvidenceType && c.required)) {
       if (!checkpointLabels.includes(c.label))
         throw new Error(`"${mod.title}": criterion "${c.label}" has no checkpoint`);
     }

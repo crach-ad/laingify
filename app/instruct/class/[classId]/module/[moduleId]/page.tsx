@@ -24,6 +24,7 @@ type Block = {
   track?: string;
   capture?: "photo" | "audio";
   criterionLabel?: string;
+  optional?: boolean;
   sketch?: string;
   steps?: unknown[];
   builds?: unknown[];
@@ -37,7 +38,7 @@ function StepCard({ b }: { b: Block }) {
   if (b.type === "checkpoint") {
     return (
       <div className="card border-l-4 p-5" style={{ borderLeftColor: "var(--accent)" }}>
-        <div className="mono-label">{b.capture === "audio" ? "🎙️ Voice-note checkpoint" : "📸 Photo checkpoint"} → {b.criterionLabel}</div>
+        <div className="mono-label">{b.capture === "audio" ? "🎙️ Voice-note checkpoint" : "📸 Photo checkpoint"} → {b.criterionLabel}{b.optional && " (optional)"}</div>
         <p className="mt-2 whitespace-pre-wrap text-sm" style={{ color: "var(--body)" }}>{b.text}</p>
       </div>
     );

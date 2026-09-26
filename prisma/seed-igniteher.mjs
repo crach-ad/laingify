@@ -323,29 +323,30 @@ async function main() {
 
   // ==========================================================================
   // MODULE 2 — Computer-Aided Design & Manufacturing
-  // Spine: skill-builder keychain with exact measurements (proven at camp),
-  // then apply the same skills to a chosen product.
+  // Fidget clicker: the body is supplied with the light and battery missing —
+  // learners place the two parts at exact heights. Each part is shown as a
+  // spinnable 3D render (public/models/fidget-clicker/*.stl).
+  // Title kept from the original product module — moduleWriter upserts by title.
   // ==========================================================================
   const module2 = await createModule({
       orgId: org.id,
       topic: "CAD & Manufacturing",
       title: "Design a 3D-Printable Product",
       summary:
-        "Learn real CAD moves in Tinkercad with exact measurements, then design your own printable product — keychain, fidget, phone stand, or a hurricane-resilience tool.",
+        "Finish a light-up fidget clicker in Tinkercad: place the battery holder and the LED at exact heights, ready to print.",
       badgeName: "Product Designer",
       badgeIcon: "🧊",
       badgeDescription:
-        "Designed a 3D-printable product in CAD using shapes, alignment, grouping, holes, and real measurements.",
+        "Completed a light-up fidget clicker in CAD by placing parts at exact measurements.",
       contentJson: JSON.stringify([
-        block("heading", { text: "From idea to object" }),
-        block("text", {
+        block("heading", { text: "Light up the fidget clicker" }),
+        block("model", {
           kind: "learn",
           minutes: 2,
-          text: "Yesterday you made a screen do things. Today you make a THING.\n\nCAD (computer-aided design) is how every manufactured product around you started — designed on screen, measured exactly, then made real. First you'll learn the five core CAD moves on a quick build, then use them to design your own product.",
-          tip: "The 3D printer builds your design by melting plastic and stacking it layer by layer, bottom to top, 0.2 mm at a time.",
+          url: "/models/fidget-clicker/clicker-body.stl",
+          text: "This is the fidget clicker — with the light and the battery missing. Your job: put them in, at exactly the right heights.",
+          tip: "Drag the model to spin it, scroll to zoom.",
         }),
-
-        block("heading", { text: "Step 1 — Get set up in Tinkercad" }),
         block("link", {
           kind: "build",
           minutes: 1,
@@ -353,115 +354,56 @@ async function main() {
           url: "https://www.tinkercad.com/joinclass/JA9N6AAZE",
           tip: "This takes you straight into IgniteHer's Tinkercad class — no separate account setup needed.",
         }),
-        block("text", {
+
+        block("heading", { text: "Step 1 — Battery Holder" }),
+        block("model", {
+          kind: "build",
+          minutes: 5,
+          url: "/models/fidget-clicker/battery-holder.stl",
+          text: "Battery Holder — 7 mm above the workplane. The X and Y position doesn't matter.",
+          actions: [
+            "Select the Battery Holder",
+            "Raise it so it sits 7 mm above the workplane",
+          ],
+        }),
+
+        block("heading", { text: "Step 2 — LED" }),
+        block("model", {
+          kind: "build",
+          minutes: 5,
+          url: "/models/fidget-clicker/led.stl",
+          text: "LED — 10 mm above the workplane. The X and Y position doesn't matter.",
+          actions: [
+            "Select the LED",
+            "Raise it so it sits 10 mm above the workplane",
+          ],
+        }),
+        block("heading", { text: "Compare with the finished clicker" }),
+        block("model", {
           kind: "build",
           minutes: 3,
-          text: "Get into the workshop:",
+          url: "/models/fidget-clicker/final-clicker.stl",
+          text: "This is the finished clicker with the battery holder and LED in place. Spin it and compare it with yours before you take your screenshot.",
           actions: [
-            "Click + Create → 3D Design — the blue workplane is the printer's bed",
-            "Learn the camera: RIGHT-drag to orbit, scroll to zoom, press F to frame — try all three now",
+            "Is your battery holder 7 mm above the workplane?",
+            "Is your LED 10 mm above the workplane?",
+            "Anything different? Fix it in Tinkercad, then come back",
           ],
-          tip: "One rule all day: TYPE your measurements, never eyeball them. Manufacturing runs on exact numbers.",
-        }),
-
-        block("heading", { text: "Step 2 — Skill builder: the tag" }),
-        block("text", {
-          kind: "build",
-          minutes: 5,
-          text: "A quick build to learn the moves — a name tag:",
-          actions: [
-            "Drag a red Box onto the workplane",
-            "Click a white corner handle and type the numbers: Length 60, Width 22, Height 3",
-            "In the shape panel, set Radius to 3 — the corners round off",
-          ],
-          tip: "Smooth corners aren't just pretty — sharp printed corners snag and crack. That's move #1: exact dimensions.",
-        }),
-
-        block("heading", { text: "Step 3 — Raised text, perfect centering" }),
-        block("text", {
-          kind: "build",
-          minutes: 6,
-          text: "Put your name on it — the pro way:",
-          actions: [
-            "Drag the TEXT shape onto your tag and type YOUR name in the shape panel",
-            "Set its Height to 4 — the tag is 3 tall, so letters rise exactly 1 mm above the face",
-            "Shrink the text with a corner handle until it fits with a border around it",
-            "ALIGN: select everything (Ctrl/Cmd+A), press L, click the two middle dots",
-          ],
-          tip: "Dragging by eye is never quite centered. Align always is. Moves #2 and #3: combining shapes, aligning precisely.",
-        }),
-        block("checkpoint", {
-          capture: "photo",
-          criterionLabel: "Design in progress screenshot",
-          text: "Screenshot your tag with your raised name centered on it, shape panel visible so the measurements show.",
-        }),
-
-        block("heading", { text: "Step 4 — Holes and grouping" }),
-        block("text", {
-          kind: "build",
-          minutes: 5,
-          text: "Cut the keyring hole and make it one piece:",
-          actions: [
-            "Drag a Cylinder in and set it to 4 × 4 × 10",
-            "Shape panel: switch it from Solid to HOLE — it turns see-through",
-            "Move it to the top-left corner, clear of your letters — press D if it floats",
-            "Select everything (Ctrl/Cmd+A) and Group (Ctrl/Cmd+G)",
-          ],
-          tip: "Moves #4 and #5: holes and grouping. That's the whole CAD toolkit — everything else is combinations.",
-        }),
-
-        block("heading", { text: "Step 5 — Tolerances: why parts FIT" }),
-        block("text", {
-          kind: "learn",
-          minutes: 3,
-          text: "Here's what separates a model that looks right from a product that works:\n\nIf a printed peg must fit a printed hole, they can NOT be the same size — plastic isn't perfect, and same-size parts jam solid. Designers leave a small gap called CLEARANCE: about 0.5 mm all around. A 10 mm peg gets a 10.5–11 mm hole.",
-          tip: "Your keyring hole is 4 mm because keyring wire is 1–2 mm — room to thread and swing. Exactly wire-sized, and the ring would never go in.",
-        }),
-        block("checkpoint", {
-          capture: "audio",
-          criterionLabel: "Voice note: measurements matter",
-          text: "Press record and answer: Why can't a printed peg and its hole be exactly the same size? What's clearance, and what would happen without it?",
-        }),
-
-        block("heading", { text: "Step 6 — Now design YOUR product" }),
-        block("text", {
-          kind: "create",
-          minutes: 25,
-          text: "Pick ONE and build it with the five moves you just learned:\n\n🔑 CUSTOM KEYCHAIN — evolve your tag: a new outline (Heart, Star), an icon from the shape library, engraved text (make the TEXT a Hole, sink it 1 mm).\n\n📱 PHONE STAND — base Box 70 × 90 × 8 · back rest Box 70 × 80 × 8, rotated back 25° (type the number!) · a lip on the front, 70 × 8 × 12, so the phone can't slide. Align on the center line, group. Test against a real phone!\n\n🌀 FIDGET — spinning disc: Cylinder 45 × 45 × 6, sides maxed, a 12 mm center hole, small shapes around the edge for grip. Keep it ≥ 6 mm thick so it feels solid.\n\n🌀🏠 HURRICANE-RESILIENCE TOOL — help your community prepare or recover: an emergency whistle keychain (Tube + mouthpiece box + air-slot hole), a supply-bag sealing clip (two 60 × 10 × 4 arms), a name tag for emergency kits. Chunky, ≥ 3 mm walls, nothing delicate.",
-          tip: "Sketch it on paper first — two minutes, boxes and circles are fine. Real designers always start on paper.",
-        }),
-
-        block("heading", { text: "Step 7 — The manufacturer's checklist" }),
-        block("text", {
-          kind: "build",
-          minutes: 5,
-          text: "Before ANY design goes to the printer, run the exact checklist real factories use:",
-          actions: [
-            "Nothing floating — every part sits ON the workplane (select, press D)",
-            "Nothing thinner than 2 mm — thin parts snap",
-            "Bottom is flat — it prints without supports",
-            "Everything that should be one piece is Grouped",
-            "Check it from the top, front, AND side views (click the view cube corners)",
-            "Export (top right) → .STL → your name in the filename → class print queue",
-          ],
-          warn: "The printer is the bottleneck for the whole class — export as soon as you're happy, not at the last minute!",
         }),
         block("checkpoint", {
           capture: "photo",
           criterionLabel: "Print-ready design screenshot",
           allowModel: true,
-          text: "Screenshot your finished, print-ready product from a good angle. Caption: which product you chose and one design decision you made on purpose. BONUS: attach the .stl file you exported — your portfolio will show your design as a real, spinnable 3D model!",
+          text: "Screenshot your fidget clicker with the battery holder and LED in place. BONUS: attach the .stl file you exported — your portfolio will show it as a spinnable 3D model!",
         }),
 
         block("heading", { text: "Reflect & share" }),
-        wrapUpPrompt("Include why you chose your product and what you'd change in version 2."),
+        wrapUpPrompt(),
       ]),
       criteria: {
         create: [
-          photoCriterion(0, "Design in progress screenshot", "The skill-builder tag: exact dimensions, raised centered text, shape panel visible."),
-          audioCriterion(1, "Voice note: measurements matter", "Reinforcement: clearance and why exact measurements matter for printed parts."),
-          photoCriterion(2, "Print-ready design screenshot", "The chosen product — grouped, flat, ≥2 mm walls, ready to export as STL."),
-          wrapUpCriterion(3, "Written reflection on the design-and-make process."),
+          photoCriterion(0, "Print-ready design screenshot", "The fidget clicker with the battery holder at 7 mm and the LED at 10 mm above the workplane."),
+          wrapUpCriterion(1, "Written reflection on the design-and-make process."),
         ],
       },
   });
@@ -2045,7 +1987,38 @@ async function main() {
   });
   const [k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15] = await createKnexModules(projectModule);
 
-  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, module5, hitl1, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15];
+  // ==========================================================================
+  // EMPOWERMENT SERIES
+  // One question, answered in writing — the final prompt card carries the
+  // reflection form inline, so there's nothing else to click through.
+  // ==========================================================================
+  const empower1 = await createModule({
+      orgId: org.id,
+      topic: "Empowerment Series",
+      title: "Series 1",
+      summary: "Reflect on today's Empowerment session in your own words.",
+      badgeName: "Empowered",
+      badgeIcon: "🌟",
+      badgeDescription: "Reflected on the key takeaways from an Empowerment Series session.",
+      contentJson: JSON.stringify([
+        block("heading", { text: "Empowerment Series — Session 1" }),
+        block("checkpoint", {
+          capture: "photo",
+          optional: true,
+          criterionLabel: "Session photo",
+          text: "Want to add a photo from today's session? This one's optional — tap Skip if not.",
+        }),
+        block("prompt", { text: "What were the key takeaways from the session today?" }),
+      ]),
+      criteria: {
+        create: [
+          { ...photoCriterion(0, "Session photo", "Optional photo from the session."), required: false },
+          wrapUpCriterion(1, "Written answer: the key takeaways from the session."),
+        ],
+      },
+  });
+
+  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, module5, hitl1, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, empower1];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.

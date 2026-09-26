@@ -58,7 +58,8 @@ export default function StlViewer({ url }: { url: string }) {
       mesh.rotation.x = -Math.PI / 2; // STL is usually Z-up; three is Y-up
       scene.add(mesh);
 
-      camera.position.set(size * 0.7, size * 0.5, size * 0.7);
+      // Far enough back that the whole bounding sphere fits the 45° view.
+      camera.position.set(size * 0.85, size * 0.6, size * 0.85);
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.autoRotate = true;
