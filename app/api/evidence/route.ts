@@ -53,6 +53,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing file." }, { status: 400 });
   }
 
+  // Pick-one answers replace the learner's earlier answer for that criterion
+  // (changing a choice), rather than piling up alongside it.
+  if (body.replace === true && criterionId) {
+    await prisma.evidence.deleteMany({
+      where: { learnerId: session.learnerId, moduleId, criterionId },
+    });
+  }
+
   const created = await prisma.evidence.create({
     data: { learnerId: session.learnerId, moduleId, criterionId, type, text, url, caption },
   });

@@ -22,7 +22,9 @@ type Block = {
   tip?: string;
   warn?: string;
   track?: string;
-  capture?: "photo" | "audio";
+  capture?: "photo" | "audio" | "text" | "choice" | "fields";
+  options?: string[];
+  fields?: { label: string }[];
   criterionLabel?: string;
   optional?: boolean;
   sketch?: string;
@@ -38,8 +40,10 @@ function StepCard({ b }: { b: Block }) {
   if (b.type === "checkpoint") {
     return (
       <div className="card border-l-4 p-5" style={{ borderLeftColor: "var(--accent)" }}>
-        <div className="mono-label">{b.capture === "audio" ? "🎙️ Voice-note checkpoint" : "📸 Photo checkpoint"} → {b.criterionLabel}{b.optional && " (optional)"}</div>
+        <div className="mono-label">{b.capture === "audio" ? "🎙️ Voice-note checkpoint" : b.capture === "choice" ? "👆 Pick-one checkpoint" : b.capture === "fields" ? "✍️ Fill-in checkpoint" : b.capture === "text" ? "✍️ Written checkpoint" : "📸 Photo checkpoint"} → {b.criterionLabel}{b.optional && " (optional)"}</div>
         <p className="mt-2 whitespace-pre-wrap text-sm" style={{ color: "var(--body)" }}>{b.text}</p>
+        {b.options?.length ? <p className="muted mt-2 text-sm">Options: {b.options.join(" · ")}</p> : null}
+        {b.fields?.length ? <p className="muted mt-2 text-sm">Parts: {b.fields.map((f) => f.label).join(" · ")}</p> : null}
       </div>
     );
   }

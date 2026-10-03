@@ -3,15 +3,21 @@ import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
 import { slugifyTopic } from "@/lib/topics";
+import { classResources } from "@/lib/class-resources";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
 import LogoutButton from "./LogoutButton";
 import PhotoCapture from "./PhotoCapture";
 
+// Vaulted for now: the selfie prompt and the Sprite customizer card. Flip to
+// true to bring both back — the components and data are untouched.
+const SHOW_PROFILE_SETUP = false;
+
 export default async function Dashboard() {
   const { learner, klass, sprite } = await requireLearner();
   const band = bandConfig(klass.band);
+  const resources = classResources(klass.classCode);
 
   // Modules assigned to this class, in order, with this learner's progress and
   // criteria (for per-module completion bars). Project rows are the completion
@@ -129,14 +135,16 @@ export default async function Dashboard() {
       </section>
 
       {/* One-time portfolio photo prompt (opt-out remembered) */}
-      {!learner.photoUrl && !learner.photoSkipped && (
+      {SHOW_PROFILE_SETUP && !learner.photoUrl && !learner.photoSkipped && (
         <PhotoCapture learnerName={learner.displayName} />
       )}
 
       {/* Sprite */}
-      <section className="animate-fade-up mt-10" style={{ animationDelay: "0.08s" }}>
-        <SpriteCustomizer sprite={sprite} />
-      </section>
+      {SHOW_PROFILE_SETUP && (
+        <section className="animate-fade-up mt-10" style={{ animationDelay: "0.08s" }}>
+          <SpriteCustomizer sprite={sprite} />
+        </section>
+      )}
 
       {/* Badges */}
       <section className="animate-fade-up mt-12" style={{ animationDelay: "0.12s" }}>
@@ -191,6 +199,40 @@ export default async function Dashboard() {
           })}
         </div>
       </section>
+
+      {/* Resources — class-specific links (lib/class-resources.ts) */}
+      {resources.length > 0 && (
+        <section className="animate-fade-up mt-12" style={{ animationDelay: "0.14s" }}>
+          <h2 className="text-base font-semibold">Resources</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {resources.map((r) => (
+              <a
+                key={r.url}
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card card-interactive flex items-center gap-4 p-4"
+              >
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
+                  style={{ flex: "none", background: "var(--tile)" }}
+                >
+                  {r.icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold" style={{ color: "var(--heading)" }}>
+                    {r.title}
+                  </span>
+                  <span className="muted block text-[13px]">{r.description}</span>
+                </span>
+                <span className="muted text-sm" aria-hidden>
+                  ↗
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Topics — each opens a page listing that topic's project modules */}
       <section className="animate-fade-up mt-12" style={{ animationDelay: "0.16s" }}>

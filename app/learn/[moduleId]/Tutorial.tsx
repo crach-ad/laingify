@@ -36,7 +36,11 @@ type Block = {
   program?: MicrobitProgram; // the microbit block's canned behavior
   // --- knex blocks: an interactive 3D build guide assembled step by step ---
   builds?: KnexStep[]; // each step adds rods ([[x,y,z],[x,y,z]] pairs)
-  capture?: "photo" | "audio" | "text";
+  capture?: "photo" | "audio" | "text" | "choice" | "fields";
+  // fields checkpoints: one box per part, each pre-started with its sentence
+  // opener; the answers join (one per line) into a single TEXT answer.
+  fields?: PitchField[];
+  options?: string[]; // choice checkpoints: tap one; it's saved as the text answer
   criterionLabel?: string;
   // Photo checkpoints can optionally accept the design file itself (.stl) so
   // the portfolio gets an interactive 3D model alongside the screenshot.
@@ -218,6 +222,155 @@ function TextCheckpoint({
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+type PitchField = { label: string; hint?: string; starter?: string; placeholder?: string };
+
+// Build-it-in-parts checkpoint: each field is a labelled box that starts
+// with its sentence opener, so the learner only finishes the sentence. The
+// saved answer is the lines joined in order — e.g. a full elevator pitch.
+function FieldsCheckpoint({
+  fields,
+  done,
+  savedText,
+  busy,
+  onSubmit,
+}: {
+  fields: PitchField[];
+  done: boolean;
+  savedText: string | null;
+  busy: boolean;
+  onSubmit: (text: string) => void;
+}) {
+  const fromSaved = () => {
+    const lines = (savedText ?? "").split("\n");
+    return fields.map((f, i) => (lines.length === fields.length ? lines[i] : (f.starter ?? "")));
+  };
+  const [values, setValues] = useState<string[]>(fromSaved);
+  const [editing, setEditing] = useState(false);
+  const showForm = !done || editing;
+  // A box counts as filled once something real follows its opener.
+  const filled = values.map((v, i) => v.trim().length >= (fields[i].starter?.trim().length ?? 0) + 3);
+
+  if (!showForm) {
+    return (
+      <div className="mt-4 flex flex-col items-start gap-3">
+        <p className="card w-full whitespace-pre-wrap p-4 text-sm leading-relaxed" style={{ color: "var(--body)" }}>
+          {savedText}
+        </p>
+        <div className="flex items-center gap-3">
+          <span className="pill pill-done">Saved ✓</span>
+          <button
+            type="button"
+            onClick={() => {
+              setValues(fromSaved());
+              setEditing(true);
+            }}
+            className="muted text-sm font-medium underline-offset-2 hover:underline"
+          >
+            ✏️ Edit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-4">
+      {fields.map((f, i) => (
+        <label key={f.label} className="flex flex-col gap-1.5">
+          <span className="flex items-baseline gap-2">
+            <span
+              className="grid h-6 w-6 place-items-center rounded-full text-[11px] font-semibold"
+              style={{
+                flex: "none",
+                background: filled[i] ? "var(--accent)" : "var(--tile)",
+                color: filled[i] ? "var(--bg, #0b0c0f)" : "var(--body)",
+              }}
+            >
+              {filled[i] ? "✓" : i + 1}
+            </span>
+            <span className="text-sm font-semibold">{f.label}</span>
+          </span>
+          {f.hint && (
+            <span className="muted pl-8 text-[13px]">{f.hint}</span>
+          )}
+          {/* The box starts with its opener, so the example sits above it. */}
+          {f.placeholder && (
+            <span className="muted pl-8 text-[13px] italic">e.g. “{f.placeholder}”</span>
+          )}
+          <textarea
+            value={values[i]}
+            onChange={(e) => setValues((v) => v.map((x, j) => (j === i ? e.target.value : x)))}
+            rows={2}
+            className="field ml-8 px-3.5 py-2.5 text-sm"
+          />
+        </label>
+      ))}
+      <button
+        type="button"
+        onClick={() => onSubmit(values.map((v) => v.trim().replace(/\s*\n\s*/g, " ")).join("\n"))}
+        disabled={busy || !filled.every(Boolean)}
+        className="btn-primary ml-8 self-start px-5 py-2 text-sm"
+      >
+        {busy ? "Saving…" : filled.every(Boolean) ? "Save my pitch" : `Fill all ${fields.length} parts to save`}
+      </button>
+    </div>
+  );
+}
+
+// Pick-one checkpoint: a tappable list of options. The pick is saved as a
+// TEXT answer, so it unlocks Next like any other checkpoint and shows up in
+// the portfolio; tapping a different option replaces it.
+function ChoiceCheckpoint({
+  options,
+  selected,
+  onPick,
+}: {
+  options: string[];
+  selected: string | null;
+  onPick: (option: string) => void;
+}) {
+  // Show the tick the instant it's tapped; the save runs in the background.
+  const [picked, setPicked] = useState(selected);
+  return (
+    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      {options.map((option) => {
+        const isSelected = option === picked;
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => {
+              if (option === picked) return;
+              setPicked(option);
+              onPick(option);
+            }}
+            aria-pressed={isSelected}
+            className="card card-interactive flex w-full cursor-pointer select-none items-center gap-3 px-4 py-3 text-left text-sm"
+            style={
+              isSelected
+                ? { borderColor: "var(--accent)", background: "var(--accent-soft)", color: "var(--text)" }
+                : { color: "var(--body)" }
+            }
+          >
+            <span
+              className="inline-flex items-center justify-center rounded-full border text-[11px] leading-none"
+              style={{
+                width: 20,
+                height: 20,
+                flex: "none",
+                borderColor: isSelected ? "var(--accent)" : "var(--border-soft)",
+              }}
+            >
+              {isSelected ? "✓" : ""}
+            </span>
+            {option}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -658,6 +811,7 @@ export default function Tutorial({
   const [textAnswers, setTextAnswers] = useState(savedTextAnswers);
   const [evidenceIds, setEvidenceIds] = useState(savedEvidenceIds);
   const [busy, setBusy] = useState(false);
+  const choiceQueue = useRef<{ saving: boolean; next: string | null }>({ saving: false, next: null });
   const [error, setError] = useState("");
   const [reflection, setReflection] = useState("");
   const [complete, setComplete] = useState(initialComplete);
@@ -721,6 +875,27 @@ export default function Tutorial({
   async function onText(text: string) {
     if (!currentCrit) return;
     await capture({ type: "TEXT", text }, currentCrit.id);
+  }
+
+  async function onChoice(option: string) {
+    if (!currentCrit) return;
+    // Saves take a moment; taps made meanwhile aren't dropped — only the
+    // latest pick is saved once the current save finishes. `replace` has the
+    // server swap out the earlier pick in the same request.
+    const criterionId = currentCrit.id;
+    const queue = choiceQueue.current;
+    queue.next = option;
+    if (queue.saving) return;
+    queue.saving = true;
+    try {
+      while (queue.next !== null) {
+        const latest = queue.next;
+        queue.next = null;
+        await capture({ type: "TEXT", text: latest, replace: true }, criterionId);
+      }
+    } finally {
+      queue.saving = false;
+    }
   }
 
   // Lets a learner clear a wrongly-picked photo (e.g. the wrong file from
@@ -1043,7 +1218,11 @@ export default function Tutorial({
             <span className="overline">
               {current!.block.capture === "audio"
                 ? "🎙️ Say it out loud"
-                : current!.block.capture === "text"
+                : current!.block.capture === "choice"
+                  ? "👆 Pick one"
+                  : current!.block.capture === "fields"
+                  ? "✍️ Build it"
+                  : current!.block.capture === "text"
                   ? "✍️ Reflect"
                   : "📸 Show your work"}
               {current!.block.optional && " · optional"}
@@ -1055,6 +1234,22 @@ export default function Tutorial({
                 savedUrl={currentCrit ? (media.get(currentCrit.id) ?? null) : null}
                 busy={busy}
                 onRecorded={onAudio}
+              />
+            ) : current!.block.capture === "choice" && current!.block.options?.length ? (
+              <ChoiceCheckpoint
+                key={`choice-${step}`}
+                options={current!.block.options}
+                selected={currentCrit ? (textAnswers.get(currentCrit.id) ?? null) : null}
+                onPick={onChoice}
+              />
+            ) : current!.block.capture === "fields" && current!.block.fields?.length ? (
+              <FieldsCheckpoint
+                key={`fields-${step}`}
+                fields={current!.block.fields}
+                done={currentDone}
+                savedText={currentCrit ? (textAnswers.get(currentCrit.id) ?? null) : null}
+                busy={busy}
+                onSubmit={onText}
               />
             ) : current!.block.capture === "text" ? (
               <TextCheckpoint

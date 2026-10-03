@@ -32,6 +32,7 @@ import {
   wrapUpCriterion,
   photoCriterion,
   audioCriterion,
+  textCriterion,
   moduleWriter,
   syncClassModules,
   checkCheckpoints,
@@ -1617,6 +1618,8 @@ async function main() {
   // ==========================================================================
   // MODULE 5 — Artificial Intelligence & Digital Safety
   // Worked prompt examples, a concrete build flow, and a verification step.
+  // Removed from the class (2026-10-03) — still defined here so it can be
+  // re-added to `modules` below; nothing assigns it while it's left out.
   // ==========================================================================
   const module5 = await createModule({
       orgId: org.id,
@@ -1879,6 +1882,8 @@ async function main() {
   });
 
   // MODULE 6 — Final Showcase (Shark Tank)
+  // Removed from the class (2026-10-03) — still defined here so it can be
+  // re-added to `modules` below; nothing assigns it while it's left out.
   // Slide-by-slide deck template, fill-in-the-blank pitch, rehearsal drill.
   // ==========================================================================
   const module6 = await createModule({
@@ -2018,7 +2023,153 @@ async function main() {
       },
   });
 
-  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, module5, hitl1, module6, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, empower1];
+  // Product elevator pitch: each girl pitches a product from the program's
+  // design-and-print list — to a customer (sell it) or an investor (fund it).
+  // Product list itself is handed out in the room, not hard-coded here.
+  const empower2 = await createModule({
+      orgId: org.id,
+      topic: "Empowerment Series",
+      title: "Product Elevator Pitch",
+      summary: "Pick the product you'll design and 3D print, then pitch it in 60 seconds — to sell it or to win investment.",
+      badgeName: "Pitch Ready",
+      badgeIcon: "🎤",
+      badgeDescription: "Wrote and delivered a 60-second elevator pitch for her own product.",
+      contentJson: JSON.stringify([
+        block("heading", { text: "Your product, in 60 seconds" }),
+        block("text", {
+          kind: "learn",
+          minutes: 3,
+          text: "An elevator pitch is what you'd say if you stepped into an elevator with the one person who could change everything for your idea — and you only had until the doors opened.\n\nAbout 60 seconds. No slides. Just you, your product, and why it matters.\n\nToday you'll build one for the product you're going to design and 3D print.",
+          tip: "Confident doesn't mean loud. It means you know exactly what you're saying — and that comes from practice, not personality.",
+        }),
+
+        block("heading", { text: "Step 1 — Pick your product" }),
+        block("checkpoint", {
+          capture: "choice",
+          criterionLabel: "My product",
+          text: "Which product will you design, 3D print, and pitch? Pick the one YOU would buy, use, or give someone — then tap Next.",
+          options: [
+            "Phone stand / holder",
+            "Cup holder",
+            "Lip gloss holder",
+            "Mini desktop / stationery organizer",
+            "3D-printed bracelet",
+            "Fidget toy",
+            "Mini figurine",
+            "Jewelry tray",
+            "Charm / cable charm",
+            "Articulated model",
+            "Mini plant pot",
+          ],
+        }),
+
+        block("heading", { text: "Step 2 — Sell it, or fund it?" }),
+        block("text", {
+          kind: "learn",
+          minutes: 3,
+          text: "Every pitch has a listener and an ask. Choose yours:\n\n🛍️ SELL IT — you're talking to a CUSTOMER. They care about: what it does for ME, what it costs, why it's better than what I have.\n\n💰 FUND IT — you're talking to an INVESTOR. They care about: how many people need this, what it costs to make, what you'll sell it for, and what their money will help you do.",
+          tip: "Not sure? Pick FUND IT — it makes you think about your numbers, and that makes the customer pitch easy later.",
+        }),
+
+        block("heading", { text: "Step 3 — Know your numbers" }),
+        block("text", {
+          kind: "build",
+          minutes: 8,
+          text: "Investors always ask about money. Get three numbers ready:",
+          actions: [
+            "COST — what one costs to make. 3D-printing plastic is roughly 2 cents per gram; a small print is often 20–50 grams. Add anything else it needs (a magnet, a battery, packaging)",
+            "PRICE — what you'd sell one for. It must be more than the cost, and a real person must happily pay it",
+            "THE ASK — customers: 'Buy one for $___.' Investors: 'I'm looking for $___ to make my first ___ units.'",
+          ],
+          tip: "A rough number you can explain beats a perfect number you can't. 'About a dollar to make, sells for eight' is a great answer.",
+        }),
+
+        block("heading", { text: "Step 4 — Write the pitch" }),
+        block("checkpoint", {
+          capture: "fields",
+          criterionLabel: "Written pitch",
+          text: "Build your pitch one part at a time. Each box already starts the sentence — you finish it. Together, the six parts ARE your pitch.",
+          tip: "The hook matters most. If they don't nod at your question, they won't hear the rest.",
+          fields: [
+            {
+              label: "Hook",
+              hint: "A question about the problem that your listener will answer YES to.",
+              starter: "Have you ever ",
+              placeholder: "Have you ever lost your lip gloss at the bottom of your bag?",
+            },
+            {
+              label: "Problem",
+              hint: "Who has this problem, and why it's annoying.",
+              placeholder: "Most girls I know carry three or four lip glosses, and they're always rolling around loose.",
+            },
+            {
+              label: "Solution",
+              hint: "Your name, your product's real name (not just 'lip gloss holder'), and what it is.",
+              starter: "I'm ",
+              placeholder: "I'm Maya, and I designed GlossGo — a clip-on holder for four lip glosses.",
+            },
+            {
+              label: "Why mine",
+              hint: "What makes it better than what people use now.",
+              starter: "Unlike ",
+              placeholder: "Unlike a makeup bag, it clips right onto your backpack strap.",
+            },
+            {
+              label: "Numbers",
+              hint: "What one costs to make, and what you'll sell it for (from Step 3).",
+              starter: "It costs about ",
+              placeholder: "It costs about $1 to make and sells for $8.",
+            },
+            {
+              label: "The ask",
+              hint: "Customer: ask them to buy. Investor: ask for an amount and say what it pays for.",
+              placeholder: "I'm looking for $100 to print my first 50 GlossGos.",
+            },
+          ],
+        }),
+
+        block("heading", { text: "Step 5 — Say it out loud" }),
+        block("text", {
+          kind: "build",
+          minutes: 10,
+          text: "Pitches are spoken, not read. Practise in pairs:",
+          actions: [
+            "Say it to a partner three times — each time, look at your notes less",
+            "Time it: aim for 45–60 seconds",
+            "Partner gives feedback: one thing that worked, one thing to make stronger",
+            "Swap — then say yours one more time with the fix",
+          ],
+          tip: "Stand tall, feet planted, eyes on your listener. Slow down on your product name and your ask — those are the words they need to remember.",
+        }),
+        block("checkpoint", {
+          capture: "audio",
+          criterionLabel: "Voice note: my elevator pitch",
+          text: "Press record and deliver your elevator pitch, start to finish. One take is fine — real beats perfect.",
+        }),
+        block("checkpoint", {
+          capture: "photo",
+          optional: true,
+          criterionLabel: "Product sketch",
+          text: "Got a sketch of your product, or a first design? Add a photo — optional, tap Skip if not.",
+        }),
+
+        block("heading", { text: "Reflect" }),
+        block("prompt", {
+          text: "How did it feel to pitch your own idea out loud? What would you change before pitching it to a real customer or investor?",
+        }),
+      ]),
+      criteria: {
+        create: [
+          textCriterion(0, "My product", "The product she chose from the design-and-print list."),
+          textCriterion(1, "Written pitch", "A complete pitch: hook, problem, solution, why it's better, numbers, and a clear ask."),
+          audioCriterion(2, "Voice note: my elevator pitch", "The full elevator pitch delivered out loud, about 60 seconds."),
+          { ...photoCriterion(3, "Product sketch", "Optional sketch or early design of the product."), required: false },
+          wrapUpCriterion(4, "Reflection on pitching her own idea and what she'd improve."),
+        ],
+      },
+  });
+
+  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, hitl1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, empower1, empower2];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.
