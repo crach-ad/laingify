@@ -2023,6 +2023,32 @@ async function main() {
       },
   });
 
+  const empower3 = await createModule({
+      orgId: org.id,
+      topic: "Empowerment Series",
+      title: "Series 2",
+      summary: "Reflect on today's Empowerment session in your own words.",
+      badgeName: "Empowered II",
+      badgeIcon: "💫",
+      badgeDescription: "Reflected on the key takeaways from a second Empowerment Series session.",
+      contentJson: JSON.stringify([
+        block("heading", { text: "Empowerment Series — Session 2" }),
+        block("checkpoint", {
+          capture: "photo",
+          optional: true,
+          criterionLabel: "Session photo",
+          text: "Want to add a photo from today's session? This one's optional — tap Skip if not.",
+        }),
+        block("prompt", { text: "What were the key takeaways from the session today?" }),
+      ]),
+      criteria: {
+        create: [
+          { ...photoCriterion(0, "Session photo", "Optional photo from the session."), required: false },
+          wrapUpCriterion(1, "Written answer: the key takeaways from the session."),
+        ],
+      },
+  });
+
   // Product elevator pitch: each girl pitches a product from the program's
   // design-and-print list — to a customer (sell it) or an investor (fund it).
   // Product list itself is handed out in the room, not hard-coded here.
@@ -2169,7 +2195,7 @@ async function main() {
       },
   });
 
-  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, hitl1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, empower1, empower2];
+  const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, hitl1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, empower1, empower2, empower3];
 
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.
