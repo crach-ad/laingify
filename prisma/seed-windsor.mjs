@@ -14,6 +14,8 @@ import { moduleWriter, syncClassModules, checkCheckpoints } from "./seed-lib.mjs
 import { createKnexModules } from "./knex-modules.mjs";
 import { createRodocodoModule, createBlocklyMazeModule } from "./coding-modules.mjs";
 
+import { createLetterLeaperModule } from "./letter-leaper-module.mjs";
+
 const prisma = new PrismaClient();
 const ORG_NAME = "Windsor School";
 const UPDATE = process.argv.includes("--update");
@@ -67,7 +69,8 @@ async function main() {
   const blockly = await createBlocklyMazeModule(projectModule, "Coding");
   const rodocodo = await createRodocodoModule(projectModule, "Coding");
   const knex = await createKnexModules(projectModule);
-  const modules = [blockly, rodocodo, ...knex];
+  const letterLeaper = await createLetterLeaperModule(projectModule);
+  const modules = [letterLeaper, blockly, rodocodo, ...knex];
   await checkCheckpoints(prisma, modules);
 
   const base = Date.now() - CLASSES.length * 1000;
@@ -98,7 +101,7 @@ async function main() {
   const owner = await prisma.instructor.findUnique({ where: { email: OWNER_EMAIL } });
   if (owner) await prisma.instructor.update({ where: { id: owner.id }, data: { accessOrgs: { connect: { id: org.id } } } });
 
-  console.log(`Windsor School ready: ${CLASSES.length} classes, ${modules.length} modules each (Coding ×2 + K'NEX ×${knex.length}).`);
+  console.log(`Windsor School ready: ${CLASSES.length} classes, ${modules.length} modules each (Keyboard Skills + Coding ×2 + K'NEX ×${knex.length}).`);
   console.log(`  Classes: ${CLASSES.map((c) => `${c.name} (${c.code})`).join(", ")}`);
   console.log(`  Instructor: ${INSTRUCTOR.email} / PIN ${INSTRUCTOR.pin}`);
   if (owner) console.log(`  Oversight: ${OWNER_EMAIL} also sees this org.`);
