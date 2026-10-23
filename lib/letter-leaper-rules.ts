@@ -5,7 +5,8 @@ export function validClimb(value: unknown): value is Climb {
   if (!value || typeof value !== "object") return false;
   const s = value as Climb;
   return typeof s.id === "string" && /^[0-9a-f-]{36}$/i.test(s.id) &&
-    PRACTICES.includes(s.practice) && PACES.includes(s.pace) && s.leaps === 150 && s.correct === 230 &&
+    PRACTICES.includes(s.practice) && PACES.includes(s.pace) && s.leaps === 150 &&
+    Number.isSafeInteger(s.correct) && s.correct >= 230 && s.correct <= s.attempts &&
     Number.isSafeInteger(s.attempts) && s.attempts >= 230 && s.attempts <= 50000 &&
     Number.isSafeInteger(s.streak) && s.streak >= 1 && s.streak <= 150 &&
     Number.isSafeInteger(s.elapsed) && s.elapsed >= 12000 && s.elapsed <= 86400000;
@@ -16,7 +17,7 @@ export function validUsername(value: unknown): value is string {
 export type ClassClimb = Climb & { learnerId: string; classId: string; username: string };
 export function rankClimbs(rows: ClassClimb[], classId: string, practice: string, pace: string) {
   const best = new Map<string, ClassClimb>();
-  const compare = (a: ClassClimb, b: ClassClimb) => a.attempts - b.attempts || b.streak - a.streak || a.elapsed - b.elapsed || a.id.localeCompare(b.id);
+  const compare = (a: ClassClimb, b: ClassClimb) => (b.correct / b.attempts) - (a.correct / a.attempts) || b.streak - a.streak || a.elapsed - b.elapsed || a.id.localeCompare(b.id);
   for (const row of rows) {
     if (!validClimb(row) || row.classId !== classId || row.practice !== practice || row.pace !== pace || !validUsername(row.username)) continue;
     const prev = best.get(row.learnerId);

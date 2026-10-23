@@ -5,6 +5,7 @@ import { createLetterLeaperModule } from '../prisma/letter-leaper-module.mjs';
 const score = (extra = {}) => ({ id: crypto.randomUUID(), practice: 'all', pace: 'relaxed', leaps: 150, correct: 230, attempts: 230, streak: 150, elapsed: 65000, classId: 'windsor-a', learnerId: 'one', username: 'MoonKid', ...extra });
 test('validates finished climbs and nicknames', () => {
   assert.ok(validClimb(score()));
+  assert.ok(validClimb(score({correct:231,attempts:232})), 'a timed-out word may contribute extra correctly typed prefix letters');
   for (const patch of [{leaps:100},{correct:231},{attempts:229},{elapsed:0},{streak:151},{practice:'bad'},{pace:'fast'}]) assert.equal(validClimb(score(patch)), false);
   assert.ok(validUsername('Moon_Kid-2')); assert.equal(validUsername('<script>'), false);
 });
@@ -18,4 +19,9 @@ test('module checkpoints match criteria and the game opens on Laingify', async (
   assert.equal(mod.topic,'Keyboard Skills');
   assert.equal(mod.blocks.find(b=>b.type==='link').url,'/play/letter-leaper');
   for(const b of mod.blocks.filter(b=>b.type==='checkpoint')) assert.ok(mod.criteria.some(c=>c.label===b.criterionLabel));
+});
+
+test('ranks actual keystroke accuracy after word timeouts', () => {
+  const rows=[score({learnerId:'lower',correct:230,attempts:250}),score({learnerId:'higher',correct:300,attempts:310})];
+  assert.equal(rankClimbs(rows,'windsor-a','all','relaxed')[0].learnerId,'higher');
 });
