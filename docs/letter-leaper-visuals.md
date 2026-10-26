@@ -77,6 +77,12 @@ Node with a fake clock.
     and the remaining letters are muted.
   - Timed paces show a countdown bar.
   - The HTML prompt below the scene repeats the target.
+- **Letter case:** students choose "Uppercase · ABC" or "Lowercase · abc" in
+  the start form. The choice is remembered per device and applies to the sign,
+  the prompt, the on-screen keys, hints, row names, and the moon card. It's
+  display-only: typing is case-insensitive either way, so it doesn't affect
+  measurement and isn't recorded. Teachers can't lock it yet; that would need
+  a classroom setting.
 - **Sound:** off by default and remembered. Sounds start only after user
   interaction (Phaser unlocks audio on the first gesture). They're soft
   synthesized tones for correct letters, takeoff, landing, mistakes, timeouts,

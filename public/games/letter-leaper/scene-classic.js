@@ -23,7 +23,7 @@
     } catch {}
   }
   function targetMarkup() {
-    return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${c.toUpperCase()}</span>`).join('');
+    return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${letterCase(c)}</span>`).join('');
   }
   function draw() {
     const e = jumping ? (t => t * t * (3 - 2 * t))(jumpProgress()) : 0;
@@ -63,5 +63,6 @@
   });
   (function loop() { if (jumping) draw(); requestAnimationFrame(loop); })();
   window.addEventListener('resize', draw);
+  prefs.on(draw);
   draw();
 })();

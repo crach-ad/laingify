@@ -81,7 +81,7 @@
       this.layout(true);
       views.push((type, d) => this.onGame(type, d));
       new ResizeObserver(() => this.onResize()).observe(host);
-      prefs.on(() => { this.applyAmbient(true); this.milo.setSpace(steps >= 80, true); });
+      prefs.on(() => { this.applyAmbient(true); this.milo.setSpace(steps >= 80, true); this.refreshCard(); });
       this.frameTimes = [];
       document.fonts?.ready.then(() => this.refreshCard());
       stats.ready = true;
@@ -176,7 +176,7 @@
     refreshCard(pop = false) {
       const c = this.card;
       if (state === 'intro' || state === 'finished' || state === 'moon' || steps >= TOTAL) { c.setAlpha(0); return; }
-      const word = target.toUpperCase();
+      const word = letterCase(target);
       if (c.word !== word) {
         for (const l of c.letters) l.destroy();
         c.letters = [...word].map(() => this.add.text(0, -6, '', { fontFamily: '"Space Grotesk", sans-serif', fontSize: '40px', fontStyle: '700', color: '#1d2b26' }).setOrigin(0.5).setResolution(this.R));

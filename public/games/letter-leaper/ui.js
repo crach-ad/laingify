@@ -19,6 +19,23 @@ const prefs = {
   changed() { for (const f of this.listeners) try { f(this); } catch (err) { console.error(err); } },
 };
 calmChoice = prefs.calm;
+// Letter case is display-only: typing is case-insensitive either way, so it
+// never changes what is measured. Used by the scenes too (shared scope).
+prefs.letterCase = prefStore.get('leaper-case') === 'lower' ? 'lower' : 'upper';
+function letterCase(s) { return prefs.letterCase === 'lower' ? s.toLowerCase() : s.toUpperCase(); }
+function paintCase() {
+  $('letter-case').value = prefs.letterCase;
+  document.body.dataset.case = prefs.letterCase;
+  for (const k of document.querySelectorAll('.key')) { k.textContent = letterCase(k.dataset.key); k.setAttribute('aria-label', 'Type ' + letterCase(k.dataset.key)); }
+  const rows = { all: 'All letters', home: 'Home row · ' + letterCase('asdfghjkl'), top: 'Top row · ' + letterCase('qwerty'), bottom: 'Bottom row · ' + letterCase('zxcvbnm') };
+  for (const o of $('letter-set').options) o.textContent = rows[o.value];
+  document.querySelector('.word-examples').textContent = ['go', 'up', 'cat', 'sun'].map(letterCase).join(' · ');
+}
+$('letter-case').onchange = () => {
+  prefs.letterCase = $('letter-case').value === 'lower' ? 'lower' : 'upper';
+  prefStore.set('leaper-case', prefs.letterCase);
+  paintCase(); stats(); prefs.changed();
+};
 function paintToggles() {
   $('sound').setAttribute('aria-pressed', String(prefs.sound));
   $('sound').setAttribute('aria-label', prefs.sound ? 'Turn sound off' : 'Turn sound on');
@@ -53,7 +70,7 @@ function message(text) {
 }
 const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
 function targetMarkup() {
-  return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${esc(c.toUpperCase())}</span>`).join('');
+  return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${esc(letterCase(c))}</span>`).join('');
 }
 function stats() {
   $('accuracy').textContent = attempts ? accuracy() + '%' : '—';
@@ -93,7 +110,7 @@ views.push((type, d) => {
       $('start').blur();
       break;
     case 'miss': {
-      message('Almost! Next is ' + d.expected.toUpperCase() + '.');
+      message('Almost! Next is ' + letterCase(d.expected) + '.');
       const btn = document.querySelector(`[data-key="${d.key}"]`);
       if (btn) { btn.classList.add('wrong'); clearTimeout(keyFlash); keyFlash = setTimeout(() => btn.classList.remove('wrong'), 250); }
       break;
@@ -149,13 +166,13 @@ for (const row of ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']) {
   el.className = 'key-row';
   for (const key of row) {
     const btn = document.createElement('button');
-    btn.className = 'key'; btn.textContent = key.toUpperCase(); btn.dataset.key = key;
-    btn.setAttribute('aria-label', 'Type ' + key.toUpperCase());
+    btn.className = 'key'; btn.dataset.key = key;
     btn.addEventListener('click', () => { input(key, 'screen'); btn.blur(); });
     el.append(btn);
   }
   $('keyboard').append(el);
 }
+paintCase();
 $('continue-stars').onclick = continueStars;
 $('again').onclick = home;
 $('pause').onclick = requestPause;
