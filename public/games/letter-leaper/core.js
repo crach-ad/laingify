@@ -33,10 +33,18 @@ const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let calmChoice = false;
 const reducedMotion = () => motionQuery.matches || calmChoice;
 const jumpMs = () => (reducedMotion() ? 80 : 410);
+// Falling platforms (opt-in preview, off by default): each letter must be typed
+// within FALL_DEADLINE ms of typing time, measured on the active clock (so
+// pauses, hidden tabs, leaps, falls, and recovery never count). A wrong letter
+// or the deadline makes Milo fall and come back to the same leap — progress is
+// never lost and a fall never awards a leap.
+const FALL_DEADLINE = 7000;
+const fallMs = () => (reducedMotion() ? 700 : 1500);
 
 let typed = 0, correct = 0;
 let state = 'intro', steps = 0, attempts = 0, streak = 0, bestStreak = 0, target = 'f', lastLetter = '', set = 'all', pace = 'relaxed',
-  jumpStart = 0, jumpDuration = 410, jumping = false, elapsed = 0, remaining = 0, lastFrame = performance.now(), scope = 'full', pendingResume = null;
+  jumpStart = 0, jumpDuration = 410, jumping = false, elapsed = 0, remaining = 0, lastFrame = performance.now(), scope = 'full', pendingResume = null,
+  falls = false, deadlineAt = Infinity, fallKind = null;
 function accuracy() { return attempts ? Math.round(correct / attempts * 100) : 0; }
 
 // ---- tracking hooks (contract unchanged; consumed by tracker.js) -------------
@@ -48,6 +56,9 @@ function activeNow() { return clock.active + (state === 'playing' && !jumping ? 
 function ready() { readyAt = activeNow(); }
 function rt() { return Math.max(0, Math.round(activeNow() - readyAt)); }
 function pausedFor() { return state === 'paused' || state === 'moon' ? performance.now() - pausedAt : 0; }
+// Typing time left before the platform falls (Infinity when falls are off).
+// The one clock both the rules and the countdown read.
+function deadlineLeft() { return falls ? Math.max(0, deadlineAt - activeNow()) : Infinity; }
 
 // ---- view events (for ui.js and the scene renderers; never affect rules) -----
 const views = [];
@@ -61,13 +72,18 @@ function pick() {
   target = choices[Math.floor(Math.random() * choices.length)];
   lastLetter = target;
   typed = 0;
-  remaining = (pace === 'steady' ? 8000 : pace === 'speedy' ? 4000 : Infinity) * target.length;
+  remaining = falls ? Infinity : (pace === 'steady' ? 8000 : pace === 'speedy' ? 4000 : Infinity) * target.length;
+  countdownShown = 0;
   hook('target', { target, kind: target.length > 1 ? 'word' : 'letter', leap: steps + 1 });
   ready();
+  if (falls) deadlineAt = activeNow() + FALL_DEADLINE;
   emit('target', { target, leap: steps + 1 });
 }
 function start() {
   ({ set, pace } = readSettings());
+  falls = !!readSettings().falls;
+  if (falls) pace = 'relaxed'; // the fixed deadline replaces the pace timer
+  fallKind = null; deadlineAt = Infinity;
   const r = pendingResume;
   pendingResume = null;
   steps = r ? r.leap : scope === 'words' ? MOON : 0;
@@ -92,11 +108,15 @@ function miss(key, timeout = false) {
 }
 function input(key, src = 'kbd') {
   if (state !== 'playing' || jumping || !/^[a-z]$/.test(key)) return;
+  // An answer at or after the deadline is a timeout, not a keystroke.
+  if (falls && activeNow() >= deadlineAt) { collapse(); return; }
   const ok = key === target[typed];
   hook('key', { exp: target[typed], got: key, pos: typed, ok, rt: rt(), src });
   ready();
+  if (!ok && falls) { attempts++; streak = 0; startFall('miss', { key, pos: typed, expected: target[typed] }); return; }
   if (!ok) { miss(key); return; }
   attempts++; correct++; typed++;
+  if (falls && typed < target.length) deadlineAt = activeNow() + FALL_DEADLINE; // each letter of a word gets its own seven seconds
   emit('typed', { pos: typed - 1, done: typed === target.length });
   if (typed < target.length) return;
   hook('complete', { target, leap: steps + 1 });
@@ -106,6 +126,30 @@ function input(key, src = 'kbd') {
   jumpStart = performance.now();
   jumpDuration = jumpMs();
   emit('jump', { from: steps, to: steps + 1, duration: jumpDuration, streak });
+}
+// A fall: a failed leap (wrong letter) or the platform giving way (deadline).
+// It runs on the jump timer, so input is ignored as 'busy' and the time counts
+// as animation, never typing; recover() brings Milo back to the same leap.
+function startFall(kind, detail = {}) {
+  fallKind = kind;
+  typed = 0;
+  jumping = true;
+  jumpStart = performance.now();
+  jumpDuration = fallMs();
+  emit('fall', { kind, leap: steps, duration: jumpDuration, ...detail });
+}
+function collapse() {
+  attempts++;
+  streak = 0;
+  hook('timeout', { target, pos: typed, rt: rt() });
+  startFall('timeout', { target });
+}
+function recover() {
+  const kind = fallKind;
+  fallKind = null;
+  jumping = false;
+  pick(); // a fresh target; its seven seconds start now that Milo is ready
+  emit('recover', { kind, leap: steps });
 }
 // Ignored input is never an attempt; it's only counted by kind (ui.js decides the kind).
 function ignore(kind) { if (state === 'playing') hook('ignored', { kind }); }
@@ -140,7 +184,8 @@ function finish() {
   state = 'finished';
   hook('end', { reason: 'completed', leap: steps });
   emit('finish', { scope, accuracy: accuracy(), bestStreak, elapsed });
-  if (scope === 'full')
+  // Falling-platform climbs aren't comparable with the paced leaderboards.
+  if (scope === 'full' && !falls)
     window.dispatchEvent(new CustomEvent('climb-complete', { detail: { id: crypto.randomUUID(), practice: set, pace, leaps: steps, correct, attempts, streak: bestStreak, elapsed: Math.round(elapsed) } }));
 }
 function pause(reason = 'user') {
@@ -174,7 +219,7 @@ function home() {
   }
   state = 'intro';
   steps = attempts = correct = typed = streak = 0;
-  jumping = false;
+  jumping = false; fallKind = null; deadlineAt = Infinity;
   emit('home');
 }
 // 0 → 1 through the current leap (frozen while paused). Renderers animate from this.
@@ -191,10 +236,14 @@ function frame(now) {
     elapsed += dt;
     if (jumping) {
       clock.anim += real;
-      if (now - jumpStart >= jumpDuration) land();
+      if (now - jumpStart >= jumpDuration) { if (fallKind) recover(); else land(); }
     } else {
       clock.active += real;
-      if (Number.isFinite(remaining)) {
+      if (falls) {
+        const left = deadlineLeft();
+        if (left <= 0) collapse();
+        else if (Math.ceil(left / 1000) !== countdownShown) { countdownShown = Math.ceil(left / 1000); emit('countdown', { seconds: countdownShown }); }
+      } else if (Number.isFinite(remaining)) {
         remaining -= dt;
         if (remaining <= 0) miss('', true);
         else if (Math.ceil(remaining / 1000) !== countdownShown) { countdownShown = Math.ceil(remaining / 1000); emit('countdown', { seconds: countdownShown }); }

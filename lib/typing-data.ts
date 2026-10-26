@@ -46,7 +46,7 @@ export function parseFilters(q: Record<string, string | string[] | undefined>): 
     to: DAY.test(one("to") ?? "") ? one("to") : undefined,
     phase: pick("phase", ["letter", "word"] as const),
     letterSet: pick("letterSet", ["all", "home", "top", "bottom"] as const),
-    pace: pick("pace", ["relaxed", "steady", "speedy"] as const),
+    pace: pick("pace", ["relaxed", "steady", "speedy", "falls"] as const),
     input: pick("input", ["keyboard", "touch", "mixed"] as const),
   };
 }

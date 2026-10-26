@@ -4,7 +4,11 @@
 // a scene renderer. Everything a student or teacher operates is ordinary,
 // accessible HTML; the canvas only illustrates. Rules live in core.js.
 const $ = id => document.getElementById(id);
-readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value });
+readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value, falls: fallsOn() });
+// Falling platforms (?falls=1), 3D scene only: public play, or class play from
+// the falls link the server offers (recorded as its own practice, pace "falls").
+const fallsRequested = () => new URLSearchParams(location.search).get('falls') === '1';
+const fallsOn = () => fallsRequested() && renderer === '3d' && !!window.__leaperScene?.ready;
 
 // ---- preferences (remembered per device) --------------------------------------
 const prefStore = {
@@ -123,6 +127,14 @@ views.push((type, d) => {
       $('continue-stars').focus();
       break;
     case 'stage': if (d.leap !== MOON) message(d.terrain.message); break;
+    case 'fall': {
+      message(d.kind === 'miss' ? 'Whoops — so close!' : 'The platform gave way!');
+      const btn = d.key && document.querySelector(`[data-key="${d.key}"]`);
+      if (btn) { btn.classList.add('wrong'); clearTimeout(keyFlash); keyFlash = setTimeout(() => btn.classList.remove('wrong'), 250); }
+      break;
+    }
+    case 'recover': message(d.kind === 'miss' ? 'Try again!' : 'A little quicker this time!'); break;
+    case 'countdown': if (falls && d.seconds === 2) message('Quick — the platform is wobbling!'); break;
     case 'land': if (d.leap === WORDS3_FROM) message('Ready for three-letter words!'); break;
     case 'continue':
       $('moon-overlay').hidden = true;
@@ -266,7 +278,29 @@ function startRenderer(name) {
     return startRenderer(name === '3d' ? 'phaser' : 'classic');
   });
 }
-startRenderer(renderer);
+startRenderer(renderer).then(() => {
+  if (!fallsRequested()) return;
+  const on = fallsOn();
+  document.body.classList.toggle('falls', on);
+  const rule = document.createElement('p');
+  rule.className = 'falls-rule';
+  rule.id = 'falls-rule';
+  rule.textContent = on
+    ? '⏱ You have 7 seconds for each letter. After 5 seconds the platform starts to wobble, and at 7 it falls. A wrong letter makes Milo fall short. Either way he comes straight back to try again — you never lose a leap.'
+    : 'Falling platforms need the 3D scene, which isn’t available here, so this is the usual game.';
+  $('player-form').querySelector('.settings').after(rule);
+  $('start').setAttribute('aria-describedby', 'falls-rule');
+  if (on) {
+    $('pace').closest('label').hidden = true;
+    const tag = document.createElement('span');
+    tag.className = 'falls-tag';
+    tag.textContent = 'Falling platforms';
+    document.querySelector('.location').append(tag);
+    const li = document.createElement('li');
+    li.textContent = 'Falling platforms: 7 seconds for each letter. The platform wobbles after 5 seconds and falls at 7; a wrong letter makes Milo fall short. He comes straight back to the same leap — no leap is ever lost.';
+    $('help-dialog').querySelector('ol').append(li);
+  }
+});
 
 // ---- classroom integration (unchanged contract) -----------------------------------
 // Public play (?mode=public) never contacts the class APIs: no username, no leaderboard, no score saving.
@@ -278,7 +312,7 @@ window.leaper = {
   clocks: () => ({ activeMs: Math.round(activeNow()), pauseMs: Math.round(clock.pause + pausedFor()), animationMs: Math.round(clock.anim) }),
   snapshot: () => ({ state, leap: steps, correct, attempts, streak, bestStreak, elapsed: Math.round(elapsed) }),
   configure(c) {
-    $('letter-set').value = c.letterSet; $('pace').value = c.pace; scope = c.scope;
+    $('letter-set').value = c.letterSet; $('pace').value = c.pace === 'falls' ? 'relaxed' : c.pace; scope = c.scope;
     for (const id of ['letter-set', 'pace']) $(id).disabled = true;
     $('letter-set').closest('label').hidden = scope === 'words';
   },
@@ -287,7 +321,9 @@ window.leaper = {
     for (const id of ['letter-set', 'pace']) $(id).disabled = false;
     $('letter-set').closest('label').hidden = false;
   },
-  choice: () => ({ letterSet: $('letter-set').value, pace: $('pace').value, scope }),
+  choice: () => ({ letterSet: $('letter-set').value, pace: falls ? 'falls' : $('pace').value, scope }),
+  // The pace this climb actually runs at ("falls" only when the falling-platform rules are on).
+  practicePace: () => (falls ? 'falls' : $('pace').value),
   resumeFrom(r) { pendingResume = r; },
   start,
   home,

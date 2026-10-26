@@ -299,3 +299,13 @@ test('resume when the teacher has not set the practice: any climb, each with its
   lettersDone.summary.furthestLeap = 100;
   assert.equal(resumableSession([lettersDone], null, now), null, 'a letters climb is finished at 100');
 });
+
+test('falling-platform sessions: accepted with hints on, kept apart from paced practice', () => {
+  const ok = script().start().target('a', 1).key('a', 'a', 0, 500).complete('a', 1).ev;
+  const falls = (extra) => batch(ok, { session: { ...batch(ok).session, pace: 'falls', ...extra } });
+  assert.equal(parseBatch(falls({ hints: true }), now).ok, true);
+  assert.equal(parseBatch(falls({ hints: false }), now).ok, false, 'falls play shows hints, like relaxed');
+  assert.equal(parseBatch(batch(ok, { session: { ...batch(ok).session, pace: 'turbo' } }), now).ok, false);
+  const relaxed = row(letterSession()), fell = row(letterSession(), { pace: 'falls' });
+  assert.notEqual(comparableKey(relaxed, 'letter'), comparableKey(fell, 'letter'), 'never compared with relaxed practice');
+});

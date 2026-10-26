@@ -7,6 +7,10 @@
 export const MEASUREMENT_VERSION = 1;
 export const LETTER_SETS = ["all", "home", "top", "bottom"] as const;
 export const PACES = ["relaxed", "steady", "speedy"] as const;
+// Paces a recorded session may have: the teacher-settable ones, plus "falls"
+// (falling platforms: 7 s per letter, hints on), offered from a class link —
+// never a teacher setting, and compared only with other falls sessions.
+export const SESSION_PACES = [...PACES, "falls"] as const;
 export const SCOPES = ["letters", "words", "full"] as const;
 export const MAX_BATCH_EVENTS = 200;
 export const MAX_BATCH_BYTES = 64 * 1024;
@@ -24,6 +28,7 @@ const IGNORED_KINDS = ["repeat", "modifier", "composition", "paste", "nonletter"
 
 export type LetterSet = (typeof LETTER_SETS)[number];
 export type Pace = (typeof PACES)[number];
+export type SessionPace = (typeof SESSION_PACES)[number];
 export type Scope = (typeof SCOPES)[number];
 export type IgnoredKind = (typeof IGNORED_KINDS)[number];
 
@@ -47,7 +52,7 @@ export type TypingEventIn = EventData & { id: string; seq: number; t: number; at
 export type SessionIn = {
   id: string;
   letterSet: LetterSet;
-  pace: Pace;
+  pace: SessionPace;
   scope: Scope;
   hints: boolean;
   gameVersion: string;
@@ -124,10 +129,10 @@ export function parseBatch(raw: unknown, now = Date.now()): BatchResult {
   const s = raw.session;
   if (!isObj(s)) return { ok: false, error: "Missing session." };
   if (typeof s.id !== "string" || !UUID.test(s.id)) return { ok: false, error: "Invalid session id." };
-  if (!oneOf(s.letterSet, LETTER_SETS) || !oneOf(s.pace, PACES) || !oneOf(s.scope, SCOPES) || typeof s.hints !== "boolean") {
+  if (!oneOf(s.letterSet, LETTER_SETS) || !oneOf(s.pace, SESSION_PACES) || !oneOf(s.scope, SCOPES) || typeof s.hints !== "boolean") {
     return { ok: false, error: "Invalid practice settings." };
   }
-  if (s.hints !== (s.pace === "relaxed")) return { ok: false, error: "Hints follow the pace in this version." };
+  if (s.hints !== (s.pace === "relaxed" || s.pace === "falls")) return { ok: false, error: "Hints follow the pace in this version." };
   if (typeof s.gameVersion !== "string" || !/^[\w.-]{1,32}$/.test(s.gameVersion)) return { ok: false, error: "Invalid game version." };
   if (s.measurementVersion !== MEASUREMENT_VERSION) return { ok: false, error: "Unsupported measurement version." };
   if (!isInt(s.startedAt, now - MAX_SESSION_AGE_MS, now + MAX_CLOCK_SKEW_MS)) return { ok: false, error: "Session start time is out of range." };

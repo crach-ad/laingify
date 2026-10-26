@@ -271,6 +271,7 @@ function init() {
     g.position.copy(islandPos(n));
     g.userData.n = n;
     g.userData.baseY = g.position.y;
+    g.userData.base = { pos: g.position.clone(), rot: g.rotation.clone() };
     return g;
   }
 
@@ -451,9 +452,9 @@ function init() {
   const card = document.createElement('div');
   card.className = 'leaper3d-card';
   card.setAttribute('aria-hidden', 'true');
-  card.innerHTML = '<div class="leaper3d-letters"></div><div class="leaper3d-timer"><i></i></div><div class="leaper3d-hint">TYPE TO LEAP</div>';
+  card.innerHTML = '<div class="leaper3d-letters"></div><div class="leaper3d-timer"><i></i></div><div class="leaper3d-hint">TYPE TO LEAP</div><div class="leaper3d-count"></div>';
   host.append(card);
-  const cardLetters = card.firstChild, cardTimer = card.querySelector('.leaper3d-timer'), cardFill = cardTimer.firstChild;
+  const cardLetters = card.firstChild, cardTimer = card.querySelector('.leaper3d-timer'), cardFill = cardTimer.firstChild, cardCount = card.querySelector('.leaper3d-count');
   function refreshCard(pop = false) {
     const show = (state === 'playing' || state === 'paused') && steps < TOTAL;
     card.classList.toggle('shown', show && !jumping);
@@ -466,7 +467,7 @@ function init() {
       cardLetters.append(s);
     });
     card.classList.toggle('word', target.length > 1);
-    cardTimer.hidden = !Number.isFinite(remaining);
+    cardTimer.hidden = !Number.isFinite(remaining) && !falls;
     if (pop && !calm()) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
   }
   function shakeCard() { if (calm()) return; card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
@@ -477,7 +478,15 @@ function init() {
     cardAnchor.project(camera);
     const x = clamp((cardAnchor.x + 1) / 2 * W, 70, W - 70), y = clamp((1 - cardAnchor.y) / 2 * H, 110, H - 20);
     card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
-    if (Number.isFinite(remaining)) {
+    if (falls) {
+      // The falling-platform countdown reads the rules' own deadline clock.
+      const left = deadlineLeft(), f = clamp(left / FALL_DEADLINE, 0, 1), secs = String(Math.ceil(left / 1000));
+      cardFill.style.transform = `scaleX(${f.toFixed(3)})`;
+      cardTimer.classList.toggle('low', left <= 2000);
+      if (cardCount.textContent !== secs) cardCount.textContent = secs;
+      card.classList.toggle('warn', left <= 2000 && left > 1000);
+      card.classList.toggle('danger', left <= 1000);
+    } else if (Number.isFinite(remaining)) {
       const total = (pace === 'steady' ? 8000 : 4000) * target.length, f = clamp(remaining / total, 0, 1);
       cardFill.style.transform = `scaleX(${f.toFixed(3)})`;
       cardTimer.classList.toggle('low', f < 0.3);
@@ -486,7 +495,7 @@ function init() {
 
   // ---- world state -------------------------------------------------------------------------------
   const platforms = new Map(), decor = new Map();
-  let milo = null, animator = null, helmet = null, flag = null, beacon = null, contact = null, leaves = null;
+  let milo = null, animator = null, helmet = null, flag = null, beacon = null, contact = null, leaves = null, warnRing = null;
   const look = new THREE.Vector3(), focus = new THREE.Vector3(), tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
   let camLevel = 0, yaw = 0, frameView = { x: 0, y: 0 }, snapCamera = true, lastSky = -1, dip = null;
   const OFFSET = new THREE.Vector3(3.3, 3.1, 6.3);
@@ -541,6 +550,9 @@ function init() {
     beacon = new THREE.Mesh(new THREE.RingGeometry(0.38, 0.5, 48), new THREE.MeshBasicMaterial({ color: '#ffe08a', transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
     beacon.rotation.x = -Math.PI / 2; beacon.renderOrder = 2;
     scene.add(beacon);
+    warnRing = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.78, 48), new THREE.MeshBasicMaterial({ color: '#ff7a3d', transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+    warnRing.rotation.x = -Math.PI / 2; warnRing.renderOrder = 2;
+    scene.add(warnRing);
     // Moon flag (shown at the landing).
     flag = new THREE.Group();
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 6), new THREE.MeshStandardMaterial({ color: '#d9d2c3', metalness: 0.4, roughness: 0.4 }));
@@ -588,7 +600,7 @@ function init() {
 
   function onGame(type, d) {
     switch (type) {
-      case 'start': case 'home': animator.play('Idle', { fade: 0.2 }); layout(); break;
+      case 'start': case 'home': restorePlatform(platforms.get(steps)); resetMilo(); animator.play('Idle', { fade: 0.2 }); layout(); break;
       case 'target': refreshCard(true); break;
       case 'typed': play(['correct', 'correct2', 'correct3'][Math.min(d.pos, 2)]); refreshCard(); break;
       case 'miss': play('mistake'); animator.play('Oops', { once: true, fade: 0.12 }); refreshCard(); shakeCard(); break;
@@ -614,8 +626,82 @@ function init() {
       case 'continue': animator.play('Idle', { fade: 0.3 }); flag.visible = false; refreshCard(true); break;
       case 'finish': refreshCard(); celebrate(steps >= TOTAL ? 'stars' : 'moon'); break;
       case 'pause': case 'resume': case 'countdown': refreshCard(); break;
+      case 'fall':
+        play(d.kind === 'miss' ? 'mistake' : 'timeout');
+        if (d.kind === 'miss' && !calm()) animator.play('Anticipate', { once: true, fade: 0.06 });
+        else animator.play('Oops', { once: true, fade: 0.1 });
+        refreshCard();
+        break;
+      case 'recover':
+        restorePlatform(platforms.get(steps));
+        resetMilo();
+        play('land');
+        animator.play('Land', { once: true, fade: 0.08 });
+        burst(standPos(steps, tmp).clone().add(new THREE.Vector3(0, 0.3, 0)), { n: 12, color: '#fff3c4', speed: 1.4, up: 1.2, life: 0.7, size: 0.18 });
+        refreshCard(true);
+        break;
     }
   }
+
+  // ---- falls (falling-platform preview) ---------------------------------------------------------------
+  // Both play inside the rules' fall time: a near miss (jump short, drop out
+  // of view) or the platform giving way, then Milo pops back onto a restored
+  // platform for the same leap. Calm mode: a simple sink-and-return.
+  const fallPoint = new THREE.Vector3();
+  function fallMotion(p, from, to, plat, still) {
+    if (still) {
+      const out = p < 0.5 ? smooth(p / 0.45) : 1 - smooth((p - 0.55) / 0.4);
+      milo.scale.setScalar(Math.max(0.001, 1 - out));
+      focus.copy(from).y -= out * 0.5;
+      if (plat && fallKind === 'timeout') plat.position.y = plat.userData.baseY - out * 0.35;
+      return 0;
+    }
+    if (fallKind === 'miss') {
+      if (p < 0.3) { // the attempt: an arc that runs out of height halfway
+        const q = p / 0.3;
+        if (q > 0.35 && animator.current() === 'Anticipate') animator.play('Air', { fade: 0.08 });
+        focus.copy(from).lerp(to, smooth(q) * 0.5).y += Math.sin(q * Math.PI * 0.8) * 0.95;
+      } else if (p < 0.72) { // falling short, out of view
+        const q = (p - 0.3) / 0.42;
+        if (animator.current() !== 'Oops') animator.play('Oops', { fade: 0.1 });
+        fallPoint.copy(from).lerp(to, 0.5 + q * 0.12).y += Math.sin(Math.PI * 0.8) * 0.95 - 10 * q * q;
+        focus.copy(fallPoint);
+        milo.rotation.x = q * 1.1;
+      } else { // back on the start platform, dropping in from above
+        const q = (p - 0.72) / 0.28;
+        milo.rotation.x = 0;
+        focus.copy(from).y += (1 - smooth(q)) * 1.8;
+        if (animator.current() !== 'Air') animator.play('Air', { fade: 0.05 });
+      }
+      return Math.max(0, focus.y - from.y);
+    }
+    // timeout: the platform drops with Milo on it, then a restored platform rises back
+    if (p < 0.55) {
+      const q = p / 0.55, drop = 9 * q * q;
+      if (plat) { plat.position.y = plat.userData.baseY - drop; plat.rotation.z = plat.userData.base.rot.z + q * 0.5; }
+      focus.copy(from).y -= drop * 0.96;
+      milo.rotation.x = q * 0.5;
+    } else {
+      const q = (p - 0.55) / 0.45;
+      if (plat) {
+        plat.position.y = plat.userData.baseY - (1 - smooth(q / 0.6)) * 2;
+        plat.rotation.z = plat.userData.base.rot.z;
+        plat.scale.setScalar(0.6 + 0.4 * smooth(q / 0.6));
+      }
+      milo.rotation.x = 0;
+      milo.visible = q > 0.45;
+      focus.copy(from).y += (1 - smooth((q - 0.45) / 0.55)) * 1.8;
+      if (milo.visible && animator.current() !== 'Air') animator.play('Air', { fade: 0.05 });
+    }
+    return 0;
+  }
+  function restorePlatform(plat) {
+    if (!plat?.userData.base) return;
+    plat.position.copy(plat.userData.base.pos);
+    plat.rotation.copy(plat.userData.base.rot);
+    plat.scale.setScalar(1);
+  }
+  function resetMilo() { milo.visible = true; milo.scale.setScalar(1); milo.rotation.x = 0; }
 
   // ---- per frame -------------------------------------------------------------------------------------
   const clock = new THREE.Timer();
@@ -625,7 +711,7 @@ function init() {
     const dt = Math.min(clock.getDelta(), 0.1), t = clock.getElapsed(), still = calm();
     // Camera level: follows the leap (calm: holds, then moves at the landing).
     const p = jumpProgress();
-    const goal = steps + (jumping && !still ? smooth((p - 0.1) / 0.85) : 0);
+    const goal = steps + (jumping && !still && !fallKind ? smooth((p - 0.1) / 0.85) : 0);
     camLevel = snapCamera || still ? goal : camLevel + (goal - camLevel) * (1 - Math.exp(-dt * 7));
     const b = blendAt(camLevel), w = (k) => weightOf(b, k);
 
@@ -633,11 +719,31 @@ function init() {
     const from = standPos(steps, new THREE.Vector3()), to = standPos(Math.min(steps + 1, TOTAL), new THREE.Vector3());
     let height = 0;
     focus.copy(from);
-    if (jumping) {
+    const plat = platforms.get(steps);
+    if (jumping && fallKind) {
+      height = fallMotion(p, from, to, plat, still);
+    } else if (jumping) {
       if (p > 0.16 && animator.current() === 'Anticipate') animator.play('Air', { fade: 0.08 });
       const u = still ? p : smooth((p - 0.16) / 0.8);
       height = still ? 0 : Math.sin(clamp((p - 0.16) / 0.8, 0, 1) * Math.PI) * 1.1;
       focus.copy(from).lerp(to, u).y += height;
+    }
+    // Falling platforms: the wobble grows over the last two seconds (calm: a steady warning ring instead).
+    const left = falls && state === 'playing' && !jumping ? deadlineLeft() : Infinity;
+    const warn = left <= 2000 ? 1 - left / 2000 : 0;
+    if (plat && !fallKind && plat.userData.base) {
+      const b0 = plat.userData.base;
+      const amp = warn && !still ? 0.012 + 0.05 * warn : 0;
+      plat.position.x = b0.pos.x + Math.sin(t * 41) * amp;
+      plat.position.z = b0.pos.z + Math.sin(t * 53 + 1) * amp * 0.7;
+      plat.rotation.z = b0.rot.z + Math.sin(t * 37) * amp * 0.9;
+      focus.x += plat.position.x - b0.pos.x; focus.z += plat.position.z - b0.pos.z;
+    }
+    warnRing.visible = warn > 0;
+    if (warnRing.visible) {
+      warnRing.position.set(from.x, from.y + 0.025, from.z);
+      warnRing.material.color.set(left <= 1000 ? '#ff4b3a' : '#ff9a3d');
+      warnRing.material.opacity = still ? 0.9 : 0.55 + 0.4 * Math.abs(Math.sin(t * (6 + 10 * warn)));
     }
     milo.position.copy(focus);
     animator.update(dt);
@@ -646,12 +752,13 @@ function init() {
     let dy = want - yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     yaw += dy * Math.min(1, dt * (still ? 30 : 9));
     milo.rotation.y = yaw;
-    const ground = jumping && p > 0.5 ? to : from;
+    const ground = jumping && p > 0.5 && !fallKind ? to : from;
+    contact.visible = milo.visible && focus.y > from.y - 0.3;
     contact.position.set(focus.x, ground.y + 0.012, focus.z);
     contact.scale.setScalar(0.62 / (1 + height * 0.6));
 
     // Camera: keep Milo and the destination in frame; framing follows the HTML around the scene.
-    const anchor = still && jumping ? from : focus;
+    const anchor = (still && jumping) || fallKind ? from : focus; // the camera never follows a fall
     tmp.copy(anchor);
     if (state !== 'intro' && !celebrating) tmp.lerp(to, 0.42);
     tmp.y += 0.45;
@@ -757,7 +864,7 @@ function init() {
       for (const [n, o] of platforms) {
         o.userData.pebbles?.forEach((pb, i) => { pb.position.y = -1.9 - i * 0.3 + Math.sin(t * 0.7 + n + i) * 0.06; });
         const kind = kindFor(n);
-        if (kind === 'clouds') o.position.y = o.userData.baseY + Math.sin(t * 0.9 + n) * 0.03;
+        if (kind === 'clouds' && !(fallKind && n === steps)) o.position.y = o.userData.baseY + Math.sin(t * 0.9 + n) * 0.03;
       }
       for (const [n, o] of decor) {
         if (o.userData.sway) o.userData.sway.rotation.z = Math.sin(t * 0.6 + n) * 0.025;
