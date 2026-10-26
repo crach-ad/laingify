@@ -60,3 +60,31 @@
 .public-play #leaderboard,.public-play .username-label,.public-play #username,.public-play #username-hint,.public-play .home-leaderboard,.public-play #finish-leaderboard{display:none}
 .tracked .home-leaderboard{display:none}.tracked #intro{grid-template-columns:1fr}.track-note{margin:10px 0 0;font-size:13px;color:var(--muted)}.save-status{font-size:12px;color:var(--muted);max-width:260px;text-align:right}.save-status[data-tone="warn"]{color:var(--gold)}.save-status:empty{display:none}#start-fresh{display:block;margin-top:6px;padding-left:0}.practice-feedback{text-align:left;margin:14px 0;padding:14px 16px;border:1px solid #ffffff20;border-radius:12px;background:#ffffff08}.practice-feedback strong{display:block;font-size:13px;letter-spacing:.5px;margin-top:10px;color:var(--gold)}.practice-feedback p{margin:4px 0 0;font-size:15px}.practice-feedback .pf-summary{font-size:16px;font-weight:600}
 @media(max-width:740px){.save-status{display:none}}
+/* Phaser scene: the canvas sits under the HTML HUD and dialogs; the classic DOM scene (and its background images) is not used. */
+.renderer-phaser .scene{background:#0b211f}
+.renderer-phaser .scene>.leaper-canvas{position:absolute;inset:0;z-index:0;display:block}
+.renderer-phaser .sky-tint,.renderer-phaser .starfield,.renderer-phaser .world,.renderer-phaser #monkey,.renderer-phaser .trail{display:none}
+.renderer-phaser .journey,.renderer-phaser #feedback,.renderer-phaser .stage-label{z-index:3}
+.renderer-phaser #feedback{text-shadow:0 1px 3px #0b211fcc}
+.renderer-phaser .stage-label{text-shadow:0 1px 3px #0b211fcc}
+.renderer-phaser .overlay{background:linear-gradient(90deg,#0b2a26e6,#0b2a2680 55%,transparent 85%)}
+.renderer-phaser .modal-overlay{background:#06141299}
+/* Milestones: the celebration stays visible. The moon card sits low in the scene with no blur; its button continues (and skips the celebration). */
+.renderer-phaser #moon-overlay{place-items:end center;background:linear-gradient(180deg,transparent 0,transparent 42%,#061412d9 78%);backdrop-filter:none;padding-bottom:18px}
+.renderer-phaser #moon-overlay .modal{background:#0b211feb;border:1px solid #f1d47b55;border-radius:18px;padding:16px 26px 20px;max-width:560px}
+.renderer-phaser #moon-overlay .modal-icon,.renderer-phaser #moon-overlay .moon-detail{display:none}
+.renderer-phaser #moon-overlay h2{font-size:30px;margin:6px 0 4px}
+.renderer-phaser #moon-overlay p{margin:6px 0}
+.renderer-phaser #moon-overlay .word-examples{font-size:20px;margin:6px 0 12px}
+.renderer-phaser #finish{backdrop-filter:none;background:radial-gradient(ellipse at 50% 55%,#061412e6 0,#061412b3 45%,#06141240 80%)}
+/* Narrow screens: the intro form flows in the page and the scene grows to fit it, with room for Milo below — nothing overlaps. */
+@media (max-width:740px){
+  body[data-state="intro"] .scene{height:auto;min-height:560px}
+  body[data-state="intro"] #intro{position:relative;inset:auto;padding-bottom:190px;background:linear-gradient(180deg,#0b2a26f2 0,#0b2a26e0 70%,#0b2a2600 100%)}
+}
+.calm *{scroll-behavior:auto}
+@media (prefers-reduced-motion:reduce){.renderer-phaser #feedback{transition:none}}
+/* Let the celebration play for a beat before the milestone card appears (calm mode: no delay). The card's DOM and focus are ready at once. */
+@keyframes leaper-card-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.renderer-phaser:not(.calm) #moon-overlay:not([hidden]) .modal{animation:leaper-card-in .45s ease-out 1s both}
+.renderer-phaser:not(.calm) #finish:not([hidden]){animation:leaper-card-in .5s ease-out 1.5s both}
