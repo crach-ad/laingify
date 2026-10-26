@@ -61,30 +61,49 @@
 .tracked .home-leaderboard{display:none}.tracked #intro{grid-template-columns:1fr}.track-note{margin:10px 0 0;font-size:13px;color:var(--muted)}.save-status{font-size:12px;color:var(--muted);max-width:260px;text-align:right}.save-status[data-tone="warn"]{color:var(--gold)}.save-status:empty{display:none}#start-fresh{display:block;margin-top:6px;padding-left:0}.practice-feedback{text-align:left;margin:14px 0;padding:14px 16px;border:1px solid #ffffff20;border-radius:12px;background:#ffffff08}.practice-feedback strong{display:block;font-size:13px;letter-spacing:.5px;margin-top:10px;color:var(--gold)}.practice-feedback p{margin:4px 0 0;font-size:15px}.practice-feedback .pf-summary{font-size:16px;font-weight:600}
 @media(max-width:740px){.save-status{display:none}}
 /* Phaser scene: the canvas sits under the HTML HUD and dialogs; the classic DOM scene (and its background images) is not used. */
-.renderer-phaser .scene{background:#0b211f}
-.renderer-phaser .scene>.leaper-canvas{position:absolute;inset:0;z-index:0;display:block}
-.renderer-phaser .sky-tint,.renderer-phaser .starfield,.renderer-phaser .world,.renderer-phaser #monkey,.renderer-phaser .trail{display:none}
-.renderer-phaser .journey,.renderer-phaser #feedback,.renderer-phaser .stage-label{z-index:3}
-.renderer-phaser #feedback{text-shadow:0 1px 3px #0b211fcc}
-.renderer-phaser .stage-label{text-shadow:0 1px 3px #0b211fcc}
-.renderer-phaser .overlay{background:linear-gradient(90deg,#0b2a26e6,#0b2a2680 55%,transparent 85%)}
-.renderer-phaser .modal-overlay{background:#06141299}
+.renderer-canvas .scene{background:#0b211f}
+.renderer-canvas .scene>.leaper-canvas{position:absolute;inset:0;z-index:0;display:block}
+.renderer-canvas .sky-tint,.renderer-canvas .starfield,.renderer-canvas .world,.renderer-canvas #monkey,.renderer-canvas .trail{display:none}
+.renderer-canvas .journey,.renderer-canvas #feedback,.renderer-canvas .stage-label{z-index:3}
+.renderer-canvas #feedback{text-shadow:0 1px 3px #0b211fcc}
+.renderer-canvas .stage-label{text-shadow:0 1px 3px #0b211fcc}
+.renderer-canvas .overlay{background:linear-gradient(90deg,#0b2a26e6,#0b2a2680 55%,transparent 85%)}
+.renderer-canvas .modal-overlay{background:#06141299}
 /* Milestones: the celebration stays visible. The moon card sits low in the scene with no blur; its button continues (and skips the celebration). */
-.renderer-phaser #moon-overlay{place-items:end center;background:linear-gradient(180deg,transparent 0,transparent 42%,#061412d9 78%);backdrop-filter:none;padding-bottom:18px}
-.renderer-phaser #moon-overlay .modal{background:#0b211feb;border:1px solid #f1d47b55;border-radius:18px;padding:16px 26px 20px;max-width:560px}
-.renderer-phaser #moon-overlay .modal-icon,.renderer-phaser #moon-overlay .moon-detail{display:none}
-.renderer-phaser #moon-overlay h2{font-size:30px;margin:6px 0 4px}
-.renderer-phaser #moon-overlay p{margin:6px 0}
-.renderer-phaser #moon-overlay .word-examples{font-size:20px;margin:6px 0 12px}
-.renderer-phaser #finish{backdrop-filter:none;background:radial-gradient(ellipse at 50% 55%,#061412e6 0,#061412b3 45%,#06141240 80%)}
+.renderer-canvas #moon-overlay{place-items:end center;background:linear-gradient(180deg,transparent 0,transparent 42%,#061412d9 78%);backdrop-filter:none;padding-bottom:18px}
+.renderer-canvas #moon-overlay .modal{background:#0b211feb;border:1px solid #f1d47b55;border-radius:18px;padding:16px 26px 20px;max-width:560px}
+.renderer-canvas #moon-overlay .modal-icon,.renderer-canvas #moon-overlay .moon-detail{display:none}
+.renderer-canvas #moon-overlay h2{font-size:30px;margin:6px 0 4px}
+.renderer-canvas #moon-overlay p{margin:6px 0}
+.renderer-canvas #moon-overlay .word-examples{font-size:20px;margin:6px 0 12px}
+.renderer-canvas #finish{backdrop-filter:none;background:radial-gradient(ellipse at 50% 55%,#061412e6 0,#061412b3 45%,#06141240 80%)}
 /* Narrow screens: the intro form flows in the page and the scene grows to fit it, with room for Milo below — nothing overlaps. */
 @media (max-width:740px){
   body[data-state="intro"] .scene{height:auto;min-height:560px}
   body[data-state="intro"] #intro{position:relative;inset:auto;padding-bottom:190px;background:linear-gradient(180deg,#0b2a26f2 0,#0b2a26e0 70%,#0b2a2600 100%)}
 }
 .calm *{scroll-behavior:auto}
-@media (prefers-reduced-motion:reduce){.renderer-phaser #feedback{transition:none}}
+@media (prefers-reduced-motion:reduce){.renderer-canvas #feedback{transition:none}}
 /* Let the celebration play for a beat before the milestone card appears (calm mode: no delay). The card's DOM and focus are ready at once. */
 @keyframes leaper-card-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.renderer-phaser:not(.calm) #moon-overlay:not([hidden]) .modal{animation:leaper-card-in .45s ease-out 1s both}
-.renderer-phaser:not(.calm) #finish:not([hidden]){animation:leaper-card-in .5s ease-out 1.5s both}
+.renderer-canvas:not(.calm) #moon-overlay:not([hidden]) .modal{animation:leaper-card-in .45s ease-out 1s both}
+.renderer-canvas:not(.calm) #finish:not([hidden]){animation:leaper-card-in .5s ease-out 1.5s both}
+
+/* three.js scene: the target card floats over the next platform (the keyboard panel keeps the accessible prompt). */
+.leaper3d-card{position:absolute;left:0;top:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px;background:#fff8e6;color:#13241e;border:3px solid #1d2b26;border-radius:18px;padding:8px 20px 9px;box-shadow:0 10px 24px #0b171455;opacity:0;transition:opacity .14s;will-change:transform}
+.leaper3d-card.shown{opacity:1}
+.leaper3d-card::after{content:"";position:absolute;left:50%;bottom:-11px;width:16px;height:16px;background:#fff8e6;border-right:3px solid #1d2b26;border-bottom:3px solid #1d2b26;transform:translateX(-50%) rotate(45deg)}
+.leaper3d-letters{display:flex;gap:2px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(40px,6vw,64px);line-height:1}
+.leaper3d-card.word .leaper3d-letters{font-size:clamp(32px,4.6vw,50px);letter-spacing:.04em}
+.leaper3d-letters .typed{color:#2f8f5b}
+.leaper3d-letters .next{text-decoration:underline;text-decoration-color:#f2c14e;text-decoration-thickness:5px;text-underline-offset:6px}
+.leaper3d-timer{width:72px;height:5px;border-radius:3px;background:#13241e22;overflow:hidden}
+.leaper3d-timer i{display:block;height:100%;background:#f2c14e;transform-origin:left}
+.leaper3d-timer.low i{background:#ff9e6b}
+.leaper3d-hint{font-size:10px;font-weight:800;letter-spacing:.12em;color:#55665f}
+.leaper3d-card.pop .leaper3d-letters{animation:leaper3d-pop .22s ease-out}
+.leaper3d-card.shake{animation:leaper3d-shake .3s ease-in-out}
+@keyframes leaper3d-pop{0%{transform:scale(.8)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes leaper3d-shake{0%,100%{margin-left:0}25%{margin-left:-7px}75%{margin-left:7px}}
+.calm .leaper3d-card{transition:none}
+@media (prefers-reduced-motion:reduce){.leaper3d-card{transition:none;animation:none!important}.leaper3d-card *{animation:none!important}}

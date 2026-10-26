@@ -214,8 +214,9 @@ if (document.modelContext?.registerTool) {
   } catch {}
 }
 
-// ---- renderer: Phaser scene by default; the classic DOM scene for comparison
-// (?renderer=classic) or when WebGL / Phaser isn't available.
+// ---- renderer: the three.js scene by default; the Phaser scene, then the
+// classic DOM scene, if it can't start (no WebGL, a failed download, or no
+// ready signal in time). ?renderer=phaser|classic picks one for comparison.
 const query = new URLSearchParams(location.search);
 function webglOk() { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } }
 function loadScripts(srcs) {
@@ -225,24 +226,47 @@ function loadScripts(srcs) {
     document.body.append(s);
   })), Promise.resolve());
 }
-let renderer = query.get('renderer') === 'classic' || !webglOk() ? 'classic' : 'phaser';
-document.body.classList.add('renderer-' + renderer);
-// The Phaser scene must report ready (scene-phaser.js sets __leaperScene.ready) or we fall back.
-const phaserReady = () => new Promise((ok, fail) => {
+function loadModule(src) {
+  return new Promise((ok, fail) => {
+    const s = Object.assign(document.createElement('script'), { src, type: 'module' });
+    s.onload = ok; s.onerror = () => fail(new Error('Could not load ' + src));
+    document.body.append(s);
+  });
+}
+// A canvas scene must report ready (it sets __leaperScene.ready) or failure, or we move on.
+const sceneReady = (ms) => new Promise((ok, fail) => {
   const t0 = performance.now();
   (function check() {
-    if (window.__leaperScene?.ready) ok();
-    else if (performance.now() - t0 > 6000) { window.__leaperGame?.destroy(true); document.querySelector('.leaper-canvas')?.remove(); fail(new Error('scene did not start')); }
+    const s = window.__leaperScene;
+    if (s?.ready) ok();
+    else if (s?.failed || performance.now() - t0 > ms) fail(new Error(s?.failed ? 'scene failed: ' + s.failed.message : 'scene did not start'));
     else setTimeout(check, 100);
   })();
 });
-(renderer === 'phaser' ? loadScripts(['vendor/phaser.min.js', 'art.js', 'milo.js', 'scene-phaser.js']).then(phaserReady) : Promise.reject(new Error('classic requested')))
-  .catch(err => {
-    if (renderer === 'phaser') console.warn('Letter Leaper: using the classic scene —', err.message);
-    document.body.classList.replace('renderer-phaser', 'renderer-classic');
-    renderer = 'classic';
-    return loadScripts(['scene-classic.js']);
+const RENDERERS = {
+  '3d': () => loadScripts(['art.js']).then(() => loadModule('scene-3d.js')).then(() => sceneReady(20000)),
+  phaser: () => loadScripts(['vendor/phaser.min.js', 'art.js', 'milo.js', 'scene-phaser.js']).then(() => sceneReady(6000)),
+};
+function dropScene() {
+  try { window.__leaperScene?.destroy?.(); } catch {}
+  window.__leaperGame?.destroy(true);
+  document.querySelectorAll('.leaper-canvas').forEach((c) => c.remove());
+  delete window.__leaperScene;
+}
+let renderer = !webglOk() ? 'classic' : ['phaser', 'classic'].includes(query.get('renderer')) ? query.get('renderer') : '3d';
+function startRenderer(name) {
+  document.body.classList.remove('renderer-' + renderer, 'renderer-canvas');
+  renderer = name;
+  document.body.classList.add('renderer-' + name);
+  if (name !== 'classic') document.body.classList.add('renderer-canvas');
+  if (name === 'classic') return loadScripts(['scene-classic.js']);
+  return RENDERERS[name]().catch((err) => {
+    console.warn(`Letter Leaper: the ${name} scene could not start —`, err.message);
+    dropScene();
+    return startRenderer(name === '3d' ? 'phaser' : 'classic');
   });
+}
+startRenderer(renderer);
 
 // ---- classroom integration (unchanged contract) -----------------------------------
 // Public play (?mode=public) never contacts the class APIs: no username, no leaderboard, no score saving.

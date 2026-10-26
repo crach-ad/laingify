@@ -1,9 +1,9 @@
 // Builds the Letter Leaper 3D preview's models as GLB files, reproducibly
 // (seeded; same output every run): node scripts/build-leaper-3d-assets.mjs
 //
-//   public/games/letter-leaper-3d/milo.glb     articulated Milo + animation clips
-//   public/games/letter-leaper-3d/islands.glb  three floating-island variants
-//   public/games/letter-leaper-3d/scenery.glb  jungle props (trees, palm, fern, bush, leaf, hills)
+//   public/games/letter-leaper/models/milo.glb     articulated Milo + animation clips
+//   public/games/letter-leaper/models/islands.glb  three floating-island variants
+//   public/games/letter-leaper/models/scenery.glb  jungle props (trees, palm, fern, bush, leaf, hills)
 //
 // PROVISIONAL ORIGINAL ARTWORK, modelled in code for this project (no
 // downloaded models or textures). Colour comes from materials and vertex
@@ -19,7 +19,7 @@ globalThis.FileReader ??= class {
   readAsDataURL(blob) { blob.arrayBuffer().then((b) => { this.result = `data:${blob.type};base64,${Buffer.from(b).toString("base64")}`; this.onloadend?.(); this.onload?.({ target: this }); }); }
 };
 
-const OUT = new URL("../public/games/letter-leaper-3d/", import.meta.url);
+const OUT = new URL("../public/games/letter-leaper/models/", import.meta.url);
 function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, ...opts });
 const vmat = (opts = {}) => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, ...opts });
