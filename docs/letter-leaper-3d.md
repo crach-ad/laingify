@@ -105,9 +105,13 @@ An opt-in rule set, active only with `?falls=1` and the 3D scene. The default
 game and teacher practice settings are unchanged.
 
 - **Where it's offered:**
-  - Classes listed in `lib/class-features.ts` (Ms. Pamela Smith's Windsor
-    School classes) get a **🐒 Letter Leaper** button in the learner
-    dashboard header.
+  - Classes of the teachers listed in `lib/class-features.ts` get a
+    **🐒 Letter Leaper** button in the learner dashboard header. That covers
+    every class in their home org or an org they have console access to:
+    Ms. Pamela Smith's Windsor School, and Crachad Laing's camp, KCSB and the
+    orgs he oversees.
+  - The button shows only in classes that have the Letter Leaper module.
+    Teachers add it from the class's Typing page in the console.
   - The button opens `/play/letter-leaper?falls=1`. The server honours
     `?falls=1` only for those classes.
   - The teacher's letters and scope still apply. The pace becomes `falls`.
