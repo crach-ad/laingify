@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { requireInstructorClass, letterLeaperModuleId, practiceSettings } from "@/lib/typing-access";
+import { DEFAULT_SETTINGS, requireInstructorClass, letterLeaperModuleId, teacherSettings } from "@/lib/typing-access";
 import { classSessions, filterQuery, parseFilters } from "@/lib/typing-data";
 import { PHASE_LABEL, difficultKeys, learnerSummary, sessionState } from "@/lib/typing-report";
 import { day, delta, minutes, num, pct } from "@/lib/typing-format";
@@ -23,9 +23,9 @@ export default async function TypingDashboard({
   const f = parseFilters(await searchParams);
   const base = `/instruct/class/${klass.id}/typing`;
 
-  const [moduleId, settings, roster, sessions] = await Promise.all([
+  const [moduleId, saved, roster, sessions] = await Promise.all([
     letterLeaperModuleId(klass.id, klass.orgId),
-    practiceSettings(klass.id),
+    teacherSettings(klass.id),
     prisma.rosterEntry.findMany({
       where: { classId: klass.id },
       include: { learner: { select: { id: true, displayName: true, pin: true } } },
@@ -63,7 +63,8 @@ export default async function TypingDashboard({
       <TypingSetup
         classId={klass.id}
         assigned={!!moduleId}
-        settings={settings}
+        settings={saved ?? { ...DEFAULT_SETTINGS }}
+        settingsSaved={!!saved}
         minAuthTier={klass.minAuthTier}
         classCode={klass.classCode}
         entryPath={`/join?code=${encodeURIComponent(klass.classCode)}`}

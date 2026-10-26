@@ -1,10 +1,13 @@
 'use strict';
-// Classroom progress tracking (loaded only when the page carries a #cfg= from
-// /play/letter-leaper). Turns game hooks into the event contract in
-// docs/letter-leaper-progress.md, queues them per learner in localStorage, and
-// uploads small batches. Queues are keyed by an opaque learner key, so on a
-// shared device one learner's unsent practice is only ever uploaded with that
-// learner's own ticket, and the server also checks it against the sign-in.
+// Classroom play (loaded only when the page carries a #cfg= from
+// /play/letter-leaper). Every classroom player gets the teacher's practice
+// settings (cfg.settings; null = players choose). Only verified sign-ins also
+// get tracking credentials (cfg.ticket/k). For them, this turns game hooks
+// into the event contract in docs/letter-leaper-progress.md, queues events in
+// localStorage, and uploads small batches. Queues are keyed per learner and
+// class, so on a shared device one learner's unsent practice is only ever
+// uploaded with that learner's own ticket — and the server also checks it
+// against the sign-in.
 (() => {
   const MV = 1, BATCH = 100, FLUSH_MS = 4000, KEEP_MS = 14 * 864e5, RESUME_MS = 864e5;
   let cfg;
@@ -12,9 +15,21 @@
     const b64 = location.hash.slice(5).replace(/-/g, '+').replace(/_/g, '/');
     cfg = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), c => c.charCodeAt(0))));
   } catch { return; }
-  if (!cfg || !cfg.ticket || !cfg.k || !cfg.settings || !window.leaper) return;
+  if (!cfg || !window.leaper) return;
+  // Teacher-set practice applies to every player, tracked or not.
+  const fixed = cfg.settings || null;
+  if (fixed) leaper.configure(fixed);
+  if (!cfg.ticket || !cfg.k) {
+    // Name-only sign-in: follow the practice; nothing is queued, uploaded, or read.
+    const note = document.createElement('p');
+    note.className = 'track-note'; note.setAttribute('role', 'status');
+    note.textContent = 'Your teacher set this practice. Sign in with your PIN to save your progress.';
+    $('player-form').append(note);
+    return;
+  }
   const KEY = 'leaper-progress:v1:' + cfg.k;
-  const settings = cfg.settings;
+  // The practice a new climb records: the teacher's, else what the player chose.
+  const practice = () => fixed || leaper.choice();
   let mem = { sessions: {} }, cur = null, candidate = null, timer = 0, flushing = false, backoff = 0, lostAt = 0, halted = '', hiddenSince = 0;
 
   // ---- storage (per learner key; in-memory fallback if storage is blocked)
@@ -52,7 +67,6 @@
 
   // ---- game setup
   document.body.classList.add('tracked');
-  leaper.configure(settings);
   $('username').required = false;
   document.querySelector('.username-label').textContent = 'Leaderboard nickname (optional)';
   const startLabel = $('start').innerHTML;
@@ -90,8 +104,9 @@
       cur.t0 = now - cur.lastT - 1;
     } else {
       if (candidate) abandon(candidate);
+      const s = practice();
       cur = {
-        meta: { id: crypto.randomUUID(), letterSet: settings.letterSet, pace: settings.pace, scope: settings.scope, hints: settings.pace === 'relaxed', gameVersion: leaper.version, measurementVersion: MV, startedAt: Date.now() },
+        meta: { id: crypto.randomUUID(), letterSet: s.letterSet, pace: s.pace, scope: s.scope, hints: s.pace === 'relaxed', gameVersion: leaper.version, measurementVersion: MV, startedAt: Date.now() },
         nextSeq: 0, lastT: 0, t0: now, pending: [], hiddenMs: 0, ended: false,
         ignored: { repeat: 0, modifier: 0, composition: 0, paste: 0, nonletter: 0, busy: 0 },
       };
@@ -172,7 +187,11 @@
   // ---- session end + feedback
   let shownFor = '';
   function finish(e, reason) {
+    // The game resets its counters right after 'end' (back to base camp), so
+    // keep this session's final numbers for its own feedback.
+    e.final = { ...e.snap };
     e.ended = true; e.endReason = reason; persist(e);
+    if (!fixed) leaper.unlock(); // a resumed free-choice climb was locked to its settings
     if (!e.pending.length) showFeedback(e);
     else setTimeout(() => { if (cur === e && e.pending.length) showFeedback(e, true); }, 6000);
   }
@@ -183,7 +202,9 @@
     if (!offline) {
       try { const r = await fetch('/api/typing/session/' + e.meta.id, { credentials: 'same-origin' }); if (r.ok) fb = (await r.json()).feedback; } catch {}
     }
-    const s = leaper.snapshot();
+    // A new climb started while we waited: don't cover it with old feedback.
+    if (cur !== e) return;
+    const s = e.final || e.snap || {};
     const box = document.createElement('div');
     box.className = 'practice-feedback';
     const add = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; el.textContent = text; box.append(el); return el; };
@@ -193,10 +214,12 @@
       add('strong', '', 'Something that improved'); add('p', '', fb.improved);
       add('strong', '', 'Try next'); add('p', '', fb.next);
     } else {
-      add('p', 'pf-summary', (s.leap || 0) + ' leaps · ' + (s.attempts ? Math.round(s.correct / s.attempts * 100) + '% accuracy' : 'no answers yet'));
-      add('p', '', 'Your practice is kept on this device and will be added to your learning record when you’re back online.');
+      add('p', 'pf-summary', 'Reached leap ' + (s.leap || 0) + ' · ' + (s.attempts ? Math.round(s.correct / s.attempts * 100) + '% accuracy (' + s.correct + ' of ' + s.attempts + ' answers right)' : 'no answers yet'));
+      add('p', '', e.pending.length
+        ? 'Your practice is kept on this device and will be added to your learning record when you’re back online.'
+        : 'Your practice is saved to your learning record.');
     }
-    if (e.endReason === 'completed') {
+    if (e.endReason === 'completed' && !$('finish').hidden) {
       $('finish').querySelector('.modal').insertBefore(box, $('again'));
     } else {
       const overlay = document.createElement('div');
@@ -216,7 +239,7 @@
       return r.ok ? await r.json() : null;
     } catch { return null; }
   }
-  const sameSettings = m => m.letterSet === settings.letterSet && m.pace === settings.pace && m.scope === settings.scope;
+  const sameSettings = m => !fixed || (m.letterSet === fixed.letterSet && m.pace === fixed.pace && m.scope === fixed.scope);
   async function prepareResume() {
     await flush();
     const st = load();
@@ -240,14 +263,16 @@
     // has begun, don't offer (or later resume) a stale copy of any session.
     if (cur) return;
     const snap = pick && pick.snap;
-    if (!snap || snap.leap >= (settings.scope === 'letters' ? 100 : 150)) return;
+    if (!snap || snap.leap >= (pick.meta.scope === 'letters' ? 100 : 150)) return;
     candidate = pick;
+    // Free choice: lock the game to the climb being resumed until it ends.
+    if (!fixed) leaper.configure({ letterSet: pick.meta.letterSet, pace: pick.meta.pace, scope: pick.meta.scope });
     const c = pick.clocks || { activeMs: 0, pauseMs: 0, animationMs: 0 };
     leaper.resumeFrom({ leap: snap.leap, correct: snap.correct, attempts: snap.attempts, streak: snap.streak, bestStreak: snap.bestStreak, elapsed: c.activeMs + c.animationMs, clocks: { active: c.activeMs, anim: c.animationMs, pause: c.pauseMs } });
     $('start').innerHTML = 'Resume at leap ' + snap.leap + ' <span>↟</span>';
     const fresh = document.createElement('button');
     fresh.type = 'button'; fresh.id = 'start-fresh'; fresh.className = 'text-button'; fresh.textContent = 'Start a new climb instead';
-    fresh.onclick = () => { leaper.resumeFrom(null); abandon(candidate); candidate = null; $('start').innerHTML = startLabel; fresh.remove(); };
+    fresh.onclick = () => { leaper.resumeFrom(null); abandon(candidate); candidate = null; if (!fixed) leaper.unlock(); $('start').innerHTML = startLabel; fresh.remove(); };
     $('start').after(fresh);
   }
   prepareResume();

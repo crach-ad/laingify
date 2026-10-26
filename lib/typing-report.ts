@@ -49,16 +49,16 @@ export function sessionState(s: Pick<SessionRow, "status" | "lastActivityAt">, n
 // An unfinished climb a learner can pick up again: same settings as the
 // class now uses, short of the finish, and touched in the last day.
 export const RESUME_MS = 24 * 60 * 60 * 1000;
-export function resumableSession(rows: SessionRow[], settings: { letterSet: string; pace: string; scope: string }, now = Date.now()) {
-  const end = settings.scope === "letters" ? 100 : 150;
+// `settings` null = the teacher hasn't set the practice, so any climb can resume.
+export function resumableSession(rows: SessionRow[], settings: { letterSet: string; pace: string; scope: string } | null, now = Date.now()) {
   return [...rows]
     .sort((a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime())
     .find(
       (r) =>
         ["in progress", "interrupted"].includes(sessionState(r, now)) &&
         now - r.lastActivityAt.getTime() < RESUME_MS &&
-        r.letterSet === settings.letterSet && r.pace === settings.pace && r.scope === settings.scope &&
-        r.summary.furthestLeap < end,
+        (!settings || (r.letterSet === settings.letterSet && r.pace === settings.pace && r.scope === settings.scope)) &&
+        r.summary.furthestLeap < (r.scope === "letters" ? 100 : 150),
     ) ?? null;
 }
 

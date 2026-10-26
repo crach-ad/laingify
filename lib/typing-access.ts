@@ -43,9 +43,16 @@ export async function letterLeaperModuleId(classId: string, orgId: string) {
   return a?.moduleId ?? null;
 }
 
-export async function practiceSettings(classId: string): Promise<PracticeSettings> {
+// The practice the teacher has set, or null when they haven't (then players
+// choose their own letters and pace, as in the original Windsor module).
+export async function teacherSettings(classId: string): Promise<PracticeSettings | null> {
   const a = await prisma.typingAssignment.findUnique({ where: { classId } });
-  return a ? { letterSet: a.letterSet as LetterSet, pace: a.pace as Pace, scope: a.scope as Scope } : { ...DEFAULT_SETTINGS };
+  return a ? { letterSet: a.letterSet as LetterSet, pace: a.pace as Pace, scope: a.scope as Scope } : null;
+}
+
+// Settings for the teacher's form: the saved ones, else the defaults.
+export async function practiceSettings(classId: string): Promise<PracticeSettings> {
+  return (await teacherSettings(classId)) ?? { ...DEFAULT_SETTINGS };
 }
 
 export type PracticeContext = {

@@ -58,5 +58,7 @@ else{document.body.append(Object.assign(document.createElement('script'),{src:'l
 window.leaper={version:'2026.10.1',on:f=>hooks.push(f),
 clocks:()=>({activeMs:Math.round(activeNow()),pauseMs:Math.round(clock.pause+pausedFor()),animationMs:Math.round(clock.anim)}),
 snapshot:()=>({state,leap:steps,correct,attempts,streak,bestStreak,elapsed:Math.round(elapsed)}),
-configure(c){$('letter-set').value=c.letterSet;$('pace').value=c.pace;scope=c.scope;for(const id of ['letter-set','pace'])$(id).disabled=true;if(scope==='words')$('letter-set').closest('label').hidden=true;},
+configure(c){$('letter-set').value=c.letterSet;$('pace').value=c.pace;scope=c.scope;for(const id of ['letter-set','pace'])$(id).disabled=true;$('letter-set').closest('label').hidden=scope==='words';},
+unlock(){scope='full';for(const id of ['letter-set','pace'])$(id).disabled=false;$('letter-set').closest('label').hidden=false;},
+choice:()=>({letterSet:$('letter-set').value,pace:$('pace').value,scope}),
 resumeFrom(r){pendingResume=r;},start,home};

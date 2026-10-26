@@ -225,7 +225,8 @@ it('name-only sign-in can play but does not record; PINs fix it', async () => {
   assert.ok(regCfg, 'registering on this device is a verified sign-in');
   const impostor = client();
   assert.equal((await impostor.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Cy Open' } })).status, 200);
-  assert.equal(await ticketFor(impostor), null, 'no ticket for a name-only sign-in');
+  const impostorCfg = await ticketFor(impostor);
+  assert.deepEqual(Object.keys(impostorCfg), ['settings'], 'a name-only sign-in gets the practice settings but no ticket, key, or resume');
   const sneaky = await upload(impostor, batch(regCfg.ticket, session(), events([['session_start', { leap: 0, resumed: false }]])));
   assert.equal(sneaky.status, 403, 'a stolen ticket does not help a name-only sign-in');
   // Teacher turns on PINs: the class becomes PIN-only and everyone has one.
@@ -295,6 +296,59 @@ it('a name-only sign-in cannot read the typing record it signed in as', async ()
   assert.equal((await byName.call(`/api/typing/session/${s.id}`)).status, 403);
   assert.doesNotMatch((await byName.call('/play/letter-leaper')).text, /reached leap/);
   assert.equal((await reg.call(`/api/typing/session/${s.id}`)).status, 200);
+});
+
+// Decodes the iframe's #cfg= (or null when the page passes no config).
+async function cfgOf(c) {
+  const page = await c.call('/play/letter-leaper');
+  assert.equal(page.status, 200);
+  const src = page.text.match(/src="(\/games\/letter-leaper\/index\.html[^"]*)"/)[1];
+  const m = src.match(/#cfg=([A-Za-z0-9_-]+)/);
+  return { page, cfg: m ? JSON.parse(Buffer.from(m[1], 'base64url').toString()) : null };
+}
+
+it('name-only players get the teacher settings but no tracking credentials', async () => {
+  const open = await prisma.class.create({ data: { orgId: orgA.id, name: `Words ${tag}`, classCode: `WRD-${tag}`.toUpperCase(), minAuthTier: 0 } });
+  const set = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'settings', settings: { letterSet: 'top', pace: 'speedy', scope: 'words' } } });
+  assert.equal(set.status, 200, set.text);
+  const reg = client();
+  assert.equal((await reg.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Eli Words', create: true } })).status, 200);
+  const byName = client();
+  assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Eli Words' } })).status, 200);
+
+  const nameOnly = await cfgOf(byName);
+  assert.deepEqual(nameOnly.cfg, { settings: { letterSet: 'top', pace: 'speedy', scope: 'words' } }, 'settings only: no ticket, key, or resume');
+  assert.match(nameOnly.page.text, /Words to the stars \(50\)/);
+  assert.match(nameOnly.page.text, /set by your teacher/);
+  assert.match(nameOnly.page.text, /Sign in with your PIN to see your saved progress/);
+
+  const verified = await cfgOf(reg);
+  assert.deepEqual(verified.cfg.settings, { letterSet: 'top', pace: 'speedy', scope: 'words' });
+  assert.ok(verified.cfg.ticket && verified.cfg.k, 'verified players keep recording');
+  // The name-only player can't use the verified player's ticket either.
+  const r = await upload(byName, batch(verified.cfg.ticket, session({ letterSet: 'top', pace: 'speedy', scope: 'words' }), events([['session_start', { leap: 100, resumed: false }]])));
+  assert.equal(r.status, 403);
+});
+
+it('classes without teacher settings let players choose (no config for name-only players)', async () => {
+  const free = await prisma.class.create({ data: { orgId: orgA.id, name: `Free ${tag}`, classCode: `FRE-${tag}`.toUpperCase(), minAuthTier: 0 } });
+  const mod = await prisma.module.findFirst({ where: { orgId: orgA.id, title: 'Letter Leaper: Moonbound' } });
+  await prisma.classModule.create({ data: { classId: free.id, moduleId: mod.id } }); // assigned the Windsor way: no TypingAssignment
+  const reg = client();
+  assert.equal((await reg.call('/api/join', { method: 'POST', body: { classCode: free.classCode, name: 'Fay Free', create: true } })).status, 200);
+  const byName = client();
+  assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: free.classCode, name: 'Fay Free' } })).status, 200);
+  const nameOnly = await cfgOf(byName);
+  assert.equal(nameOnly.cfg, null, 'unchanged from before: the game alone, players choose');
+  assert.match(nameOnly.page.text, /Choose your letters and pace in the game/);
+  const verified = await cfgOf(reg);
+  assert.equal(verified.cfg.settings, null);
+  assert.ok(verified.cfg.ticket);
+  // A free-choice session records what was actually played.
+  const s = session({ letterSet: 'bottom', pace: 'steady', scope: 'full' });
+  assert.equal((await upload(reg, batch(verified.cfg.ticket, s, events([['session_start', { leap: 0, resumed: false }]])))).status, 200);
+  const row = await prisma.typingSession.findUnique({ where: { id: s.id } });
+  assert.deepEqual([row.letterSet, row.pace], ['bottom', 'steady']);
 });
 
 it('org wipes (used by every seed) still work once typing data exists', async () => {

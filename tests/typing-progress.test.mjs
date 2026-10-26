@@ -291,3 +291,11 @@ test('"highest yet" only compares the same kind of climb', () => {
   assert.match(learnerFeedback(letters, [words, earlierLetters]).improved, /leap 40 — your highest yet|accuracy|faster|kept your accuracy/);
   assert.doesNotMatch(learnerFeedback(letters, [words]).improved, /highest yet/, 'no comparable earlier climb');
 });
+
+test('resume when the teacher has not set the practice: any climb, each with its own finish line', () => {
+  const r = row(letterSession({ n: 10 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - 1000), letterSet: 'top', pace: 'speedy', hints: false });
+  assert.equal(resumableSession([r], null, now)?.id, r.id, 'free choice: whatever they were playing');
+  const lettersDone = row(letterSession({ n: 3 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - 1000), scope: 'letters' });
+  lettersDone.summary.furthestLeap = 100;
+  assert.equal(resumableSession([lettersDone], null, now), null, 'a letters climb is finished at 100');
+});

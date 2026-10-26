@@ -42,6 +42,8 @@ export default function TypingSetup(props: {
   classId: string;
   assigned: boolean;
   settings: Settings;
+  // False until the teacher saves settings: students then choose their own.
+  settingsSaved: boolean;
   minAuthTier: number;
   classCode: string;
   entryPath: string;
@@ -88,7 +90,12 @@ export default function TypingSetup(props: {
       <div className="card p-5">
         <div className="overline mb-3">Practice settings</div>
         <SettingsFields value={settings} onChange={setSettings} />
-        <p className="muted mt-2 text-xs">Students see these settings locked in the game. Relaxed pace lights up the next key (the hint).</p>
+        <p className="muted mt-2 text-xs">
+          {props.settingsSaved
+            ? "Every student sees these settings locked in the game, whether or not their practice is being recorded."
+            : "Not set yet — students choose their own letters and pace. Save to lock these for everyone."}{" "}
+          Relaxed pace lights up the next key (the hint).
+        </p>
         <button disabled={!!busy} onClick={() => run("settings", { action: "settings", settings }, "Settings saved.")} className="btn-primary mt-3 h-10 px-4 text-sm">
           {busy === "settings" ? "Saving…" : "Save settings"}
         </button>

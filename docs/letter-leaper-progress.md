@@ -30,9 +30,20 @@ module, then **Play Letter Leaper**. The page shows:
 - their own recent progress
 - a start or resume action
 
-The game locks the teacher's settings. After every session, finished or not,
-the student sees one thing that improved, one thing to practise next, and a
-short summary. Progress is about their own improvement. The class leaderboard
+**Practice settings.** Settings are separate from recording:
+- **When the teacher has saved settings,** every player on the roster gets
+  them locked in the game, whether or not their practice is recorded. That
+  includes name-only sign-ins.
+- **When the teacher hasn't,** players choose their letters and pace, as in
+  the original Windsor module. Verified players' sessions record what they
+  actually chose, and resuming such a climb locks the game to that climb's
+  settings until it ends.
+
+**After every session,** finished or not, the student sees one thing that
+improved, one thing to practise next, and a short summary. The feedback always
+uses that session's own final numbers. If the feedback request is slow or
+fails, the game falls back to them. If the student has started another climb
+by the time it resolves, nothing is shown over it. Progress is about their own improvement. The class leaderboard
 is still available as a secondary feature. The Top-5 panel is hidden on the
 intro screen, and the nickname is optional.
 
@@ -53,9 +64,11 @@ learners.
   - `name` (typed an existing name in an open class), `roster` — not verified
 
   **Typing progress is recorded only for verified sign-ins.** A display name
-  alone can't add to or change another student's record. Name-only sign-ins can
-  still play, the student page explains why nothing is being saved, and the
-  existing leaderboard flow is unchanged.
+  alone can't add to or change another student's record. Name-only sign-ins
+  can still play, with the teacher's settings, but they never receive tracking
+  credentials (practice ticket, queue key, or resume). The student page
+  explains why nothing is being saved, and the existing leaderboard flow is
+  unchanged.
 - **Windsor and other open classes are unchanged** until a teacher presses
   **Turn on PIN sign-in**. That gives PINs to students without one and switches
   the class to roster-plus-PIN sign-in. Self-registration then stops, and the
@@ -260,26 +273,41 @@ No IP addresses, user agents, or free text are stored with typing data.
 
 ## Rollout
 
-1. **Set `SESSION_SECRET`** (a long random string) in Vercel before deploying.
-   Without it the signing key is derived from `DATABASE_URL`, which works but
-   rotates whenever the database password does. Expect everyone to sign in once
-   after deploy.
-2. **Apply the migration** before deploying the code. It is additive: four new
-   tables, and no changes to existing tables or rows. Its foreign keys cascade
-   from `Learner` and `Class`:
-   - SQL: `prisma/migrations/20261026120000_typing_progress/migration.sql`, or
-   - `npx prisma db push`, from a checkout whose schema includes **all**
-     committed schema changes.
-3. **Deploy.** Windsor classes keep name-only sign-in, so their play stays
-   unrecorded until Pam turns on PIN sign-in on each class's ⌨️ Typing page.
-   Then print PIN cards.
-4. **Optional.** Schedule `scripts/purge-typing-events.mjs --apply` monthly.
+1. **Set `SESSION_SECRET`** (a long random string) in Vercel production
+   before deploying.
+   - Without it, the signing key is derived from `DATABASE_URL`. That works,
+     but signs everyone out whenever the database password rotates.
+   - **Impact:** existing cookies are unsigned, so every student and teacher
+     signs in once after this deploys. Students in PIN classes need their PIN;
+     open classes sign in by name as before.
+2. **Apply the typing migration** to production before deploying the code:
+   `prisma/migrations/20261026120000_typing_progress/migration.sql`.
+   - It is additive: four new tables (`TypingAssignment`, `TypingSession`,
+     `TypingEvent`, `SignInFailure`), with foreign keys that cascade from
+     `Learner` and `Class`. Existing tables and rows are unchanged.
+   - Run the SQL file itself (for example in the Supabase SQL editor).
+   - Don't use `prisma migrate deploy`. Production's migration history
+     doesn't match the migrations folder (`20260917…` and `20260921…` were
+     applied without being recorded), so it would fail.
+   - Don't use `prisma db push`. It makes production match whatever schema is
+     checked out, including unrelated uncommitted changes.
+   - Afterwards, optionally record it:
+     `prisma migrate resolve --applied 20261026120000_typing_progress`.
+3. **Merge and deploy.**
+4. **Windsor:** its classes keep name-only sign-in, so existing Windsor
+   students' play stays unrecorded until PIN sign-in is turned on. To start
+   recording, open each class's ⌨️ Typing page, press **Turn on PIN sign-in**,
+   and print the PIN cards. New students are then added by the teacher.
+5. **Optional:** schedule `scripts/purge-typing-events.mjs --apply` monthly.
 
 ## Checks
 
 ```sh
-node --test tests/*.test.mjs                       # unit tests (integration skipped)
+node --test tests/*.test.mjs                       # unit tests (integration and browser skipped)
 TYPING_IT_BASE=http://localhost:3000 DATABASE_URL=postgresql://…@localhost:…/db \
   node --test tests/typing-integration.test.mjs    # API, auth, dedupe — local DB only
+# Real game in headless Chrome (start Chrome with --remote-debugging-port=9333):
+TYPING_IT_BASE=… TYPING_CDP=http://localhost:9333 DATABASE_URL=…localhost… \
+  node --test tests/letter-leaper-browser.test.mjs
 npx tsc --noEmit && npm run build
 ```
