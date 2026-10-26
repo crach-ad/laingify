@@ -28,12 +28,17 @@ test('ranks actual keystroke accuracy after word timeouts', () => {
 
 test('public play never loads the class API client', async () => {
   const { readFile } = await import('node:fs/promises');
-  const html = await readFile(new URL('../public/games/letter-leaper/index.html', import.meta.url), 'utf8');
-  const game = await readFile(new URL('../public/games/letter-leaper/game.js', import.meta.url), 'utf8');
-  assert.equal(html.includes('leaderboard.js'), false, 'leaderboard.js is loaded by game.js only outside public mode');
+  const dir = new URL('../public/games/letter-leaper/', import.meta.url);
+  const read = (f) => readFile(new URL(f, dir), 'utf8');
+  const html = await read('index.html');
+  const ui = await read('ui.js');
+  assert.equal(/leaderboard\.js|tracker\.js/.test(html), false, 'the API clients are loaded by ui.js only outside public mode');
   // The API clients (leaderboard.js, tracker.js) are only appended in the non-public branch.
-  const loader = game.slice(game.indexOf('if(publicPlay){'));
-  assert.match(loader, /^if\(publicPlay\)\{[^\n]*\}\nelse\{[^\n]*'leaderboard\.js'[^\n]*'tracker\.js'/);
-  assert.equal(/leaderboard\.js|tracker\.js/.test(loader.slice(0, loader.indexOf('\nelse{'))), false);
-  assert.equal(/fetch\(|\/api\//.test(game), false);
+  const loader = ui.slice(ui.indexOf('if (publicPlay) {'));
+  const [publicBranch, otherBranch] = loader.split('\n} else {');
+  assert.equal(/leaderboard\.js|tracker\.js/.test(publicBranch), false);
+  assert.match(otherBranch, /'leaderboard\.js'[\s\S]*'tracker\.js'/);
+  // Neither the rules, the HTML layer, nor any renderer makes network calls.
+  for (const f of ['core.js', 'ui.js', 'scene-classic.js', 'scene-phaser.js', 'milo.js', 'art.js'])
+    assert.equal(/fetch\(|XMLHttpRequest|sendBeacon|\/api\//.test(await read(f)), false, f);
 });

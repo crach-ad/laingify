@@ -20,6 +20,7 @@
     "digest": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/weekly-digest.mjs",
     "report:term": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/term-report.mjs",
     "export:work": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/export-student-work.mjs",
+    "vendor:phaser": "node scripts/vendor-phaser.mjs",
     "provision:nfc": "node --env-file=.env --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/provision-nfc.mjs",
     "postinstall": "prisma generate"
   },
@@ -53,6 +54,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "phaser": "4.2.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
