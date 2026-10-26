@@ -8,6 +8,7 @@ import { toSessionRow } from "@/lib/typing-data";
 import { phaseMetrics, poolPhases } from "@/lib/typing-metrics";
 import { PACE_LABEL, SCOPE_LABEL, SET_LABEL, resumableSession, sessionState } from "@/lib/typing-report";
 import { day, encodeCfg, num, pct } from "@/lib/typing-format";
+import { offersLetterLeaperFalls } from "@/lib/class-features";
 
 export const metadata = {
   title: "Letter Leaper — Moonbound | laingify",
@@ -19,11 +20,16 @@ export const metadata = {
 // settings; only verified sign-ins (PIN, NFC tag, or the device they
 // registered on — see lib/session.ts) also get tracking credentials, so
 // name-only players follow the practice but nothing is recorded or shown.
-export default async function LetterLeaperPage() {
+// ?falls=1 (the dashboard's header link, offered to some classes — see
+// lib/class-features.ts): falling platforms. The teacher's letters and scope
+// still apply; the pace is "falls", recorded and resumed as its own practice.
+export default async function LetterLeaperPage({ searchParams }: { searchParams: Promise<{ falls?: string }> }) {
   await requireLearner();
   const ctx = await practiceContext(await getSession());
   if (!ctx) notFound();
-  const settings = await teacherSettings(ctx.classId);
+  const falls = (await searchParams).falls === "1" && (await offersLetterLeaperFalls(ctx.orgId));
+  const teacher = await teacherSettings(ctx.classId);
+  const settings = teacher && falls ? { ...teacher, pace: "falls" as const } : teacher;
 
   // Progress is only shown to verified sign-ins: anyone can type a classmate's
   // name in an open class.
@@ -34,14 +40,15 @@ export default async function LetterLeaperPage() {
       take: 6,
     })
   ).map(toSessionRow);
-  const resumable = resumableSession(rows, settings);
+  // Falls and paced climbs never resume into each other.
+  const resumable = resumableSession(rows.filter((r) => (r.pace === "falls") === falls), settings);
 
   // Practice configuration for everyone; tracking credentials only when verified.
   const tracking = ctx.verified
     ? { ticket: issueTicket({ l: ctx.learnerId, c: ctx.classId, m: ctx.moduleId }), k: learnerKey(ctx.learnerId, ctx.classId), resume: resumable?.id ?? null }
     : {};
   const cfg = settings || ctx.verified ? encodeCfg({ settings, ...tracking }) : null;
-  const src = `/games/letter-leaper/index.html${cfg ? `#cfg=${cfg}` : ""}`;
+  const src = `/games/letter-leaper/index.html${falls ? "?falls=1" : ""}${cfg ? `#cfg=${cfg}` : ""}`;
 
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1 px-3 py-4 sm:px-6">
@@ -51,18 +58,24 @@ export default async function LetterLeaperPage() {
 
       <section className="mt-4 grid gap-3 lg:grid-cols-[1fr_1.4fr]">
         <div className="card p-5">
-          <div className="overline mb-2">Your practice</div>
+          <div className="overline mb-2">{falls ? "Falling platforms" : "Your practice"}</div>
+          {falls && (
+            <p className="mb-3 text-sm" style={{ color: "var(--body)" }}>
+              You have 7 seconds for each letter. The platform wobbles after 5 seconds and falls at 7, and a wrong letter
+              makes Milo fall short — but he comes straight back, and you never lose a leap.
+            </p>
+          )}
           {settings ? (
             <>
               <h1 className="text-2xl font-semibold tracking-tight">{SCOPE_LABEL[settings.scope]}</h1>
               <p className="muted mt-1 text-sm">
-                {settings.scope === "words" ? "Short words, whole keyboard" : SET_LABEL[settings.letterSet]} · {PACE_LABEL[settings.pace]} · set by your teacher
+                {settings.scope === "words" ? "Short words, whole keyboard" : SET_LABEL[settings.letterSet]} · {PACE_LABEL[settings.pace]} · {falls ? "letters set by your teacher" : "set by your teacher"}
               </p>
             </>
           ) : (
             <>
               <h1 className="text-2xl font-semibold tracking-tight">{SCOPE_LABEL.full}</h1>
-              <p className="muted mt-1 text-sm">Choose your letters and pace in the game.</p>
+              <p className="muted mt-1 text-sm">{falls ? "Choose your letters in the game." : "Choose your letters and pace in the game."}</p>
             </>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-3">

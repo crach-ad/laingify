@@ -36,7 +36,7 @@ export type SessionRow = {
 
 export const PHASE_LABEL: Record<Phase, string> = { letter: "Letter practice", word: "Word practice" };
 export const SET_LABEL: Record<string, string> = { all: "All letters", home: "Home row", top: "Top row", bottom: "Bottom row" };
-export const PACE_LABEL: Record<string, string> = { relaxed: "Relaxed (hints on)", steady: "Steady · 8 s", speedy: "Speedy · 4 s" };
+export const PACE_LABEL: Record<string, string> = { relaxed: "Relaxed (hints on)", steady: "Steady · 8 s", speedy: "Speedy · 4 s", falls: "Falling platforms · 7 s" };
 export const SCOPE_LABEL: Record<string, string> = { letters: "Letters to the moon (100)", words: "Words to the stars (50)", full: "Full adventure (150)" };
 export const INPUT_LABEL: Record<string, string> = { keyboard: "Physical keyboard", touch: "On-screen keys", mixed: "Mixed input", unknown: "No input yet" };
 

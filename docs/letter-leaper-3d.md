@@ -99,12 +99,27 @@ drop and the Phaser fallback exist for slower devices.
 
 The earlier React prototype route, `/play/letter-leaper-3d`, now redirects to `/play/typing`.
 
-## Falling platforms (local preview, not in production)
+## Falling platforms
 
-Branch `letter-leaper-falls` adds an opt-in rule set. It's active only with
-`?mode=public&falls=1` and the 3D scene, for example at `/play/letter-leaper-3d`
-on that branch. Classroom play, its practice settings and the default game
-are unchanged.
+An opt-in rule set, active only with `?falls=1` and the 3D scene. The default
+game and teacher practice settings are unchanged.
+
+- **Where it's offered:**
+  - Classes listed in `lib/class-features.ts` (Ms. Pamela Smith's Windsor
+    School classes) get a **🐒 Letter Leaper** button in the learner
+    dashboard header.
+  - The button opens `/play/letter-leaper?falls=1`. The server honours
+    `?falls=1` only for those classes.
+  - The teacher's letters and scope still apply. The pace becomes `falls`.
+- **Recorded practice:** verified sign-ins are saved as their own practice,
+  `pace: "falls"` with hints on (`SESSION_PACES` in `lib/typing-events.ts`).
+  - It isn't a teacher setting, and teacher reports label it "Falling platforms · 7 s".
+  - It's compared only with other falls sessions.
+  - It resumes only from the falls page, and paced climbs never resume into it.
+- **Leaderboard:** finished falls climbs aren't posted to the paced
+  leaderboards. The game still reads the class board as usual.
+- **Public play:** `/games/letter-leaper/index.html?mode=public&falls=1`.
+  Nothing is saved there.
 
 - **Deadline:** each letter must be typed within 7 seconds of typing time. In
   a word, each letter gets its own 7 seconds.
@@ -126,7 +141,7 @@ are unchanged.
 - **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back on a restored
   platform for the same leap with "Try again!" or "A little quicker this time!".
   A fresh target appears and its 7 seconds start then.
-- **Tracking:** no new tracking event types. Falls and recoveries are view
-  events only, and the preview is public play, so nothing is uploaded.
+- **Tracking:** no new event types. A wrong letter is one `key` with `ok: false`,
+  and the deadline is one `timeout`. Falls and recoveries are view events only.
 
 Tests: `tests/letter-leaper-falls.test.mjs`.

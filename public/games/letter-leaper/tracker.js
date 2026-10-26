@@ -29,7 +29,10 @@
   }
   const KEY = 'leaper-progress:v1:' + cfg.k;
   // The practice a new climb records: the teacher's, else what the player chose.
-  const practice = () => fixed || leaper.choice();
+  // A falls page whose 3D scene can't start plays (and records) the usual relaxed climb.
+  const fallsPage = new URLSearchParams(location.search).get('falls') === '1';
+  const practice = () => (fixed ? { ...fixed, pace: leaper.practicePace() } : leaper.choice());
+  const hintsFor = (pace) => pace === 'relaxed' || pace === 'falls';
   let mem = { sessions: {} }, cur = null, candidate = null, timer = 0, flushing = false, backoff = 0, lostAt = 0, halted = '', hiddenSince = 0;
 
   // ---- storage (per learner key; in-memory fallback if storage is blocked)
@@ -106,7 +109,7 @@
       if (candidate) abandon(candidate);
       const s = practice();
       cur = {
-        meta: { id: crypto.randomUUID(), letterSet: s.letterSet, pace: s.pace, scope: s.scope, hints: s.pace === 'relaxed', gameVersion: leaper.version, measurementVersion: MV, startedAt: Date.now() },
+        meta: { id: crypto.randomUUID(), letterSet: s.letterSet, pace: s.pace, scope: s.scope, hints: hintsFor(s.pace), gameVersion: leaper.version, measurementVersion: MV, startedAt: Date.now() },
         nextSeq: 0, lastT: 0, t0: now, pending: [], hiddenMs: 0, ended: false,
         ignored: { repeat: 0, modifier: 0, composition: 0, paste: 0, nonletter: 0, busy: 0 },
       };
@@ -239,7 +242,8 @@
       return r.ok ? await r.json() : null;
     } catch { return null; }
   }
-  const sameSettings = m => !fixed || (m.letterSet === fixed.letterSet && m.pace === fixed.pace && m.scope === fixed.scope);
+  // Falling-platform climbs resume only from the falls page, and paced climbs only from the usual page.
+  const sameSettings = m => (m.pace === 'falls') === fallsPage && (!fixed || (m.letterSet === fixed.letterSet && m.pace === fixed.pace && m.scope === fixed.scope));
   async function prepareResume() {
     await flush();
     const st = load();
@@ -251,7 +255,7 @@
       const local = entry(st, cfg.resume);
       if (srv && (srv.state === 'in progress' || srv.state === 'interrupted') && sameSettings(srv.settings) && !(local && local.ended)) {
         pick = local && local.nextSeq > srv.lastSeq + 1 ? local : {
-          meta: { id: srv.id, ...srv.settings, hints: srv.settings.pace === 'relaxed', gameVersion: leaper.version, measurementVersion: MV, startedAt: srv.startedAt },
+          meta: { id: srv.id, ...srv.settings, hints: hintsFor(srv.settings.pace), gameVersion: leaper.version, measurementVersion: MV, startedAt: srv.startedAt },
           nextSeq: srv.lastSeq + 1, lastT: srv.lastT, pending: (local && local.pending) || [], hiddenMs: srv.resume.clocks.hiddenMs, ended: false,
           ignored: (local && local.ignored) || { repeat: 0, modifier: 0, composition: 0, paste: 0, nonletter: 0, busy: 0 },
           snap: { leap: srv.resume.leap, correct: srv.resume.correct, attempts: srv.resume.attempts, streak: srv.resume.streak, bestStreak: srv.resume.bestStreak },

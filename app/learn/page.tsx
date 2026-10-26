@@ -4,6 +4,7 @@ import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
 import { slugifyTopic } from "@/lib/topics";
 import { classResources } from "@/lib/class-resources";
+import { offersLetterLeaperFalls } from "@/lib/class-features";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
@@ -18,6 +19,7 @@ export default async function Dashboard() {
   const { learner, klass, sprite } = await requireLearner();
   const band = bandConfig(klass.band);
   const resources = classResources(klass.classCode);
+  const fallsLink = await offersLetterLeaperFalls(klass.orgId);
 
   // Modules assigned to this class, in order, with this learner's progress and
   // criteria (for per-module completion bars). Project rows are the completion
@@ -70,7 +72,7 @@ export default async function Dashboard() {
   return (
     <main className={`mx-auto w-full max-w-4xl flex-1 px-6 py-10 ${band.textScale}`}>
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-[var(--border-soft)] pb-8">
+      <header className="flex flex-wrap items-center justify-between gap-x-5 gap-y-4 border-b border-[var(--border-soft)] pb-8">
         <div className="flex items-center gap-3.5">
           <Logo />
           <div className="flex items-baseline gap-3">
@@ -78,7 +80,17 @@ export default async function Dashboard() {
             <span className="mono-label">Ages {band.ageRange.replace("≈", "")}</span>
           </div>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+          {/* Class extra (lib/class-features.ts): Letter Leaper's falling platforms, one click from the header. */}
+          {fallsLink && (
+            <Link
+              href="/play/letter-leaper?falls=1"
+              className="btn-ghost flex h-9 items-center gap-2 whitespace-nowrap px-3.5 text-sm"
+              title="Letter Leaper: falling platforms — 7 seconds per letter"
+            >
+              <span aria-hidden>🐒</span> Letter Leaper
+            </Link>
+          )}
           <div className="flex items-center gap-2.5">
             {learner.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

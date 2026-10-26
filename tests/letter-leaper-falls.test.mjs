@@ -15,15 +15,15 @@ function game({ reduced = false, falls = true } = {}) {
     performance: { now: () => now },
     requestAnimationFrame: (cb) => { rafCb = cb; },
     matchMedia: () => ({ matches: reduced, addEventListener() {} }),
-    window: { dispatchEvent() {} },
-    CustomEvent: class {},
+    window: { dispatchEvent: (e) => { ctx.__dom.push(e.type); } },
+    CustomEvent: class { constructor(type) { this.type = type; } },
     crypto: { randomUUID: () => '00000000-0000-4000-8000-000000000000' },
     console,
     Math,
   });
   vm.runInContext(source, ctx);
   const run = (code) => vm.runInContext(code, ctx);
-  ctx.__hooks = []; ctx.__views = [];
+  ctx.__hooks = []; ctx.__views = []; ctx.__dom = [];
   run('hooks.push((type, data) => globalThis.__hooks.push([type, data]))');
   run('views.push((type, d) => globalThis.__views.push([type, d]))');
   const g = {
@@ -219,4 +219,21 @@ test('mixed run: every failure recorded once, only correct answers advance', () 
   assert.equal(g.run('attempts'), ok + wrong + timeouts);
   assert.equal(g.run('correct'), ok);
   assert.equal(g.views('recover').length, wrong + timeouts);
+});
+
+test('a finished falling-platform climb is not sent to the paced leaderboard', () => {
+  const run = (falls) => {
+    const g = game({ falls });
+    g.start();
+    for (let i = 0; i < 150; i++) {
+      if (g.run('state') === 'moon') g.run('continueStars()');
+      for (const ch of g.target.slice(g.run('typed'))) { g.advance(100); g.type(ch); }
+      g.advance(500);
+    }
+    assert.equal(g.run('state'), 'finished');
+    return g;
+  };
+  const paced = run(false), fell = run(true);
+  assert.deepEqual(paced.run('globalThis.__dom'), ['climb-complete']);
+  assert.deepEqual(fell.run('globalThis.__dom'), []);
 });

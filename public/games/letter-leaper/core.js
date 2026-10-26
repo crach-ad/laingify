@@ -184,7 +184,8 @@ function finish() {
   state = 'finished';
   hook('end', { reason: 'completed', leap: steps });
   emit('finish', { scope, accuracy: accuracy(), bestStreak, elapsed });
-  if (scope === 'full')
+  // Falling-platform climbs aren't comparable with the paced leaderboards.
+  if (scope === 'full' && !falls)
     window.dispatchEvent(new CustomEvent('climb-complete', { detail: { id: crypto.randomUUID(), practice: set, pace, leaps: steps, correct, attempts, streak: bestStreak, elapsed: Math.round(elapsed) } }));
 }
 function pause(reason = 'user') {
