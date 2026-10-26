@@ -57,3 +57,4 @@
 #refresh-home-board{padding:12px 0;font-size:12px;color:#d0e0d3}
 #intro .milo-note{top:auto;bottom:120px}
 @media(max-width:740px){#intro{grid-template-columns:1fr;gap:12px;overflow-y:auto;padding-bottom:45px}.home-leaderboard{margin:0;padding:12px 0;border:0}.home-leaderboard h2{font-size:22px}.top-five li{display:flex;align-items:center;justify-content:space-between;gap:12px}.top-five span{margin:0;text-align:right}#intro .intro-copy h1{font-size:32px}}
+.public-play #leaderboard,.public-play .username-label,.public-play #username,.public-play #username-hint,.public-play .home-leaderboard,.public-play #finish-leaderboard{display:none}

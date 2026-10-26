@@ -25,3 +25,12 @@ test('ranks actual keystroke accuracy after word timeouts', () => {
   const rows=[score({learnerId:'lower',correct:230,attempts:250}),score({learnerId:'higher',correct:300,attempts:310})];
   assert.equal(rankClimbs(rows,'windsor-a','all','relaxed')[0].learnerId,'higher');
 });
+
+test('public play never loads the class API client', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../public/games/letter-leaper/index.html', import.meta.url), 'utf8');
+  const game = await readFile(new URL('../public/games/letter-leaper/game.js', import.meta.url), 'utf8');
+  assert.equal(html.includes('leaderboard.js'), false, 'leaderboard.js is loaded by game.js only outside public mode');
+  assert.match(game, /if\(publicPlay\)\{[^\n]*\}\nelse document\.body\.append\([^\n]*'leaderboard\.js'/);
+  assert.equal(/fetch\(|\/api\//.test(game), false);
+});
