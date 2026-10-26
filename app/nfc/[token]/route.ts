@@ -20,6 +20,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
 
   if (!entry) return NextResponse.redirect(new URL("/join", origin));
 
-  await setSession({ learnerId: entry.learnerId, classId: entry.classId });
+  await setSession({ learnerId: entry.learnerId, classId: entry.classId, via: "nfc" });
   return NextResponse.redirect(new URL("/learn", origin));
 }

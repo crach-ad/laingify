@@ -1,7 +1,9 @@
 import { block, photoCriterion, wrapUpCriterion, wrapUpPrompt } from "./seed-lib.mjs";
 
 export const LETTER_LEAPER_TITLE = "Letter Leaper: Moonbound";
-export function createLetterLeaperModule(projectModule) {
+// `teacher` names the class's teacher in the learner-facing text (Windsor's
+// seed and enable script keep the default).
+export function createLetterLeaperModule(projectModule, { teacher = "Ms. Smith" } = {}) {
   return projectModule({
     topic: "Keyboard Skills",
     title: LETTER_LEAPER_TITLE,
@@ -13,7 +15,7 @@ export function createLetterLeaperModule(projectModule) {
       block("heading", { text: "Small leaps, stronger typing" }),
       block("text", {
         kind: "learn", minutes: 2,
-        text: "Sit comfortably and find the letters on your keyboard. Accuracy comes before speed. Choose a nickname for your class leaderboard—do not use your full name.\n\nStart in Relaxed mode. Choose All letters, or practise one keyboard row if Ms. Smith asks you to. The highlighted key helps you find your next letter.",
+        text: `Sit comfortably and find the letters on your keyboard. Accuracy comes before speed. Choose a nickname for your class leaderboard—do not use your full name.\n\nStart in Relaxed mode. Choose All letters, or practise one keyboard row if ${teacher} asks you to. The highlighted key helps you find your next letter.`,
       }),
       block("text", {
         kind: "build", minutes: 15,
@@ -25,7 +27,7 @@ export function createLetterLeaperModule(projectModule) {
           "Type every letter in a word in order. A mistake keeps your correct letters; try the next letter again.",
           "Take breaks with Escape. If time runs out in class, capture how far you got before closing the game.",
         ],
-        tip: "Your completed climb is saved to your class leaderboard. An unfinished climb stays in the open game tab; closing or reloading it starts a new climb.",
+        tip: "When you sign in with your PIN, every practice — finished or not — saves to your learning record, and you can resume an unfinished climb. Without a PIN, an unfinished climb only stays in the open game tab. A completed climb also goes on your class leaderboard.",
       }),
       block("link", { url: "/play/letter-leaper", text: "Play Letter Leaper" }),
       block("checkpoint", {
@@ -33,7 +35,7 @@ export function createLetterLeaperModule(projectModule) {
         text: "Upload a screenshot of your moon landing, star finish, or the progress you reached today. Include the leap counter and accuracy when possible. Caption it with your practice mode and something you improved.",
       }),
       block("heading", { text: "Reflect on your typing" }),
-      wrapUpPrompt("Which letters or words were tricky? What helped you type more accurately? Younger learners can ask Ms. Smith to help them write their answer."),
+      wrapUpPrompt(`Which letters or words were tricky? What helped you type more accurately? Younger learners can ask ${teacher} to help them write their answer.`),
     ],
     criteria: [
       photoCriterion(0, "Typing adventure screenshot", "A screenshot of today's typing progress, with practice mode and an improvement noted."),

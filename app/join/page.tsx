@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 
 type RosterName = { learnerId: string; displayName: string };
@@ -16,16 +16,50 @@ type ClassInfo = {
   context: string;
 };
 
+async function fetchClass(value: string): Promise<{ class: ClassInfo; roster: RosterName[] }> {
+  const res = await fetch(`/api/class?code=${encodeURIComponent(value.trim())}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Could not find that class.");
+  return data;
+}
+
+// useSearchParams needs a Suspense boundary on this prerendered page.
 export default function JoinPage() {
+  return (
+    <Suspense>
+      <JoinForm />
+    </Suspense>
+  );
+}
+
+function JoinForm() {
   const router = useRouter();
-  const [code, setCode] = useState("");
+  // Class entry links (/join?code=…) open straight on the class.
+  const linked = useSearchParams().get("code") ?? "";
+  const [code, setCode] = useState(linked);
   const [klass, setKlass] = useState<ClassInfo | null>(null);
   const [roster, setRoster] = useState<RosterName[]>([]);
   const [learnerId, setLearnerId] = useState("");
   const [pin, setPin] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState<string | boolean>(false);
+  const [busy, setBusy] = useState<string | boolean>(!!linked);
+
+  useEffect(() => {
+    if (!linked) return;
+    let cancelled = false;
+    fetchClass(linked)
+      .then((data) => {
+        if (cancelled) return;
+        setKlass(data.class);
+        setRoster(data.roster);
+      })
+      .catch((err) => !cancelled && setError(err instanceof Error ? err.message : "Something went wrong."))
+      .finally(() => !cancelled && setBusy(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [linked]);
 
   // Self-registration (camp) classes: create a profile or come back by name.
   async function joinByName(create: boolean) {
@@ -55,9 +89,7 @@ export default function JoinPage() {
     setError("");
     setBusy(true);
     try {
-      const res = await fetch(`/api/class?code=${encodeURIComponent(code.trim())}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not find that class.");
+      const data = await fetchClass(code);
       setKlass(data.class);
       setRoster(data.roster);
     } catch (err) {

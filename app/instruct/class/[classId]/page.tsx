@@ -90,7 +90,7 @@ export default async function ClassPage({
       </section>
 
       {/* View switch */}
-      <div className="mt-10 flex items-center gap-1 border-b border-[var(--border-soft)] pb-3">
+      <div className="mt-10 flex flex-wrap items-center gap-1 border-b border-[var(--border-soft)] pb-3">
         <Link href={`/instruct/class/${klass.id}`} className={tab(!showRoster && !showAttendance && !showReport && !showInsights)}>
           📚 Projects · {klass.moduleCount}
         </Link>
@@ -108,6 +108,9 @@ export default async function ClassPage({
         </Link>
         <Link href={`/instruct/class/${klass.id}?view=insights`} className={tab(showInsights)}>
           📊 Insights
+        </Link>
+        <Link href={`/instruct/class/${klass.id}/typing`} className={tab(false)}>
+          ⌨️ Typing
         </Link>
         <Link href={`/instruct/class/${klass.id}/qr`} className={tab(false)}>
           📷 QR Codes
