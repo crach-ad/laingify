@@ -68,6 +68,19 @@ export default async function Home() {
                 <span className="btn-ghost hidden h-11 shrink-0 items-center px-5 text-sm sm:flex">Play →</span>
               </div>
             </Link>
+            <Link href="/play/typing" className="block">
+              <div className="card card-interactive flex items-center gap-5 p-6">
+                <span className="tile flex h-14 w-14 shrink-0 items-center justify-center text-3xl">🐒</span>
+                <span className="min-w-0 flex-1">
+                  <span className="display block text-lg font-semibold">Letter Leaper</span>
+                  <span className="muted mt-1 block text-sm">
+                    Help Milo leap through six terrains — 100 letters to the moon, then 50 words to the
+                    stars. Typing practice for brave little fingers.
+                  </span>
+                </span>
+                <span className="btn-ghost hidden h-11 shrink-0 items-center px-5 text-sm sm:flex">Start typing →</span>
+              </div>
+            </Link>
           </div>
         </section>
       </div>
