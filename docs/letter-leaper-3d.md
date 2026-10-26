@@ -98,3 +98,35 @@ It has **not** been tested on a Chromebook or a real phone. The automatic qualit
 drop and the Phaser fallback exist for slower devices.
 
 The earlier React prototype route, `/play/letter-leaper-3d`, now redirects to `/play/typing`.
+
+## Falling platforms (local preview, not in production)
+
+Branch `letter-leaper-falls` adds an opt-in rule set. It's active only with
+`?mode=public&falls=1` and the 3D scene, for example at `/play/letter-leaper-3d`
+on that branch. Classroom play, its practice settings and the default game
+are unchanged.
+
+- **Deadline:** each letter must be typed within 7 seconds of typing time. In
+  a word, each letter gets its own 7 seconds.
+  - The clock is `core.js`'s active clock, the same one the rules and the
+    countdown read (`deadlineLeft()`). It runs only while Milo is ready and
+    input is accepted, never while paused, in a hidden tab, or during a leap,
+    fall or recovery.
+- **Warning:** after 5 seconds the platform wobbles, more strongly over the
+  last 2 seconds. The card shows a countdown badge, turning orange and then
+  red, with an orange-to-red ring around Milo's platform. A text message
+  ("Quick — the platform is wobbling!") means no sound is needed. In calm
+  motion there's no wobble: only the outline, ring and countdown.
+- **At 7 seconds:** the platform drops with Milo. This is recorded once as a
+  `timeout` (not a keystroke). An answer arriving at or after 7 seconds is a
+  timeout.
+- **Wrong letter:** one incorrect `key` attempt. Milo jumps, falls short and
+  drops out of view.
+- **During any fall:** further keys are ignored (`busy`), and nothing advances.
+- **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back on a restored
+  platform for the same leap with "Try again!" or "A little quicker this time!".
+  A fresh target appears and its 7 seconds start then.
+- **Tracking:** no new tracking event types. Falls and recoveries are view
+  events only, and the preview is public play, so nothing is uploaded.
+
+Tests: `tests/letter-leaper-falls.test.mjs`.
