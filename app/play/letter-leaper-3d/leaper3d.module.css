@@ -1,0 +1,56 @@
+/* Letter Leaper 3D preview. The HUD is ordinary HTML over the canvas:
+   high-contrast, separate from the scenery, never drawn into the 3D world. */
+.root { display: flex; flex-direction: column; min-height: 100vh; background: #0b1714; color: var(--text); }
+.header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--border-soft); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.title { font-family: var(--font-grotesk); font-weight: 700; letter-spacing: 0.02em; }
+.badge { font-family: var(--font-jetbrains); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #1c1405; background: #f2c94d; border-radius: 999px; padding: 4px 10px; }
+.control { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--tile); color: var(--text); font-size: 13px; }
+.control[aria-pressed="true"] { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent); }
+.control:disabled { opacity: 0.45; }
+.control:focus-visible, .key:focus-visible, .field select:focus-visible { outline: 3px solid #f2c94d; outline-offset: 2px; }
+
+.stage { position: relative; height: clamp(420px, 66vh, 780px); overflow: hidden; background: #cfe6d6; }
+.stage > div:first-child { position: absolute; inset: 0; }
+.hud { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start; padding: 14px; gap: 10px; }
+.progress { align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: #13241e; }
+.label { font-family: var(--font-jetbrains); font-size: 12px; font-weight: 500; background: #fff8e6e6; border-radius: 999px; padding: 4px 10px; }
+.pips { display: flex; gap: 5px; }
+.pips i { width: 12px; height: 12px; border-radius: 50%; background: #fff8e6aa; border: 2px solid #1d2b26; }
+.pips i[data-done="y"] { background: #f2c14e; }
+.prompt { margin-top: 4px; display: flex; flex-direction: column; align-items: center; background: #fff8e6; color: #13241e; border: 3px solid #1d2b26; border-radius: 22px; padding: 10px 34px 14px; box-shadow: 0 10px 24px #0b171455; transition: transform 0.15s, opacity 0.15s; }
+.prompt[data-open="n"] { opacity: 0.55; transform: scale(0.94); }
+.eyebrow { font-family: var(--font-jetbrains); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #55665f; }
+.letter { font-family: var(--font-grotesk); font-weight: 700; font-size: clamp(56px, 9vw, 96px); line-height: 1; }
+.status { margin: 0; font-size: 15px; font-weight: 600; background: #0b1714d9; color: #fff8e6; border-radius: 999px; padding: 6px 14px; }
+.status[data-open="y"] { background: #1f6b43; }
+.prompt[data-shake="y"] { animation: nudge 0.35s ease-in-out; }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: #0b171488; }
+.celebrate { background: transparent; align-items: start; justify-items: end; padding: 14px; }
+.celebrate .panel { max-width: 360px; padding: 18px 20px; }
+.panel { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 460px; text-align: center; background: #0f1f1bf2; border: 1px solid #f2c94d55; border-radius: 18px; padding: 22px 26px; }
+.panel h1, .panel h2 { margin: 0; font-family: var(--font-grotesk); font-size: 26px; line-height: 1.15; color: var(--heading); }
+.small { margin: 0; font-size: 14px; color: var(--body); }
+.field { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--body); }
+.field select { height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--tile); color: var(--text); padding: 0 10px; }
+.center { flex: 1; display: grid; place-items: center; padding: 24px; }
+
+.keys { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 22px; background: #0f1f1b; }
+.keyRow { display: flex; gap: 6px; }
+.key { width: clamp(28px, 7.6vw, 44px); height: 44px; border-radius: 10px; border: 1px solid #ffffff22; background: #183029; color: #fff8e6; font-family: var(--font-grotesk); font-weight: 600; font-size: 16px; touch-action: manipulation; }
+.key:disabled { opacity: 0.5; }
+.key:not(:disabled):active { background: #1f6b43; }
+
+.inspector { position: fixed; right: 10px; bottom: 10px; width: min(460px, 94vw); max-height: 44vh; overflow: auto; z-index: 50; background: #000000e0; color: #b6f24d; font: 11px/1.45 var(--font-jetbrains), monospace; padding: 10px; border-radius: 10px; border: 1px solid #b6f24d55; }
+.inspector ol { margin: 6px 0 0; padding-left: 0; list-style: none; color: #e7e9ee; }
+
+@media (max-width: 640px) {
+  .header { padding: 10px 12px; }
+  .control { height: 34px; padding: 0 9px; font-size: 12px; }
+  .stage { height: 58vh; min-height: 380px; }
+  .panel h1, .panel h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .prompt, .prompt[data-shake="y"] { transition: none; animation: none; } }
+.root[data-calm="on"] .prompt[data-shake="y"] { animation: none; }
