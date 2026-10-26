@@ -1,6 +1,11 @@
-# Letter Leaper visuals (Phaser scene)
+# Letter Leaper visuals (Phaser scene — now the fallback)
 
-Letter Leaper's game scene is drawn with Phaser 4. The rules, the HTML
+> Since October 2026 the default scene is the three.js renderer
+> (`scene-3d.js`, see `docs/letter-leaper-3d.md`). This Phaser scene is the
+> automatic fallback when the 3D scene can't start, and `?renderer=phaser`
+> still selects it.
+
+Letter Leaper's Phaser scene is drawn with Phaser 4. The rules, the HTML
 interface, and classroom tracking are separate from it, so visual changes
 don't touch analytics.
 
@@ -13,7 +18,7 @@ don't touch analytics.
 | `scene-phaser.js` | Phaser renderer: camera, layered environments, platforms, the target sign, particles, and sound. |
 | `milo.js` | Milo's layered character rig and animations. |
 | `art.js` | Asset definitions: environment palettes and layer recipes, platform styles, celestial bodies, Milo's parts, and sound recipes. |
-| `scene-classic.js` | The previous DOM renderer. Used for comparison (`?renderer=classic`) and automatically if WebGL or Phaser isn't available, or the scene doesn't start within 6 s. |
+| `scene-classic.js` | The previous DOM renderer. Used for comparison (`?renderer=classic`) and automatically if WebGL isn't available, or neither canvas scene starts. |
 | `tracker.js`, `leaderboard.js` | Classroom tracking and the legacy leaderboard. Unchanged apart from reading the new renderer-tagged game version. |
 | `vendor/` | Phaser 4.2.1 (`phaser.min.js`) and its MIT licence. Refresh it with `npm run vendor:phaser`. |
 

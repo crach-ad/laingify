@@ -107,9 +107,9 @@ history is inferred from them.
 ## Event contract (measurement version 1)
 
 Producer: `public/games/letter-leaper/tracker.js` (class mode only). The game
-itself is split into a rules engine, HTML UI, and a Phaser scene; see
-`docs/letter-leaper-visuals.md`. Since then, `gameVersion` also names the
-renderer (`…-phaser` or `…-classic`), and `stage` events follow the 20-leap
+itself is split into a rules engine, HTML UI, and a scene renderer; see
+`docs/letter-leaper-3d.md` and `docs/letter-leaper-visuals.md`. Since then, `gameVersion` also names the
+renderer (`…-3d`, `…-phaser` or `…-classic`), and `stage` events follow the 20-leap
 environment bands. Consumer:
 `POST /api/typing/batch`. Validation lives in `lib/typing-events.ts`.
 

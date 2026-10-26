@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored third-party builds (Phaser, three.js) for the static game.
+    "public/games/letter-leaper/vendor/**",
   ]),
 ]);
 
