@@ -5,6 +5,7 @@ import { requireLearner } from "@/lib/learner";
 import { slugifyTopic } from "@/lib/topics";
 import { classResources } from "@/lib/class-resources";
 import { offersLetterLeaperFalls } from "@/lib/class-features";
+import { letterLeaperModuleId } from "@/lib/typing-access";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
@@ -19,7 +20,8 @@ export default async function Dashboard() {
   const { learner, klass, sprite } = await requireLearner();
   const band = bandConfig(klass.band);
   const resources = classResources(klass.classCode);
-  const fallsLink = await offersLetterLeaperFalls(klass.orgId);
+  // Only where the class has Letter Leaper (the falls page plays from that module).
+  const fallsLink = (await offersLetterLeaperFalls(klass.orgId)) && (await letterLeaperModuleId(klass.id, klass.orgId)) !== null;
 
   // Modules assigned to this class, in order, with this learner's progress and
   // criteria (for per-module completion bars). Project rows are the completion
