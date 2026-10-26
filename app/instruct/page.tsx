@@ -29,8 +29,13 @@ export default async function InstructorDashboard() {
         <div className="overline mb-3">Classes</div>
         <div className="flex items-baseline justify-between">
           <h1 className="text-3xl font-semibold tracking-tight">Your classes</h1>
-          <span className="mono-label">
-            {classes.length} class{classes.length === 1 ? "" : "es"} · {classes.reduce((n, c) => n + c.roster.length, 0)} learners
+          <span className="flex items-baseline gap-4">
+            <span className="mono-label">
+              {classes.length} class{classes.length === 1 ? "" : "es"} · {classes.reduce((n, c) => n + c.roster.length, 0)} learners
+            </span>
+            <Link href="/instruct/typing/new" className="btn-ghost flex h-9 items-center px-3 text-xs">
+              ＋ New typing classroom
+            </Link>
           </span>
         </div>
 

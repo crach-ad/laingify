@@ -31,6 +31,9 @@ test('public play never loads the class API client', async () => {
   const html = await readFile(new URL('../public/games/letter-leaper/index.html', import.meta.url), 'utf8');
   const game = await readFile(new URL('../public/games/letter-leaper/game.js', import.meta.url), 'utf8');
   assert.equal(html.includes('leaderboard.js'), false, 'leaderboard.js is loaded by game.js only outside public mode');
-  assert.match(game, /if\(publicPlay\)\{[^\n]*\}\nelse document\.body\.append\([^\n]*'leaderboard\.js'/);
+  // The API clients (leaderboard.js, tracker.js) are only appended in the non-public branch.
+  const loader = game.slice(game.indexOf('if(publicPlay){'));
+  assert.match(loader, /^if\(publicPlay\)\{[^\n]*\}\nelse\{[^\n]*'leaderboard\.js'[^\n]*'tracker\.js'/);
+  assert.equal(/leaderboard\.js|tracker\.js/.test(loader.slice(0, loader.indexOf('\nelse{'))), false);
   assert.equal(/fetch\(|\/api\//.test(game), false);
 });

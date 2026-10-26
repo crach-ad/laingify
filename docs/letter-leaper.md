@@ -21,9 +21,14 @@ learner, and run ID. Best runs rank by accuracy, streak, then elapsed time.
 These are client-reported practice results, not proctored assessments. The
 existing Laingify cookie-session trust model applies.
 
-Incomplete climbs stay in the open browser tab. A completed climb saves to the
-class leaderboard; module completion still uses screenshot evidence and the
-reflection, allowing Pam to accept a younger learner's partial progress.
+A completed climb saves to the class leaderboard; module completion still uses
+screenshot evidence and the reflection, allowing Pam to accept a younger
+learner's partial progress.
+
+Per-session typing progress (including partial climbs), the teacher dashboard,
+and PIN sign-in for recording it are described in `docs/letter-leaper-progress.md`.
+Windsor's open, name-only classes play as before but aren't recorded until PIN
+sign-in is turned on for the class.
 
 ## Enable safely
 

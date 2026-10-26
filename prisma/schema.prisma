@@ -60,6 +60,8 @@ model Class {
   roster      RosterEntry[]
   modules     ClassModule[]
   attendance  AttendanceRecord[]
+  typingAssignment TypingAssignment?
+  typingSessions   TypingSession[]
   createdAt   DateTime @default(now())
 }
 
@@ -165,6 +167,7 @@ model Learner {
   spriteLogs  SpriteInteraction[]
   events      LearnerEvent[]
   attendance  AttendanceRecord[]
+  typingSessions TypingSession[]
   createdAt   DateTime @default(now())
 }
 
@@ -339,4 +342,110 @@ model Project {
   createdAt   DateTime @default(now())
 
   @@unique([learnerId, moduleId])
+}
+
+// ---------------------------------------------------------------------------
+// Letter Leaper typing progress (docs/letter-leaper-progress.md)
+// ---------------------------------------------------------------------------
+
+// The practice a class's teacher has set for Letter Leaper. Absent = defaults
+// (all letters, relaxed, full adventure).
+model TypingAssignment {
+  id        String   @id @default(cuid())
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String   @unique
+  // The class's "Letter Leaper: Moonbound" module (ClassModule assignment).
+  moduleId  String
+  // all | home | top | bottom
+  letterSet String   @default("all")
+  // relaxed | steady | speedy (relaxed also lights up the next key — the hint)
+  pace      String   @default("relaxed")
+  // letters (100 letter leaps) | words (50 word leaps) | full (all 150)
+  scope     String   @default("full")
+  updatedAt DateTime @updatedAt
+}
+
+// One practice session, including partial ones. The summary columns are
+// recomputed from TypingEvent on every upload, and outlive the events
+// (detailed events are purged after the retention window; summaries stay).
+// Deleting a learner or class deletes its typing data, so org wipes and
+// deletion requests don't trip over these rows.
+model TypingSession {
+  // Client-generated UUID; stable across retries, reloads, and resumes.
+  id                 String        @id
+  learner            Learner       @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  learnerId          String
+  class              Class         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId            String
+  moduleId           String
+  letterSet          String
+  pace               String
+  scope              String
+  hints              Boolean
+  // keyboard | touch | mixed | unknown (derived from accepted attempts)
+  inputMethod        String        @default("unknown")
+  gameVersion        String
+  measurementVersion Int
+  startedAt          DateTime
+  lastActivityAt     DateTime
+  endedAt            DateTime?
+  // ACTIVE | COMPLETED | ENDED_EARLY ("interrupted" = ACTIVE and stale; derived)
+  status             String        @default("ACTIVE")
+  // completed | exited | superseded
+  endReason          String?
+  startLeap          Int           @default(0)
+  furthestLeap       Int           @default(0)
+  lastSeq            Int           @default(-1)
+  // Client clocks (ms): accepting input, paused (incl. moon break and hidden
+  // tab), jump animations, and hidden-tab time (a subset of pause).
+  activeMs           Int           @default(0)
+  pauseMs            Int           @default(0)
+  animationMs        Int           @default(0)
+  hiddenMs           Int           @default(0)
+  // Derived from events (see lib/typing-metrics.ts)
+  responseMs         Int           @default(0)
+  idleMs             Int           @default(0)
+  attempts           Int           @default(0)
+  correct            Int           @default(0)
+  timeouts           Int           @default(0)
+  wordsCompleted     Int           @default(0)
+  // Full SessionSummary JSON: per-phase stats, per-key counts, confusions,
+  // timing medians, ignored-input counts.
+  summaryJson        String        @default("{}")
+  eventsPurgedAt     DateTime?
+  createdAt          DateTime      @default(now())
+  events             TypingEvent[]
+
+  @@index([classId, startedAt])
+  @@index([learnerId, startedAt])
+}
+
+// Append-only interaction events for one session. (sessionId, seq) and the
+// client event id both dedupe retries.
+model TypingEvent {
+  // Client-generated UUID
+  id        String        @id
+  session   TypingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  seq       Int
+  // session_start | target | key | complete | timeout | pause | resume |
+  // stage | end | connection
+  type      String
+  // ms since the session's first event (client monotonic clock)
+  t         Int
+  // Event fields (validated, small)
+  data      String        @default("{}")
+  createdAt DateTime      @default(now())
+
+  @@unique([sessionId, seq])
+}
+
+// Failed PIN sign-ins, for a short per-learner lockout (app/api/join). Kept
+// out of LearnerEvent because every LearnerEvent row counts as activity.
+model SignInFailure {
+  id        String   @id @default(cuid())
+  learnerId String
+  createdAt DateTime @default(now())
+
+  @@index([learnerId, createdAt])
 }

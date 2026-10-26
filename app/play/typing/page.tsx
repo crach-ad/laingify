@@ -24,6 +24,10 @@ export default function TypingPage() {
             Help Milo climb six terrains — 100 letter leaps to the moon, then 50 word leaps to the stars.
             Use your keyboard or tap the keys. No account needed.
           </p>
+          <p className="muted mt-2 max-w-2xl text-xs">
+            Guest play isn&apos;t saved anywhere. To save your practice to your learning record, join your class and play from your
+            Keyboard Skills module.
+          </p>
         </div>
         <a href={GAME_SRC} className="btn-ghost flex h-11 shrink-0 items-center px-5 text-sm">
           Open full page ↗

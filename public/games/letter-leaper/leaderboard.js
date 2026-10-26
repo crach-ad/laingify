@@ -14,6 +14,8 @@ api('/profile').then(profile=>{if(!profileEdited && profile.username)$('username
 $('player-form').addEventListener('submit',async event=>{
   event.preventDefault();
   if ($('start').disabled) return;
+  // Tracked classrooms don't need a leaderboard nickname to practise.
+  if (document.body.classList.contains('tracked') && !$('username').value.trim()) { start(); return; }
   $('start').disabled=true;
   $('profile-status').textContent='Saving your username…';
   try {
@@ -76,7 +78,7 @@ async function loadBoard(prefix='board') {
   } catch(error) { if(sequence===boardRequests[prefix])boardElement('status').textContent=errorMessage(error); }
 }
 function openBoard() {
-  if(state==='playing')requestPause();
+  if(state==='playing')requestPause('leaderboard');
   $('board-practice').value=state==='intro'?$('letter-set').value:set;
   $('board-pace').value=state==='intro'?$('pace').value:pace;
   $('leaderboard-dialog').showModal();
