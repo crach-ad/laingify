@@ -56,6 +56,7 @@ export default async function Dashboard() {
     return { cm, m, done, started, pct };
   });
 
+  const mouseModule = rows.find(r => r.m.title === "Mouse Meadow" && r.m.topic === "Mouse Skills");
   const inProgress = rows.filter((r) => r.started && !r.done).length;
   const completed = rows.filter((r) => r.done).length;
   const earned = rows.filter((r) => completedModuleIds.has(r.m.id));
@@ -213,6 +214,12 @@ export default async function Dashboard() {
           })}
         </div>
       </section>
+
+      <Link href={mouseModule ? `/learn/${mouseModule.m.id}` : "/play/mouse"} className="card card-interactive mt-8 flex items-center gap-4 p-6">
+        <span className="text-4xl">🌻</span>
+        <div><h2 className="text-lg font-semibold">Mouse Meadow</h2><p className="muted mt-1 text-sm">75 mouse-skill challenges, class scores, and a Meadow Explorer badge.</p></div>
+        <span className="ml-auto">→</span>
+      </Link>
 
       {/* Resources — class-specific links (lib/class-resources.ts) */}
       {resources.length > 0 && (

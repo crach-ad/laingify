@@ -55,6 +55,11 @@ export default async function Home() {
         <section className="mt-20 w-full max-w-3xl">
           <div className="overline mb-3">Free resources · no account needed</div>
           <div className="grid gap-4 text-left sm:grid-cols-1">
+            <Link href="/play/mouse" className="card card-interactive flex items-center gap-5 p-6">
+              <span className="text-4xl">🌻</span>
+              <span><span className="display block text-lg font-semibold">Mouse Meadow</span><span className="muted mt-1 block text-sm">75 playful levels of pointing, clicking, and drag-and-drop puzzles. Play free or join your class for scores, progress, and a Mouse Skills module.</span></span>
+              <span className="ml-auto">→</span>
+            </Link>
             <Link href="/play/blocks" className="block">
               <div className="card card-interactive flex items-center gap-5 p-6">
                 <span className="tile flex h-14 w-14 shrink-0 items-center justify-center text-3xl">🧩</span>

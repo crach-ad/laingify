@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "assets:leaper3d": "node scripts/build-leaper-3d-assets.mjs",
+    "module:mouse": "node --env-file=.env prisma/enable-mouse-meadow.mjs",
     "seed:demo": "node prisma/seed.mjs",
     "seed:camp": "node prisma/seed-camp.mjs",
     "seed:abaco": "node prisma/seed-abaco.mjs",

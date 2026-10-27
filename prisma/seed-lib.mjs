@@ -99,7 +99,8 @@ export function moduleWriter(prisma, org, update) {
 // touching the roster — safe mid-term.
 export async function syncClassModules(prisma, classId, modules) {
   await prisma.classModule.deleteMany({
-    where: { classId, moduleId: { notIn: modules.map((m) => m.id) } },
+    // Mouse Meadow is a platform-wide resource assigned by the additive rollout.
+    where: { classId, moduleId: { notIn: modules.map((m) => m.id) }, module: { NOT: { title: "Mouse Meadow", topic: "Mouse Skills" } } },
   });
   for (let i = 0; i < modules.length; i++) {
     const existing = await prisma.classModule.findFirst({

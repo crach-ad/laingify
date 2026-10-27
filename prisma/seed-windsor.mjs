@@ -14,6 +14,7 @@ import { moduleWriter, syncClassModules, checkCheckpoints } from "./seed-lib.mjs
 import { createKnexModules } from "./knex-modules.mjs";
 import { createRodocodoModule, createBlocklyMazeModule } from "./coding-modules.mjs";
 
+import { createMouseMeadowModule } from "./mouse-meadow-module.mjs";
 import { createLetterLeaperModule } from "./letter-leaper-module.mjs";
 
 const prisma = new PrismaClient();
@@ -70,7 +71,8 @@ async function main() {
   const rodocodo = await createRodocodoModule(projectModule, "Coding");
   const knex = await createKnexModules(projectModule);
   const letterLeaper = await createLetterLeaperModule(projectModule);
-  const modules = [letterLeaper, blockly, rodocodo, ...knex];
+  const mouseMeadow = await createMouseMeadowModule(projectModule);
+  const modules = [mouseMeadow, letterLeaper, blockly, rodocodo, ...knex];
   await checkCheckpoints(prisma, modules);
 
   const base = Date.now() - CLASSES.length * 1000;

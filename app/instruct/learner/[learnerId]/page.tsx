@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireInstructor } from "@/lib/instructor";
 import { bandConfig } from "@/lib/bands";
+import MouseProgress from "@/components/MouseProgress";
 import SpriteAvatar from "@/app/learn/SpriteAvatar";
 
 // One learner, whole-program view for instructors: progress across every
@@ -235,6 +236,8 @@ export default async function LearnerProfilePage({
           </div>
         ))}
       </section>
+
+      <MouseProgress learnerId={learnerId} classIds={learner.roster.filter(r => orgIds.includes(r.class.orgId)).map(r => r.classId)} />
 
       {/* Badges */}
       <section className="animate-fade-up mt-10" style={{ animationDelay: "0.1s" }}>

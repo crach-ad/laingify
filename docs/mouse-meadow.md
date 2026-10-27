@@ -1,0 +1,29 @@
+# Mouse Meadow
+
+Open `/play/mouse`, linked from the home page and learner dashboard. Guests play without persistence. Signed-in learners save to their current class. The existing instructor learner profile displays Mouse Meadow session history for classes in the instructor's accessible organizations.
+
+Five skills (aim and dwell, single click, double click, right click, drag and drop) each have 15 levels (75 total). Targets gradually shrink from 88 to 46 pixels. Aiming dwell rises from 450 to 856 ms. Drag destination radii shrink from 62 to 34 pixels. Double clicks use a forgiving 650 ms interval. Four to seven successful attempts (depending on level) and at least 80% accuracy at the current level unlock the next challenge. Students may choose a starting skill from the garden path; unobserved skills stay unobserved. Speed never gates advancement.
+
+`lib/mouse-skills.ts` defines validation and the shared reporting rubric. Accuracy is successes divided by all scored attempts; mean success time excludes failures. Timing measures elapsed time since the prior attempt or challenge start, so it includes reading/thinking and is not an isolated reaction-time measurement. Hiding the page pauses play and resets timing on explicit resume. Input type is captured for interpretation; this is designed for a mouse or trackpad, with hover and secondary-click requirements.
+
+`POST /api/mouse` writes append-only `LearnerEvent` rows of type `mouse_skills`. Start, attempt, and finish records share a UUID with monotonic sequence numbers and version 2. Identity/class come from the existing session and verified roster membership. Same-origin requests are required. Writes are idempotent and must follow their predecessor. Existing MVP cookie-auth limitations still apply; event validation is not anti-cheat verification.
+
+The client serializes saves and provides retry feedback. Unsaved records remain in memory: keep the page open during connection failures. Leaving with queued records triggers a browser warning, and the in-game back link is blocked until they save. Saved attempts survive unfinished sessions; closing without Finish is shown as open/unfinished. There is no offline reload recovery or cross-session game resume in this version.
+
+Reports show the latest 20 sessions within the latest 5,000 authorized events, including accuracy, success time, input types, errors, level demonstrated, and suggested practice. The rubric is formative evidence, not a standardized assessment. A secure result requires level 15 within a new session (legacy version-1 sessions retain the three-level rubric); teachers should confirm consistency across sessions and observation.
+
+Verification: `node --test tests/mouse*.test.mjs`, `npx tsc --noEmit`, and ESLint on the changed files. API tests use an in-memory Prisma substitute; a signed-in live database round trip remains a separate deployment smoke check. No schema migration or content seed is required.
+
+Learner UI uses animated instruction dialogs before each challenge and a persistent help button. The board is inactive while instructions are open, and task timing starts on dismissal. Learner-facing results show a score and levels completed; detailed accuracy and timing remain in the instructor report. Dialogs support Escape, focus containment, and reduced-motion preferences.
+
+## Scores and leaderboard
+
+The game home and session results include a class-only leaderboard. `GET /api/mouse` verifies the learner’s roster membership, ranks version-2 `mouse_score` events, returns the top 10 and the learner’s own best/rank, and exposes garden nicknames rather than learner IDs or full names. Each learner appears once, ranked by best session score, then completed levels, then stable ID for deterministic ties. Guest play displays scores but is not submitted to the class board.
+
+Each successful action earns `10 + 2 × levelIndex` points, capped at the level’s 4–7 required successes. Completing a level adds its accuracy percentage (80–100) as a bonus; retries after mastery cannot farm more points. Speed does not affect the score. Finish a session to submit it, even if not all 75 levels are completed. The server derives the score from ordered saved attempts and writes an idempotent summary; retrying Finish repairs an interrupted score write. Client events remain formative, self-reported evidence under the existing MVP authentication model, not anti-cheat verified competition. Older sessions remain visible in teacher reports but are not backfilled into the new leaderboard.
+
+## Class module
+
+Mouse Meadow is a standard module under **Mouse Skills**, with a game launch, session screenshot checkpoint, written reflection, and **Meadow Explorer** badge. `/play/mouse/class` requires an assigned class module, starts module progress without downgrading completion, and returns learners to the module via the home button. The public `/play/mouse` remains free play. Saved attempts resolve the current class’s assigned Mouse Meadow module server-side and carry its module ID.
+
+`npm run module:mouse -- --all` previews an additive rollout; append `--apply` to provision it for every existing class. Use `--class-code=CODE` instead of `--all` to target one class. It upserts one module per organization and appends missing assignments, preserving rosters, work, and existing assignments. Run it again for newly created classes. Windsor seeds include the module; other content-sync scripts preserve existing Mouse Meadow assignments. No database schema migration is required.
