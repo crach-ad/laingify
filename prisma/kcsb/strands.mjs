@@ -28,3 +28,7 @@ export const YEARS = [
   { key: "year-7", name: "Year 7", code: "KCSB-7", band: "TEEN", ages: "11–12", stage: "Lower Secondary Stage 7" },
   { key: "year-8", name: "Year 8", code: "KCSB-8", band: "TEEN", ages: "12–13", stage: "Lower Secondary Stage 8" },
 ];
+
+// Year groups that also get the Arduino track (IgniteHer's Programmable
+// Electronics projects, prisma/arduino-modules.mjs), after their strand modules.
+export const ARDUINO_YEARS = ["year-5", "year-6", "year-7", "year-8"];
