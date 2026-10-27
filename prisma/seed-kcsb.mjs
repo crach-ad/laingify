@@ -15,6 +15,7 @@ import { PrismaClient } from "@prisma/client";
 import { wipeOrg } from "./org-wipe.mjs";
 import { moduleWriter, syncClassModules, checkCheckpoints } from "./seed-lib.mjs";
 import { YEARS, STRAND_ORDER } from "./kcsb/strands.mjs";
+import { createLetterLeaperModule } from "./letter-leaper-module.mjs";
 
 const prisma = new PrismaClient();
 const ORG_NAME = "KCSB Computing";
@@ -26,6 +27,8 @@ const yearArg = (() => {
 
 // The coach account that should see every KCSB class (home org: Abaco camp).
 const COACH = { displayName: "Coach Crachad", email: "crachad.laing@gmail.com", pin: "4321" };
+// Other existing instructor accounts that also see KCSB in their console.
+const ALSO_SEE = ["crachad@lainglaing.com"];
 
 const selected = YEARS.filter(
   (y) => !yearArg || y.key === yearArg || y.key === `year-${yearArg}` || y.name.toLowerCase() === yearArg,
@@ -45,6 +48,11 @@ async function main() {
     org = await prisma.org.create({ data: { name: ORG_NAME, context: "community" } });
   }
   const createModule = moduleWriter(prisma, org, UPDATE);
+  // Letter Leaper (typing practice) is every class's first module, as in Windsor.
+  const letterLeaper = await createLetterLeaperModule(
+    ({ blocks, criteria, ...data }) => createModule({ ...data, contentJson: JSON.stringify(blocks), criteria: { create: criteria } }),
+    { teacher: "Coach Crachad" },
+  );
 
   for (const year of selected) {
     let defs, toolbeltModules;
@@ -72,7 +80,7 @@ async function main() {
       throw new Error(`${year.name}: toolbelt module(s) with unknown leadsTo: ${unplaced.map((t) => t.title).join(", ")}`);
 
     console.log(`\n${year.name} (${year.code}, ${year.band})`);
-    const modules = [];
+    const modules = [letterLeaper];
     for (const def of orderedDefs) modules.push(await createModule(def));
     await checkCheckpoints(prisma, modules);
 
@@ -100,6 +108,11 @@ async function main() {
       await prisma.instructor.update({ where: { id: coach.id }, data: { accessOrgs: { connect: { id: org.id } } } });
   } else {
     await prisma.instructor.create({ data: { ...COACH, orgId: org.id } });
+  }
+  for (const email of ALSO_SEE) {
+    const other = await prisma.instructor.findUnique({ where: { email } });
+    if (other && other.orgId !== org.id)
+      await prisma.instructor.update({ where: { id: other.id }, data: { accessOrgs: { connect: { id: org.id } } } });
   }
 
   console.log(`\nKCSB Computing ready. Classes: ${selected.map((y) => `${y.name} (code ${y.code})`).join(", ")}`);
