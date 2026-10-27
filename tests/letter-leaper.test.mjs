@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validClimb, rankClimbs, validUsername } from '../lib/letter-leaper-rules.ts';
 import { createLetterLeaperModule } from '../prisma/letter-leaper-module.mjs';
-const score = (extra = {}) => ({ id: crypto.randomUUID(), practice: 'all', pace: 'relaxed', leaps: 150, correct: 230, attempts: 230, streak: 150, elapsed: 65000, classId: 'windsor-a', learnerId: 'one', username: 'MoonKid', ...extra });
+const score = (extra = {}) => ({ id: crypto.randomUUID(), practice: 'all', pace: 'easy', leaps: 150, correct: 230, attempts: 230, streak: 150, elapsed: 65000, classId: 'windsor-a', learnerId: 'one', username: 'MoonKid', ...extra });
 test('validates finished climbs and nicknames', () => {
   assert.ok(validClimb(score()));
   assert.ok(validClimb(score({correct:231,attempts:232})), 'a timed-out word may contribute extra correctly typed prefix letters');
@@ -10,8 +10,8 @@ test('validates finished climbs and nicknames', () => {
   assert.ok(validUsername('Moon_Kid-2')); assert.equal(validUsername('<script>'), false);
 });
 test('leaderboard isolates classes and modes and keeps the best run per learner', () => {
-  const rows = [score({attempts:240}),score(),score({learnerId:'two',elapsed:60000}),score({classId:'other',learnerId:'outsider'}),score({pace:'speedy',learnerId:'speed'}),score({practice:'home',learnerId:'home'})];
-  const result=rankClimbs(rows,'windsor-a','all','relaxed');
+  const rows = [score({attempts:240}),score(),score({learnerId:'two',elapsed:60000}),score({classId:'other',learnerId:'outsider'}),score({pace:'hard',learnerId:'speed'}),score({practice:'home',learnerId:'home'})];
+  const result=rankClimbs(rows,'windsor-a','all','easy');
   assert.deepEqual(result.map(r=>r.learnerId),['two','one']); assert.equal(result[1].attempts,230);
 });
 test('module checkpoints match criteria and the game opens on Laingify', async () => {
@@ -23,7 +23,15 @@ test('module checkpoints match criteria and the game opens on Laingify', async (
 
 test('ranks actual keystroke accuracy after word timeouts', () => {
   const rows=[score({learnerId:'lower',correct:230,attempts:250}),score({learnerId:'higher',correct:300,attempts:310})];
-  assert.equal(rankClimbs(rows,'windsor-a','all','relaxed')[0].learnerId,'higher');
+  assert.equal(rankClimbs(rows,'windsor-a','all','easy')[0].learnerId,'higher');
+});
+
+test('relaxed climbs rank with easy (same rules); steady and speedy climbs are not ranked', () => {
+  const rows=[score({learnerId:'old',pace:'relaxed'}),score({learnerId:'steady',pace:'steady'}),score({learnerId:'speedy',pace:'speedy'})];
+  assert.deepEqual(rankClimbs(rows,'windsor-a','all','easy').map(r=>r.learnerId),['old']);
+  assert.deepEqual(rankClimbs(rows,'windsor-a','all','medium'),[]);
+  assert.deepEqual(rankClimbs(rows,'windsor-a','all','hard'),[]);
+  assert.equal(validClimb(score({pace:'relaxed'})),false,'new climbs use the difficulty names');
 });
 
 test('public play never loads the class API client', async () => {

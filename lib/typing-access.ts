@@ -15,10 +15,10 @@ import { getSession, verifiedSignIn, type Session } from "@/lib/session";
 import { notFound } from "next/navigation";
 import { getInstructor, requireInstructor } from "@/lib/instructor";
 import { signToken, verifyToken } from "@/lib/signed-token";
-import type { LetterSet, Pace, Scope } from "@/lib/typing-events";
+import { paceOf, type LetterSet, type Pace, type Scope } from "@/lib/typing-events";
 
 export const LETTER_LEAPER_TITLE = "Letter Leaper: Moonbound";
-export const DEFAULT_SETTINGS = { letterSet: "all", pace: "relaxed", scope: "full" } as const;
+export const DEFAULT_SETTINGS = { letterSet: "all", pace: "easy", scope: "full" } as const;
 export type PracticeSettings = { letterSet: LetterSet; pace: Pace; scope: Scope };
 
 export type Ticket = { l: string; c: string; m: string };
@@ -44,10 +44,11 @@ export async function letterLeaperModuleId(classId: string, orgId: string) {
 }
 
 // The practice the teacher has set, or null when they haven't (then players
-// choose their own letters and pace, as in the original Windsor module).
+// choose their own letters and difficulty, as in the original Windsor module).
+// Settings saved under the old pace names read as the matching difficulty.
 export async function teacherSettings(classId: string): Promise<PracticeSettings | null> {
   const a = await prisma.typingAssignment.findUnique({ where: { classId } });
-  return a ? { letterSet: a.letterSet as LetterSet, pace: a.pace as Pace, scope: a.scope as Scope } : null;
+  return a ? { letterSet: a.letterSet as LetterSet, pace: paceOf(a.pace), scope: a.scope as Scope } : null;
 }
 
 // Settings for the teacher's form: the saved ones, else the defaults.

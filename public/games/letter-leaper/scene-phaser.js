@@ -193,8 +193,8 @@
         l.setScale(i === typed ? 1.08 : 1);
       });
       c.underline.setPosition(start + typed * spacing, 20).setVisible(typed < word.length).setSize(26, 4);
-      const timed = pace !== 'relaxed';
-      c.caption.setText(timed ? `${Math.max(0, Math.ceil(remaining / 1000))} SECONDS` : word.length > 1 ? 'TYPE THE WORD' : 'TYPE TO LEAP');
+      const timed = falls;
+      c.caption.setText(timed ? `${Math.ceil(deadlineLeft() / 1000)} SECONDS` : word.length > 1 ? 'TYPE THE WORD' : 'TYPE TO LEAP');
       c.timerBack.setVisible(timed); c.timer.setVisible(timed);
       const n = steps + 1, s = this.sizeScale;
       c.setPosition(this.xFor(n), this.yFor(n) - 96 * s).setScale(s);
@@ -359,7 +359,8 @@
           this.refreshCard();
           if (!calm()) this.tweens.add({ targets: this.card, angle: { from: -4, to: 4 }, duration: 70, yoyo: true, repeat: 2, onComplete: () => this.card.setAngle(0) });
           break;
-        case 'timeout': this.play('timeout'); this.milo.shrug(); break;
+        // This scene doesn't draw the fall: Milo shrugs on his platform until the fresh target.
+        case 'fall': this.play(d.kind === 'miss' ? 'mistake' : 'timeout'); if (d.kind === 'miss') this.milo.oops(); else this.milo.shrug(); break;
         case 'jump': {
           this.play('takeoff');
           this.milo.setFacing(this.xFor(d.to) < this.xFor(d.from) ? -1 : 1);
@@ -424,23 +425,22 @@
     // ---- per frame -----------------------------------------------------------------------------
     update(time, delta) {
       // Camera: follow the leap smoothly (calm: hold, then move at landing).
-      const p = jumpProgress();
-      const goal = steps + (jumping && !calm() ? smooth((p - 0.1) / 0.85) : 0);
+      const leaping = jumping && !fallKind, p = leaping ? jumpProgress() : 0;
+      const goal = steps + (leaping && !calm() ? smooth((p - 0.1) / 0.85) : 0);
       this.camLevel = calm() ? goal : this.camLevel + (goal - this.camLevel) * (1 - Math.exp(-delta / 140));
       if (Math.abs(goal - this.camLevel) < 0.001) this.camLevel = goal;
       this.cameras.main.centerOn(this.W / 2, this.yFor(this.camLevel) - this.H * this.frame());
       this.updateEnvironments(this.camLevel, delta);
       // Milo: anticipation, an arc, and the landing — all inside the rules' jump time.
-      if (jumping) {
+      if (leaping) {
         const from = this.standAt(steps), to = this.standAt(steps + 1);
         const u = calm() ? p : smooth((p - 0.16) / 0.74);
         const arc = calm() ? 0 : Math.sin(clamp((p - 0.16) / 0.74, 0, 1) * Math.PI) * 70 * this.sizeScale;
         this.milo.root.setPosition(from.x + (to.x - from.x) * u, from.y + (to.y - from.y) * u - arc);
       }
-      this.milo.update(time, delta, jumping ? { p } : null);
-      if (this.card.timer.visible && Number.isFinite(remaining)) {
-        const total = (pace === 'steady' ? 8000 : 4000) * target.length;
-        const f = clamp(remaining / total, 0, 1);
+      this.milo.update(time, delta, leaping ? { p } : null);
+      if (this.card.timer.visible && falls) {
+        const f = clamp(deadlineLeft() / fallDeadline, 0, 1);
         this.card.timer.setSize(70 * f, 5);
         this.card.timer.fillColor = f < 0.3 ? 0xff9e6b : 0xf2c14e;
       }

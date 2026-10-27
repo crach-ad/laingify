@@ -4,7 +4,7 @@ import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
 import { slugifyTopic } from "@/lib/topics";
 import { classResources } from "@/lib/class-resources";
-import { offersLetterLeaperFalls } from "@/lib/class-features";
+import { offersLetterLeaperLink } from "@/lib/class-features";
 import { letterLeaperModuleId } from "@/lib/typing-access";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
@@ -20,8 +20,8 @@ export default async function Dashboard() {
   const { learner, klass, sprite } = await requireLearner();
   const band = bandConfig(klass.band);
   const resources = classResources(klass.classCode);
-  // Only where the class has Letter Leaper (the falls page plays from that module).
-  const fallsLink = (await offersLetterLeaperFalls(klass.orgId)) && (await letterLeaperModuleId(klass.id, klass.orgId)) !== null;
+  // Only where the class has Letter Leaper (the game plays from that module).
+  const leaperLink = (await offersLetterLeaperLink(klass.orgId)) && (await letterLeaperModuleId(klass.id, klass.orgId)) !== null;
 
   // Modules assigned to this class, in order, with this learner's progress and
   // criteria (for per-module completion bars). Project rows are the completion
@@ -84,12 +84,12 @@ export default async function Dashboard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          {/* Class extra (lib/class-features.ts): Letter Leaper's falling platforms, one click from the header. */}
-          {fallsLink && (
+          {/* Class extra (lib/class-features.ts): Letter Leaper, one click from the header. */}
+          {leaperLink && (
             <Link
-              href="/play/letter-leaper?falls=1"
+              href="/play/letter-leaper"
               className="btn-ghost flex h-9 items-center gap-2 whitespace-nowrap px-3.5 text-sm"
-              title="Letter Leaper: falling platforms — 7 seconds per letter"
+              title="Letter Leaper typing practice"
             >
               <span aria-hidden>🐒</span> Letter Leaper
             </Link>

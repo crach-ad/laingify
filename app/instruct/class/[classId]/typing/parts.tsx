@@ -47,7 +47,7 @@ export function Filters({ action, f }: { action: string; f: TypingFilters }) {
       </label>
       {select("phase", "Practice", [["letter", "Letters"], ["word", "Words"]])}
       {select("letterSet", "Keys", [["all", "All letters"], ["home", "Home row"], ["top", "Top row"], ["bottom", "Bottom row"]])}
-      {select("pace", "Pace", [["relaxed", "Relaxed"], ["steady", "Steady"], ["speedy", "Speedy"], ["falls", "Falling platforms"]])}
+      {select("pace", "Difficulty", [["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"], ["relaxed", "Relaxed (older)"], ["steady", "Steady (older)"], ["speedy", "Speedy (older)"], ["falls", "Falling platforms (older)"]])}
       {select("input", "Input", [["keyboard", "Keyboard"], ["touch", "On-screen keys"], ["mixed", "Mixed"]])}
       <button type="submit" className="btn-primary h-10 px-4 text-sm">Apply</button>
       <Link href={action} className="btn-ghost flex h-10 items-center px-4 text-sm">Clear</Link>

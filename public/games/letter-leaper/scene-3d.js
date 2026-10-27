@@ -8,7 +8,7 @@
 //
 // Shared script scope (classic scripts): $, views, state, steps, target,
 // typed, jumping, jumpProgress, terrains, terrainFor, MOON, TOTAL, pace,
-// remaining, reducedMotion, prefs, letterCase, Art.
+// falls, fallDeadline, deadlineLeft, reducedMotion, prefs, letterCase, Art.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/three/examples/jsm/loaders/GLTFLoader.js';
 
@@ -467,7 +467,7 @@ function init() {
       cardLetters.append(s);
     });
     card.classList.toggle('word', target.length > 1);
-    cardTimer.hidden = !Number.isFinite(remaining) && !falls;
+    cardTimer.hidden = !falls;
     if (pop && !calm()) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
   }
   function shakeCard() { if (calm()) return; card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
@@ -480,16 +480,12 @@ function init() {
     card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
     if (falls) {
       // The falling-platform countdown reads the rules' own deadline clock.
-      const left = deadlineLeft(), f = clamp(left / FALL_DEADLINE, 0, 1), secs = String(Math.ceil(left / 1000));
+      const left = deadlineLeft(), f = clamp(left / fallDeadline, 0, 1), secs = String(Math.ceil(left / 1000));
       cardFill.style.transform = `scaleX(${f.toFixed(3)})`;
       cardTimer.classList.toggle('low', left <= 2000);
       if (cardCount.textContent !== secs) cardCount.textContent = secs;
       card.classList.toggle('warn', left <= 2000 && left > 1000);
       card.classList.toggle('danger', left <= 1000);
-    } else if (Number.isFinite(remaining)) {
-      const total = (pace === 'steady' ? 8000 : 4000) * target.length, f = clamp(remaining / total, 0, 1);
-      cardFill.style.transform = `scaleX(${f.toFixed(3)})`;
-      cardTimer.classList.toggle('low', f < 0.3);
     }
   }
 
@@ -604,7 +600,6 @@ function init() {
       case 'target': refreshCard(true); break;
       case 'typed': play(['correct', 'correct2', 'correct3'][Math.min(d.pos, 2)]); refreshCard(); break;
       case 'miss': play('mistake'); animator.play('Oops', { once: true, fade: 0.12 }); refreshCard(); shakeCard(); break;
-      case 'timeout': play('timeout'); animator.play('Oops', { once: true, fade: 0.12 }); break;
       case 'jump':
         play('takeoff');
         animator.play('Anticipate', { once: true, fade: 0.06 }); // immediate response to the accepted key
@@ -643,7 +638,7 @@ function init() {
     }
   }
 
-  // ---- falls (falling-platform preview) ---------------------------------------------------------------
+  // ---- falls (medium and hard) ---------------------------------------------------------------------------
   // Both play inside the rules' fall time: a near miss (jump short, drop out
   // of view) or the platform giving way, then Milo pops back onto a restored
   // platform for the same leap. Calm mode: a simple sink-and-return.

@@ -40,7 +40,7 @@ function game({ reduced = false } = {}) {
     get typed() { return run('typed'); },
     get jumping() { return run('jumping'); },
     start(opts = {}) {
-      run(`readSettings = () => (${JSON.stringify({ set: opts.set ?? 'all', pace: opts.pace ?? 'relaxed' })}); scope = ${JSON.stringify(opts.scope ?? 'full')};`);
+      run(`readSettings = () => (${JSON.stringify({ set: opts.set ?? 'all', pace: opts.pace ?? 'easy' })}); scope = ${JSON.stringify(opts.scope ?? 'full')};`);
       run('start()');
     },
     type(ch, src = 'kbd') { run(`input(${JSON.stringify(ch)}, ${JSON.stringify(src)})`); },
@@ -171,20 +171,40 @@ test('a jump paused midway resumes where it was; landing still happens once', ()
   assert.equal(g.count('target'), 2);
 });
 
-test('timed paces time out per letter, record a timeout (not a keystroke), and present a fresh target', () => {
+test('medium and hard time out per letter (8 s, 4 s): one timeout (not a keystroke), then a fresh target after the fall', () => {
   const g = game();
-  g.start({ pace: 'steady' });
-  g.advance(8100);
+  g.start({ pace: 'medium' });
+  g.advance(7900);
+  assert.equal(g.count('timeout'), 0);
+  g.advance(200);
   assert.equal(g.count('timeout'), 1);
   assert.equal(g.count('key'), 0);
-  assert.equal(g.count('target'), 2);
   assert.equal(g.run('streak'), 0);
+  g.advance(1600);
+  assert.equal(g.count('target'), 2);
   const w = game();
-  w.start({ pace: 'speedy', scope: 'words' });
-  w.advance(4000 * w.target.length - 100);
-  assert.equal(w.count('timeout'), 0, 'words get 4 s per letter');
+  w.start({ pace: 'hard', scope: 'words' });
+  w.advance(3900);
+  w.type(w.target[0]);
+  w.advance(3900);
+  assert.equal(w.count('timeout'), 0, 'each letter of a word gets its own 4 s');
   w.advance(200);
   assert.equal(w.count('timeout'), 1);
+});
+
+test('easy never times out or falls, and old pace names map onto the difficulties', () => {
+  const g = game();
+  g.start({ pace: 'easy' });
+  g.advance(60000);
+  for (let i = 0; i < 5; i++) g.type(g.target === 'q' ? 'w' : 'q');
+  assert.equal(g.count('timeout'), 0);
+  assert.equal(g.jumping, false);
+  assert.equal(g.count('key'), 5);
+  for (const [old, now] of [['relaxed', 'easy'], ['steady', 'medium'], ['speedy', 'hard'], ['falls', 'medium'], ['nonsense', 'easy']]) {
+    const o = game();
+    o.start({ pace: old });
+    assert.equal(o.run('pace'), now);
+  }
 });
 
 test('reduced motion shortens the jump without changing what is measured', () => {

@@ -56,8 +56,8 @@ async function ticketFor(c) {
 }
 
 // ---- event batches -------------------------------------------------------------
-function session(settings = { letterSet: 'all', pace: 'relaxed', scope: 'full' }) {
-  return { id: crypto.randomUUID(), ...settings, hints: settings.pace === 'relaxed', gameVersion: 'test', measurementVersion: 1, startedAt: Date.now() - 120000 };
+function session(settings = { letterSet: 'all', pace: 'easy', scope: 'full' }) {
+  return { id: crypto.randomUUID(), ...settings, hints: settings.pace === 'easy', gameVersion: 'test', measurementVersion: 1, startedAt: Date.now() - 120000 };
 }
 // seq/t-stamped events from a compact list of [type, data].
 function events(list, seq0 = 0, t0 = 0) {
@@ -85,19 +85,19 @@ it('a teacher creates a classroom with Letter Leaper assigned and PINs issued', 
   teacherAC = await teacher(teacherA.email, PIN_A);
   const r = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: {
     action: 'create-class', orgId: orgA.id, name: `Typing ${tag}`, band: 'YOUTH', students: 'Ann T\nBo T',
-    settings: { letterSet: 'home', pace: 'steady', scope: 'full' },
+    settings: { letterSet: 'home', pace: 'medium', scope: 'full' },
   } });
   assert.equal(r.status, 200, r.text);
   klass = await prisma.class.findUnique({ where: { id: r.json.classId }, include: { roster: { include: { learner: true } }, typingAssignment: true, modules: { include: { module: true } } } });
   assert.equal(klass.minAuthTier, 1);
   assert.equal(klass.modules[0].module.title, 'Letter Leaper: Moonbound');
-  assert.equal(klass.typingAssignment.pace, 'steady');
+  assert.equal(klass.typingAssignment.pace, 'medium');
   assert.ok(klass.roster.every((r) => /^\d{4}$/.test(r.learner.pin)));
   ann = klass.roster.find((r) => r.learner.displayName === 'Ann T').learner;
   bo = klass.roster.find((r) => r.learner.displayName === 'Bo T').learner;
   // Another org's instructor cannot create classes in org A.
   const other = await teacher(teacherB.email, PIN_B);
-  const denied = await other.call('/api/instruct/typing', { method: 'POST', body: { action: 'create-class', orgId: orgA.id, name: 'x', band: 'YOUTH', students: 'X Y', settings: { letterSet: 'all', pace: 'relaxed', scope: 'full' } } });
+  const denied = await other.call('/api/instruct/typing', { method: 'POST', body: { action: 'create-class', orgId: orgA.id, name: 'x', band: 'YOUTH', students: 'X Y', settings: { letterSet: 'all', pace: 'easy', scope: 'full' } } });
   assert.equal(denied.status, 403);
 });
 
@@ -106,14 +106,18 @@ it('students sign in with PINs and receive a practice ticket with the teacher se
   boC = await student(klass.classCode, bo.id, bo.pin);
   const cfgA = await ticketFor(annC);
   const cfgB = await ticketFor(boC);
-  assert.deepEqual(cfgA.settings, { letterSet: 'home', pace: 'steady', scope: 'full' });
+  assert.deepEqual(cfgA.settings, { letterSet: 'home', pace: 'medium', scope: 'full' });
   assert.notEqual(cfgA.k, cfgB.k);
   annTicket = cfgA.ticket; boTicket = cfgB.ticket;
+  // Settings saved under the old pace names play at the matching difficulty.
+  await prisma.typingAssignment.update({ where: { classId: klass.id }, data: { pace: 'steady' } });
+  assert.equal((await ticketFor(annC)).settings.pace, 'medium');
+  await prisma.typingAssignment.update({ where: { classId: klass.id }, data: { pace: 'medium' } });
 });
 
 let annSession, annEvents;
 it('two students practise without their records mixing; retries do not duplicate', async () => {
-  annSession = session({ letterSet: 'home', pace: 'steady', scope: 'full' });
+  annSession = session({ letterSet: 'home', pace: 'medium', scope: 'full' });
   annEvents = events([
     ['session_start', { leap: 0, resumed: false }],
     ['target', { target: 'f', kind: 'letter', leap: 1 }],
@@ -137,7 +141,7 @@ it('two students practise without their records mixing; retries do not duplicate
   const rest = await upload(annC, batch(annTicket, annSession, annEvents.slice(5)));
   assert.deepEqual([rest.status, rest.json.accepted, rest.json.duplicates], [200, 5, 2]);
 
-  const boSession = session({ letterSet: 'home', pace: 'steady', scope: 'full' });
+  const boSession = session({ letterSet: 'home', pace: 'medium', scope: 'full' });
   const boRes = await upload(boC, batch(boTicket, boSession, events([
     ['session_start', { leap: 0, resumed: false }],
     ['target', { target: 'a', kind: 'letter', leap: 1 }],
@@ -195,7 +199,7 @@ it('the teacher sees partial sessions; other teachers and guests see nothing', a
     assert.equal(r.status, 404, `other teacher: ${path}`);
     assert.doesNotMatch(r.text, /Ann T/);
   }
-  for (const action of [{ action: 'settings', settings: { letterSet: 'all', pace: 'relaxed', scope: 'full' } }, { action: 'enable-pins' }, { action: 'add-students', students: 'Eve X' }]) {
+  for (const action of [{ action: 'settings', settings: { letterSet: 'all', pace: 'easy', scope: 'full' } }, { action: 'enable-pins' }, { action: 'add-students', students: 'Eve X' }]) {
     assert.equal((await other.call('/api/instruct/typing', { method: 'POST', body: { classId: klass.id, ...action } })).status, 404);
   }
   const guest = client();
@@ -256,12 +260,12 @@ it('a learner on two classes keeps separate queues; tickets never cross classes'
   const inSecond = await ticketFor(inSecondC);
   assert.notEqual(inFirst.k, inSecond.k, 'one device queue per learner and class');
   // Practice queued in the first class can't be uploaded while signed into the second.
-  const r = await upload(inSecondC, batch(inFirst.ticket, session({ letterSet: 'home', pace: 'steady', scope: 'full' }), events([['session_start', { leap: 0, resumed: false }]])));
+  const r = await upload(inSecondC, batch(inFirst.ticket, session({ letterSet: 'home', pace: 'medium', scope: 'full' }), events([['session_start', { leap: 0, resumed: false }]])));
   assert.deepEqual([r.status, r.json.code], [409, 'other-learner']);
 });
 
 it('a resumed session reports its real last-activity time, not start + session clock', async () => {
-  const s = { ...session({ letterSet: 'home', pace: 'steady', scope: 'full' }), startedAt: Date.now() - 4 * 3600_000 };
+  const s = { ...session({ letterSet: 'home', pace: 'medium', scope: 'full' }), startedAt: Date.now() - 4 * 3600_000 };
   const early = events([['session_start', { leap: 0, resumed: false }], ['target', { target: 'f', kind: 'letter', leap: 1 }]]).map((e) => ({ ...e, at: s.startedAt + e.t }));
   assert.equal((await upload(annC, batch(annTicket, s, early))).status, 200);
   // Resumed four hours later: the session clock continues (t is small), the wall clock doesn't.
@@ -309,7 +313,7 @@ async function cfgOf(c) {
 
 it('name-only players get the teacher settings but no tracking credentials', async () => {
   const open = await prisma.class.create({ data: { orgId: orgA.id, name: `Words ${tag}`, classCode: `WRD-${tag}`.toUpperCase(), minAuthTier: 0 } });
-  const set = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'settings', settings: { letterSet: 'top', pace: 'speedy', scope: 'words' } } });
+  const set = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'settings', settings: { letterSet: 'top', pace: 'hard', scope: 'words' } } });
   assert.equal(set.status, 200, set.text);
   const reg = client();
   assert.equal((await reg.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Eli Words', create: true } })).status, 200);
@@ -317,16 +321,16 @@ it('name-only players get the teacher settings but no tracking credentials', asy
   assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Eli Words' } })).status, 200);
 
   const nameOnly = await cfgOf(byName);
-  assert.deepEqual(nameOnly.cfg, { settings: { letterSet: 'top', pace: 'speedy', scope: 'words' } }, 'settings only: no ticket, key, or resume');
+  assert.deepEqual(nameOnly.cfg, { settings: { letterSet: 'top', pace: 'hard', scope: 'words' } }, 'settings only: no ticket, key, or resume');
   assert.match(nameOnly.page.text, /Words to the stars \(50\)/);
   assert.match(nameOnly.page.text, /set by your teacher/);
   assert.match(nameOnly.page.text, /Sign in with your PIN to see your saved progress/);
 
   const verified = await cfgOf(reg);
-  assert.deepEqual(verified.cfg.settings, { letterSet: 'top', pace: 'speedy', scope: 'words' });
+  assert.deepEqual(verified.cfg.settings, { letterSet: 'top', pace: 'hard', scope: 'words' });
   assert.ok(verified.cfg.ticket && verified.cfg.k, 'verified players keep recording');
   // The name-only player can't use the verified player's ticket either.
-  const r = await upload(byName, batch(verified.cfg.ticket, session({ letterSet: 'top', pace: 'speedy', scope: 'words' }), events([['session_start', { leap: 100, resumed: false }]])));
+  const r = await upload(byName, batch(verified.cfg.ticket, session({ letterSet: 'top', pace: 'hard', scope: 'words' }), events([['session_start', { leap: 100, resumed: false }]])));
   assert.equal(r.status, 403);
 });
 
@@ -340,15 +344,15 @@ it('classes without teacher settings let players choose (no config for name-only
   assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: free.classCode, name: 'Fay Free' } })).status, 200);
   const nameOnly = await cfgOf(byName);
   assert.equal(nameOnly.cfg, null, 'unchanged from before: the game alone, players choose');
-  assert.match(nameOnly.page.text, /Choose your letters and pace in the game/);
+  assert.match(nameOnly.page.text, /Choose your letters and difficulty in the game/);
   const verified = await cfgOf(reg);
   assert.equal(verified.cfg.settings, null);
   assert.ok(verified.cfg.ticket);
   // A free-choice session records what was actually played.
-  const s = session({ letterSet: 'bottom', pace: 'steady', scope: 'full' });
+  const s = session({ letterSet: 'bottom', pace: 'medium', scope: 'full' });
   assert.equal((await upload(reg, batch(verified.cfg.ticket, s, events([['session_start', { leap: 0, resumed: false }]])))).status, 200);
   const row = await prisma.typingSession.findUnique({ where: { id: s.id } });
-  assert.deepEqual([row.letterSet, row.pace], ['bottom', 'steady']);
+  assert.deepEqual([row.letterSet, row.pace], ['bottom', 'medium']);
 });
 
 it('org wipes (used by every seed) still work once typing data exists', async () => {

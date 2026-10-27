@@ -5,7 +5,7 @@ Letter Leaper's default scene is drawn with three.js
 The rules (`core.js`), the HTML around the game (`ui.js`), classroom tracking
 (`tracker.js`), the leaderboard and teacher settings are unchanged. That covers
 the 100 letter leaps to the moon, the 50 word leaps to the stars, the six
-environments, the paces, the practice rows and the letter case.
+environments, the difficulties, the practice rows and the letter case.
 
 ## How it loads
 
@@ -52,7 +52,7 @@ way as Phaser. The import map in `index.html` points `three` at it.
   - The moon and the stars play Celebrate.
 - **Target card:** HTML positioned over the next platform. It shows the
   letter or word in the chosen case, with typed letters marked, and a timer
-  bar for the steady and speedy paces. It's `aria-hidden`; the keyboard
+  bar on medium and hard. It's `aria-hidden`; the keyboard
   panel's prompt stays the accessible one.
 - **Framing:** at the intro, Milo stands beside the welcome text; on narrow
   screens he stands at the bottom. During milestones he moves clear of the
@@ -99,52 +99,51 @@ drop and the Phaser fallback exist for slower devices.
 
 The earlier React prototype route, `/play/letter-leaper-3d`, now redirects to `/play/typing`.
 
-## Falling platforms
+## Difficulty and falling platforms
 
-An opt-in rule set, active only with `?falls=1` and the 3D scene. The default
-game and teacher practice settings are unchanged.
+The pace setting is a difficulty: **easy**, **medium** or **hard**
+(`PACE_RULES` in `core.js`, `PACES` in `lib/typing-events.ts`). It applies in
+every renderer; only the 3D scene draws the fall itself (the 2D scenes keep
+Milo on his platform and show the message).
 
-- **Where it's offered:**
-  - Classes of the teachers listed in `lib/class-features.ts` get a
-    **🐒 Letter Leaper** button in the learner dashboard header. That covers
-    every class in their home org or an org they have console access to:
-    Ms. Pamela Smith's Windsor School, and Crachad Laing's camp, KCSB and the
-    orgs he oversees.
-  - The button shows only in classes that have the Letter Leaper module.
-    Teachers add it from the class's Typing page in the console.
-  - The button opens `/play/letter-leaper?falls=1`. The server honours
-    `?falls=1` only for those classes.
-  - The teacher's letters and scope still apply. The pace becomes `falls`.
-- **Recorded practice:** verified sign-ins are saved as their own practice,
-  `pace: "falls"` with hints on (`SESSION_PACES` in `lib/typing-events.ts`).
-  - It isn't a teacher setting, and teacher reports label it "Falling platforms · 7 s".
-  - It's compared only with other falls sessions.
-  - It resumes only from the falls page, and paced climbs never resume into it.
-- **Leaderboard:** finished falls climbs aren't posted to the paced
-  leaderboards. The game still reads the class board as usual.
-- **Public play:** `/games/letter-leaper/index.html?mode=public&falls=1`.
-  Nothing is saved there.
+| | Time per letter | Falls on | Hint (next key lit) |
+|---|---|---|---|
+| Easy | none | never | yes |
+| Medium | 8 s | the deadline, or the 3rd wrong letter on a target | no |
+| Hard | 4 s | the deadline, or the 1st wrong letter | no |
 
-- **Deadline:** each letter must be typed within 7 seconds of typing time. In
-  a word, each letter gets its own 7 seconds.
+- **Settings:** teachers choose the difficulty on the class's Typing page;
+  otherwise students choose it in the game. Settings saved under the older
+  names read as relaxed → easy, steady → medium, speedy → hard.
+- **Recorded practice and leaderboards:** each difficulty is its own practice
+  and leaderboard. Older sessions keep their labels in reports; relaxed
+  sessions and climbs count as easy (same rules). Steady and speedy climbs
+  (timed, no falls) are no longer ranked.
+- **Header link:** classes of the teachers in `lib/class-features.ts` get a
+  **🐒 Letter Leaper** button in the learner dashboard header, opening
+  `/play/letter-leaper` at the class's settings.
+
+- **Deadline:** each letter must be typed within the difficulty's time,
+  counted in typing time. In a word, each letter gets its own time.
   - The clock is `core.js`'s active clock, the same one the rules and the
     countdown read (`deadlineLeft()`). It runs only while Milo is ready and
     input is accepted, never while paused, in a hidden tab, or during a leap,
     fall or recovery.
-- **Warning:** after 5 seconds the platform wobbles, more strongly over the
-  last 2 seconds. The card shows a countdown badge, turning orange and then
+- **Warning:** over the last 2 seconds the platform wobbles. The card shows a countdown badge, turning orange and then
   red, with an orange-to-red ring around Milo's platform. A text message
   ("Quick — the platform is wobbling!") means no sound is needed. In calm
   motion there's no wobble: only the outline, ring and countdown.
-- **At 7 seconds:** the platform drops with Milo. This is recorded once as a
-  `timeout` (not a keystroke). An answer arriving at or after 7 seconds is a
+- **At the deadline:** the platform drops with Milo. This is recorded once as a
+  `timeout` (not a keystroke). An answer arriving at or after the deadline is a
   timeout.
-- **Wrong letter:** one incorrect `key` attempt. Milo jumps, falls short and
-  drops out of view.
+- **Wrong letters:** each is one incorrect `key` attempt. On medium the first
+  two are ordinary misses ("One more miss and the platform falls!" after the
+  second); the third makes Milo jump, fall short and drop out of view. On hard
+  the first does. Misses count per target.
 - **During any fall:** further keys are ignored (`busy`), and nothing advances.
 - **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back on a restored
   platform for the same leap with "Try again!" or "A little quicker this time!".
-  A fresh target appears and its 7 seconds start then.
+  A fresh target appears and its time starts then.
 - **Tracking:** no new event types. A wrong letter is one `key` with `ok: false`,
   and the deadline is one `timeout`. Falls and recoveries are view events only.
 

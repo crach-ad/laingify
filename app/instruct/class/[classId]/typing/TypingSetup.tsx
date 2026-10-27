@@ -32,7 +32,7 @@ export function SettingsFields({ value, onChange }: { value: Settings; onChange:
     <div className="grid gap-3 sm:grid-cols-3">
       {field("scope", "Practice", [["full", "Full · 150 leaps"], ["letters", "Letters · 100"], ["words", "Words · 50"]])}
       {field("letterSet", "Letters", [["all", "All letters"], ["home", "Home row"], ["top", "Top row"], ["bottom", "Bottom row"]])}
-      {field("pace", "Pace", [["relaxed", "Relaxed + hints"], ["steady", "Timed · 8 s"], ["speedy", "Timed · 4 s"]])}
+      {field("pace", "Difficulty", [["easy", "Easy · hints, no falls"], ["medium", "Medium · 8 s or 3 misses"], ["hard", "Hard · 4 s or 1 miss"]])}
     </div>
   );
 }
@@ -93,8 +93,8 @@ export default function TypingSetup(props: {
         <p className="muted mt-2 text-xs">
           {props.settingsSaved
             ? "Every student sees these settings locked in the game, whether or not their practice is being recorded."
-            : "Not set yet — students choose their own letters and pace. Save to lock these for everyone."}{" "}
-          Relaxed pace lights up the next key (the hint).
+            : "Not set yet — students choose their own letters and difficulty. Save to lock these for everyone."}{" "}
+          Easy lights up the next key (the hint) and platforms never fall. On medium and hard, Milo falls when time runs out or after too many wrong letters, then tries the same leap again.
         </p>
         <button disabled={!!busy} onClick={() => run("settings", { action: "settings", settings }, "Settings saved.")} className="btn-primary mt-3 h-10 px-4 text-sm">
           {busy === "settings" ? "Saving…" : "Save settings"}
