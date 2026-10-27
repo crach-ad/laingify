@@ -14,8 +14,9 @@
 import { PrismaClient } from "@prisma/client";
 import { wipeOrg } from "./org-wipe.mjs";
 import { moduleWriter, syncClassModules, checkCheckpoints } from "./seed-lib.mjs";
-import { YEARS, STRAND_ORDER } from "./kcsb/strands.mjs";
+import { YEARS, STRAND_ORDER, ARDUINO_YEARS } from "./kcsb/strands.mjs";
 import { createLetterLeaperModule } from "./letter-leaper-module.mjs";
+import { createArduinoModules } from "./arduino-modules.mjs";
 
 const prisma = new PrismaClient();
 const ORG_NAME = "KCSB Computing";
@@ -48,11 +49,13 @@ async function main() {
     org = await prisma.org.create({ data: { name: ORG_NAME, context: "community" } });
   }
   const createModule = moduleWriter(prisma, org, UPDATE);
+  const projectModule = ({ blocks, criteria, ...data }) =>
+    createModule({ ...data, contentJson: JSON.stringify(blocks), criteria: { create: criteria } });
   // Letter Leaper (typing practice) is every class's first module, as in Windsor.
-  const letterLeaper = await createLetterLeaperModule(
-    ({ blocks, criteria, ...data }) => createModule({ ...data, contentJson: JSON.stringify(blocks), criteria: { create: criteria } }),
-    { teacher: "Coach Crachad" },
-  );
+  const letterLeaper = await createLetterLeaperModule(projectModule, { teacher: "Coach Crachad" });
+  // The Arduino track: written (and its sketches compiled) once, only if a selected year uses it.
+  let arduino = null;
+  const arduinoModules = async () => (arduino ??= await createArduinoModules(projectModule));
 
   for (const year of selected) {
     let defs, toolbeltModules;
@@ -82,6 +85,7 @@ async function main() {
     console.log(`\n${year.name} (${year.code}, ${year.band})`);
     const modules = [letterLeaper];
     for (const def of orderedDefs) modules.push(await createModule(def));
+    if (ARDUINO_YEARS.includes(year.key)) modules.push(...(await arduinoModules()));
     await checkCheckpoints(prisma, modules);
 
     let klass = await prisma.class.findFirst({ where: { orgId: org.id, classCode: year.code } });
