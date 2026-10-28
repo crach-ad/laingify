@@ -13,6 +13,7 @@ Signature pedagogy: project-based, build-first; Learn → Build → Reflect → 
 | Strand / program component (CT, P, MD, DC, CS, TC, SW, DW) | **`Module.topic`** — 8 topic cards on every learner dashboard | same 8 topic names in every year → consistent spiral |
 | Cell in the grid (strand × year) | **one project `Module`** — 72 total | title must be unique per org (seed upserts by title) → titles carry the year, e.g. `Y3 · Break It Down` |
 | "Toolbelt escalation" row | not a module — it's the tool each year's P / CS modules are built on | Bee-Bot → ScratchJr → Scratch → micro:bit → MakeCode Arcade → Python/Tinkercad → Python/Arduino/v0 |
+| Programmable Electronics (Y4–Y8) | **toolbelt modules** (`toolbeltModules`, `leadsTo: STRAND.P`) — a 9th topic card, seeded just before each year's P module | IgniteHer's project spine from `prisma/electronics-modules.mjs`, titles prefixed per year (`Y7 · First Blink`). Y4–Y6: micro:bit track (8). Y7–Y8: Arduino + micro:bit (16), with the board picker |
 | Weekly rhythm Learn → Build → Reflect → Share | block `kind: "learn"` / `"build"` text cards → photo/audio **checkpoints** → **wrap-up** → portfolio/badge | already how every Abaco module is written |
 
 ### Classes

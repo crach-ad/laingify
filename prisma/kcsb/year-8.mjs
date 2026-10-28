@@ -9,6 +9,7 @@
 
 import { block, photoCriterion, audioCriterion, wrapUpCriterion, wrapUpPrompt } from "../seed-lib.mjs";
 import { STRAND } from "./strands.mjs";
+import { electronicsModules } from "../electronics-modules.mjs";
 
 const Y = "Y8";
 
@@ -548,3 +549,10 @@ export const modules = [
     },
   },
 ];
+
+// Programmable Electronics — toolbelt: the shared project spine IgniteHer
+// teaches (both tracks, 16 projects), seeded right before the P module
+// (leadsTo: STRAND.P — see seed-kcsb.mjs) as its own topic card.
+export const toolbeltModules = (
+  await electronicsModules({ boards: ["arduino", "microbit"], title: (t) => `${Y} · ${t}` })
+).map((m) => ({ ...m, leadsTo: STRAND.P }));
