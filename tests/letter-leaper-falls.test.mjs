@@ -3,7 +3,7 @@
 // per-letter deadline on the active clock (medium 8 s, hard 4 s), wrong-letter
 // falls (medium on the third miss, hard on the first), timeout collapses,
 // recovery to the same leap, deadline races, pauses, and exactly-once
-// tracking. A fall sends Milo back to the bottom. Hard is words from the first
+// tracking. A fall sends Milo 10 leaps down. Hard is words from the first
 // leap, 2 → 5 letters. Easy never falls.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -76,7 +76,7 @@ test('a correct letter before the deadline leaps exactly once', () => {
   assert.ok(g.left > MEDIUM - 100 && g.left <= MEDIUM, `left ${g.left}`);
 });
 
-test('hard: one wrong letter is one incorrect attempt and a fall, then back to the bottom', () => {
+test('hard: one wrong letter is one incorrect attempt and a fall, then down to the bottom (fewer than 10 leaps up)', () => {
   const g = game();
   g.start();
   g.leap = () => { g.word(); g.advance(500); };
@@ -248,7 +248,7 @@ test('mixed run on hard: every failure recorded once, only correct answers advan
     else if (r === 1) { g.advance(800); g.type(g.wrong()); g.advance(FALL + 32); wrong++; }
     else { g.advance(HARD + 100); g.advance(FALL + 32); timeouts++; }
   }
-  assert.equal(g.steps, 0, 'the last failure sent Milo to the bottom');
+  assert.equal(g.steps, 0, 'never more than 10 leaps up, so every fall lands at the bottom');
   assert.equal(g.hooks('complete').length, ok);
   assert.equal(g.hooks('key').filter(([, d]) => !d.ok).length, wrong);
   assert.equal(g.hooks('timeout').length, timeouts);
@@ -271,22 +271,40 @@ test('a finished climb is posted to its own difficulty’s leaderboard', () => {
   }
 });
 
-test('medium: a fall partway up sends Milo back to leap 0; a words-only practice goes back to the moon', () => {
+test('medium: a fall sends Milo 10 leaps down, never below the bottom of the practice', () => {
   const g = game({ pace: 'medium' });
   g.start();
   for (let i = 0; i < 25; i++) { g.word(); g.advance(500); }
   assert.equal(g.steps, 25);
   g.advance(MEDIUM + 50);
   g.advance(FALL + 32);
-  assert.equal(g.steps, 0);
-  assert.equal(g.target.length, 1, 'medium keeps single letters below the moon');
-  assert.match(g.run('terrainFor(steps).id'), /jungle/);
+  assert.equal(g.steps, 15);
+  assert.deepEqual([g.views('recover')[0][1].from, g.views('recover')[0][1].leap], [25, 15]);
+  assert.equal(g.hooks('target').at(-1)[1].leap, 16);
+  assert.match(g.run('terrainFor(steps).id'), /jungle/, 'back below the mountains');
+  for (let i = 0; i < 3; i++) g.type(g.wrong());
+  g.advance(FALL + 32);
+  assert.equal(g.steps, 5);
+  g.advance(MEDIUM + 50);
+  g.advance(FALL + 32);
+  assert.equal(g.steps, 0, 'not below leap 0');
   const w = game({ pace: 'medium' });
   w.start({ scope: 'words' });
   for (let i = 0; i < 5; i++) { w.word(); w.advance(500); }
   w.type(w.wrong()); w.type(w.wrong()); w.type(w.wrong());
   w.advance(FALL + 32);
-  assert.equal(w.steps, 100);
+  assert.equal(w.steps, 100, 'a words-only practice never drops below the moon');
+});
+
+test('hard: a fall high up drops 10 leaps and the word length follows', () => {
+  const g = game();
+  g.start();
+  for (let i = 0; i < 80; i++) { if (g.run('state') === 'moon') g.run('continueStars()'); g.word(); g.advance(500); }
+  assert.equal(g.target.length, 4);
+  g.type(g.wrong());
+  g.advance(FALL + 32);
+  assert.equal(g.steps, 70);
+  assert.equal(g.target.length, 3);
 });
 
 test('hard: words from the first leap, ignoring the letter row, growing from 2 to 5 letters', () => {

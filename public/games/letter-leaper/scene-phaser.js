@@ -179,7 +179,7 @@
       const word = letterCase(target);
       if (c.word !== word) {
         for (const l of c.letters) l.destroy();
-        c.letters = [...word].map(() => this.add.text(0, -6, '', { fontFamily: '"Space Grotesk", sans-serif', fontSize: '40px', fontStyle: '700', color: '#1d2b26' }).setOrigin(0.5).setResolution(this.R));
+        c.letters = [...word].map(() => this.add.text(0, -6, '', { fontFamily: letterFont(), fontSize: '40px', fontStyle: '700', color: '#1d2b26' }).setOrigin(0.5).setResolution(this.R));
         c.add(c.letters);
         c.bg.setTexture(this.cardTex(word.length)).setScale(1 / this.R);
         c.word = word;
@@ -360,7 +360,7 @@
           if (!calm()) this.tweens.add({ targets: this.card, angle: { from: -4, to: 4 }, duration: 70, yoyo: true, repeat: 2, onComplete: () => this.card.setAngle(0) });
           break;
         // This scene doesn't draw the fall: Milo shrugs on his platform until the fresh target,
-        // then moves to the bottom if the fall sent him there.
+        // then moves down to where the fall sent him.
         case 'recover': if (d.from !== d.leap) { this.milo.reset(); this.layout(true); } break;
         case 'fall': this.play(d.kind === 'miss' ? 'mistake' : 'timeout'); if (d.kind === 'miss') this.milo.oops(); else this.milo.shrug(); break;
         case 'jump': {

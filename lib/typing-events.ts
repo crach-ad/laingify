@@ -9,7 +9,7 @@ export const LETTER_SETS = ["all", "home", "top", "bottom"] as const;
 // Difficulty (stored as "pace"). Easy: no falls, hints on. Medium: the platform
 // falls at 8 s per letter or on the third wrong letter. Hard: words from the
 // first leap (2 → 5 letters), 4 s, or one wrong letter. On medium and hard a
-// fall sends Milo back to the bottom. Older sessions keep the paces they were played at (relaxed,
+// fall sends Milo 10 leaps back down. Older sessions keep the paces they were played at (relaxed,
 // steady, speedy, falls); new sessions must use these.
 export const PACES = ["easy", "medium", "hard"] as const;
 // Older names, for settings saved before the difficulties (relaxed had the

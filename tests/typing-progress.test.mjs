@@ -320,13 +320,13 @@ test('difficulties: new sessions use easy/medium/hard (hints only on easy); olde
   assert.equal(paceOf('hard'), 'hard');
 });
 
-test('falls back to the bottom: the summary knows where Milo is now (for resume), and 5-letter words are valid', () => {
+test('falls move Milo down: the summary knows where Milo is now (for resume), and 5-letter words are valid', () => {
   const s = script().start();
   clean(s, 'a', 1); clean(s, 'b', 2);
   s.target('c', 3).timeout('c', 0, 4000).target('d', 1);
   const sum = summarizeSession(s.ev);
   assert.equal(sum.furthestLeap, 2, 'highest leap reached');
-  assert.equal(sum.leap, 0, 'back at the bottom');
+  assert.equal(sum.leap, 0, 'fell back down');
   const w = script().start().target('apple', 1).key('l', 'l', 3, 400).key('e', 'e', 4, 300).complete('apple', 1).ev;
   assert.equal(parseBatch(batch(w, { session: { ...batch(w).session, pace: 'hard', hints: false } }), now).ok, true);
   const tooLong = script().start().target('apples', 1).ev;

@@ -94,7 +94,7 @@ export default function TypingSetup(props: {
           {props.settingsSaved
             ? "Every student sees these settings locked in the game, whether or not their practice is being recorded."
             : "Not set yet — students choose their own letters and difficulty. Save to lock these for everyone."}{" "}
-          Easy lights up the next key (the hint) and platforms never fall. On medium and hard, Milo falls when time runs out or after too many wrong letters, and a fall sends him back to the bottom. Hard is words from the first leap (2 to 5 letters), so it ignores the letter row.
+          Easy lights up the next key (the hint) and platforms never fall. On medium and hard, Milo falls when time runs out or after too many wrong letters, and a fall sends him 10 leaps back down. Hard is words from the first leap (2 to 5 letters), so it ignores the letter row.
         </p>
         <button disabled={!!busy} onClick={() => run("settings", { action: "settings", settings }, "Settings saved.")} className="btn-primary mt-3 h-10 px-4 text-sm">
           {busy === "settings" ? "Saving…" : "Save settings"}
