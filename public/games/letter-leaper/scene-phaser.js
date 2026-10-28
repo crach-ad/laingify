@@ -359,7 +359,9 @@
           this.refreshCard();
           if (!calm()) this.tweens.add({ targets: this.card, angle: { from: -4, to: 4 }, duration: 70, yoyo: true, repeat: 2, onComplete: () => this.card.setAngle(0) });
           break;
-        // This scene doesn't draw the fall: Milo shrugs on his platform until the fresh target.
+        // This scene doesn't draw the fall: Milo shrugs on his platform until the fresh target,
+        // then moves to the bottom if the fall sent him there.
+        case 'recover': if (d.from !== d.leap) { this.milo.reset(); this.layout(true); } break;
         case 'fall': this.play(d.kind === 'miss' ? 'mistake' : 'timeout'); if (d.kind === 'miss') this.milo.oops(); else this.milo.shrug(); break;
         case 'jump': {
           this.play('takeoff');

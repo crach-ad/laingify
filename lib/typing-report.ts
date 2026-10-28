@@ -38,7 +38,7 @@ export type SessionRow = {
 export const PHASE_LABEL: Record<Phase, string> = { letter: "Letter practice", word: "Word practice" };
 export const SET_LABEL: Record<string, string> = { all: "All letters", home: "Home row", top: "Top row", bottom: "Bottom row" };
 export const PACE_LABEL: Record<string, string> = {
-  easy: "Easy (hints on, no falls)", medium: "Medium · falls at 8 s or 3 misses", hard: "Hard · falls at 4 s or 1 miss",
+  easy: "Easy (hints on, no falls)", medium: "Medium · falls at 8 s or 3 misses", hard: "Hard · words, falls at 4 s or 1 miss",
   // Paces played before the difficulties.
   relaxed: "Relaxed (hints on)", steady: "Steady · 8 s (older)", speedy: "Speedy · 4 s (older)", falls: "Falling platforms · 7 s (older)",
 };

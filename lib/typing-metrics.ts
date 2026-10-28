@@ -40,6 +40,9 @@ export type SessionSummary = {
   v: 1;
   phases: Record<Phase, PhaseStats>;
   furthestLeap: number;
+  // Where Milo is now (falls on medium and hard send him back to the bottom).
+  // Absent from summaries stored before falls reset the climb.
+  leap?: number;
   // Consecutive targets completed with no wrong key or timeout (as the game shows it).
   streak: number;
   bestStreak: number;
@@ -58,7 +61,7 @@ const emptyPhase = (): PhaseStats => ({
 
 export function summarizeSession(events: (EventData & { seq: number })[]): SessionSummary {
   const out: SessionSummary = {
-    v: 1, phases: { letter: emptyPhase(), word: emptyPhase() }, furthestLeap: 0, streak: 0, bestStreak: 0,
+    v: 1, phases: { letter: emptyPhase(), word: emptyPhase() }, furthestLeap: 0, leap: 0, streak: 0, bestStreak: 0,
     inputs: { kbd: 0, screen: 0 }, pauses: {}, connectionLost: 0, inconsistent: 0, endReason: null,
   };
   // The target on screen, and what has happened on it so far.
@@ -75,10 +78,12 @@ export function summarizeSession(events: (EventData & { seq: number })[]): Sessi
   for (const e of [...events].sort((a, b) => a.seq - b.seq)) {
     switch (e.type) {
       case "session_start":
+        out.leap = e.leap;
         out.furthestLeap = Math.max(out.furthestLeap, e.leap);
         break;
       case "target":
         cur = { target: e.target, phase: e.kind, leap: e.leap, erred: false, tries: 0, lastOk: null };
+        out.leap = e.leap - 1; // the target is for the next leap
         out.phases[e.kind].targetsPresented++;
         break;
       case "key": {
@@ -123,6 +128,7 @@ export function summarizeSession(events: (EventData & { seq: number })[]): Sessi
         out.streak++;
         out.bestStreak = Math.max(out.bestStreak, out.streak);
         out.furthestLeap = Math.max(out.furthestLeap, e.leap);
+        out.leap = e.leap;
         cur = null;
         break;
       }
@@ -149,6 +155,7 @@ export function summarizeSession(events: (EventData & { seq: number })[]): Sessi
       case "end":
         out.endReason = e.reason;
         out.furthestLeap = Math.max(out.furthestLeap, e.leap);
+        out.leap = e.leap;
         break;
     }
   }

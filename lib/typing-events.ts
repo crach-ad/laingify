@@ -7,8 +7,9 @@
 export const MEASUREMENT_VERSION = 1;
 export const LETTER_SETS = ["all", "home", "top", "bottom"] as const;
 // Difficulty (stored as "pace"). Easy: no falls, hints on. Medium: the platform
-// falls at 8 s per letter or on the third wrong letter. Hard: 4 s, or one
-// wrong letter. Older sessions keep the paces they were played at (relaxed,
+// falls at 8 s per letter or on the third wrong letter. Hard: words from the
+// first leap (2 → 5 letters), 4 s, or one wrong letter. On medium and hard a
+// fall sends Milo back to the bottom. Older sessions keep the paces they were played at (relaxed,
 // steady, speedy, falls); new sessions must use these.
 export const PACES = ["easy", "medium", "hard"] as const;
 // Older names, for settings saved before the difficulties (relaxed had the
@@ -78,7 +79,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isInt = (v: unknown, min: number, max: number): v is number =>
   Number.isSafeInteger(v) && (v as number) >= min && (v as number) <= max;
 const isLetter = (v: unknown): v is string => typeof v === "string" && /^[a-z]$/.test(v);
-const isTarget = (v: unknown): v is string => typeof v === "string" && /^[a-z]{1,3}$/.test(v);
+// Up to 5 letters: hard climbs go up to 5-letter words.
+const isTarget = (v: unknown): v is string => typeof v === "string" && /^[a-z]{1,5}$/.test(v);
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const oneOf = <T extends string>(v: unknown, list: readonly T[]): v is T => typeof v === "string" && list.includes(v as T);
 
@@ -95,7 +97,7 @@ export function parseEventData(raw: Record<string, unknown>): EventData | null {
         ? { type: "target", target: raw.target, kind: raw.kind, leap: raw.leap }
         : null;
     case "key":
-      return isLetter(raw.exp) && isLetter(raw.got) && isInt(raw.pos, 0, 2) && raw.ok === (raw.exp === raw.got) &&
+      return isLetter(raw.exp) && isLetter(raw.got) && isInt(raw.pos, 0, 4) && raw.ok === (raw.exp === raw.got) &&
         isInt(raw.rt, 0, MAX_RT_MS) && oneOf(raw.src, ["kbd", "screen"] as const)
         ? { type: "key", exp: raw.exp, got: raw.got, pos: raw.pos, ok: raw.ok as boolean, rt: raw.rt, src: raw.src }
         : null;

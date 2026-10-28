@@ -11,9 +11,13 @@
 
 const sets = { all: 'abcdefghijklmnopqrstuvwxyz', home: 'asdfghjkl', top: 'qwertyuiop', bottom: 'zxcvbnm' };
 const MOON = 100, TOTAL = 150, WORDS3_FROM = 120;
-const GAME_VERSION = '2026.10.3';
+const GAME_VERSION = '2026.10.4';
 const words2 = ['an','at','as','am','be','by','do','go','he','hi','if','in','is','it','me','my','no','of','on','or','so','to','up','us','we'];
 const words3 = ['ant','bat','bed','bee','big','box','bug','bus','car','cat','cow','cup','dog','dot','dry','egg','fan','far','fig','fin','fit','fly','fox','fun','hat','hen','hop','hot','ice','jam','jar','jet','joy','key','leg','lip','log','map','mat','mix','mud','net','new','nut','old','owl','pan','pen','pet','pig','pot','red','row','run','sad','sea','sky','sit','six','sun','tap','tea','ten','tin','top','toy','two','van','vet','wet','win','yes','zip','zoo'];
+// Hard climbs: words from the first leap, 2 → 3 → 4 → 5 letters (wordLength()).
+const words4 = ['ball','bird','blue','boat','book','cake','camp','coat','cold','corn','desk','duck','farm','fish','flag','frog','gift','glow','goat','hand','help','hill','home','jump','king','kite','lamp','leaf','lion','milk','moon','nest','park','pink','play','quiz','rain','ring','rock','sand','ship','shoe','sing','snow','soup','star','swim','tree','vest','wind','wolf','word','yard','zoom'];
+const words5 = ['apple','beach','bread','brick','chair','cloud','dream','earth','extra','field','flame','frost','fruit','grape','grass','happy','horse','house','jelly','juice','lemon','light','magic','mango','music','night','ocean','paint','party','pizza','plant','queen','quick','river','robot','salad','sheep','shell','smile','snack','space','spoon','storm','sunny','table','tiger','toast','train','water','waves','whale','yummy','zebra'];
+const WORDS = { 2: words2, 3: words3, 4: words4, 5: words5 };
 // Six environments of the climb. `at` = leaps landed when the environment
 // begins (so leaps 1–20 are the jungle). Ids are the stage ids the classroom
 // backend accepts, so they can't be renamed: "moon" is the near-space
@@ -37,8 +41,9 @@ const jumpMs = () => (reducedMotion() ? 80 : 410);
 // hard: each letter must be typed within `deadline` ms of typing time,
 // measured on the active clock (so pauses, hidden tabs, leaps, falls, and
 // recovery never count), and the `misses`-th wrong letter on a target is a
-// fall. A fall brings Milo back to the same leap with a fresh target —
-// progress is never lost and a fall never awards a leap.
+// fall. A fall sends Milo back to the bottom of the climb (fallTo: leap 0,
+// or the moon for a words-only practice) with a fresh target; it never
+// awards a leap. Hard is also words all the way (wordLength()).
 const PACE_RULES = {
   easy: { deadline: Infinity, misses: Infinity },
   medium: { deadline: 8000, misses: 3 },
@@ -52,7 +57,7 @@ const fallMs = () => (reducedMotion() ? 700 : 1500);
 let typed = 0, correct = 0;
 let state = 'intro', steps = 0, attempts = 0, streak = 0, bestStreak = 0, target = 'f', lastLetter = '', set = 'all', pace = 'easy',
   jumpStart = 0, jumpDuration = 410, jumping = false, elapsed = 0, lastFrame = performance.now(), scope = 'full', pendingResume = null,
-  falls = false, fallDeadline = Infinity, deadlineAt = Infinity, fallKind = null, missesHere = 0;
+  falls = false, fallDeadline = Infinity, deadlineAt = Infinity, fallKind = null, fallTo = 0, missesHere = 0;
 function accuracy() { return attempts ? Math.round(correct / attempts * 100) : 0; }
 
 // ---- tracking hooks (contract unchanged; consumed by tracker.js) -------------
@@ -74,8 +79,19 @@ function emit(type, detail = {}) { for (const v of views) try { v(type, detail);
 // Settings come from the HTML form; ui.js replaces this.
 let readSettings = () => ({ set: 'all', pace: 'easy' });
 
+// The bottom of this climb and its finish line.
+const firstLeap = () => (scope === 'words' ? MOON : 0);
+const lastLeap = () => (scope === 'letters' ? MOON : TOTAL);
+// Word length for the target after `at` leaps (0 = single letters). Usual
+// climbs: letters to the moon, then 2- and 3-letter words. Hard: words from
+// the first leap, 2 → 5 letters in four equal parts of the climb.
+function wordLength(at = steps) {
+  if (pace === 'hard') return 2 + Math.min(3, Math.floor((at - firstLeap()) / (lastLeap() - firstLeap()) * 4));
+  return at < MOON ? 0 : at < WORDS3_FROM ? 2 : 3;
+}
 function pick() {
-  const pool = steps < MOON ? sets[set].split('') : steps < WORDS3_FROM ? words2 : words3;
+  const n = wordLength();
+  const pool = n ? WORDS[n] : sets[set].split('');
   const choices = pool.filter(w => w !== lastLetter);
   target = choices[Math.floor(Math.random() * choices.length)];
   lastLetter = target;
@@ -95,7 +111,7 @@ function start() {
   fallKind = null; deadlineAt = Infinity;
   const r = pendingResume;
   pendingResume = null;
-  steps = r ? r.leap : scope === 'words' ? MOON : 0;
+  steps = r ? r.leap : firstLeap();
   attempts = r ? r.attempts : 0; correct = r ? r.correct : 0; streak = r ? r.streak : 0; bestStreak = r ? r.bestStreak : 0;
   elapsed = r ? r.elapsed : 0; typed = 0;
   clock.active = r ? r.clocks.active : 0; clock.anim = r ? r.clocks.anim : 0; clock.pause = r ? r.clocks.pause : 0;
@@ -138,11 +154,12 @@ function input(key, src = 'kbd') {
 // as animation, never typing; recover() brings Milo back to the same leap.
 function startFall(kind, detail = {}) {
   fallKind = kind;
+  fallTo = firstLeap();
   typed = 0;
   jumping = true;
   jumpStart = performance.now();
   jumpDuration = fallMs();
-  emit('fall', { kind, leap: steps, duration: jumpDuration, ...detail });
+  emit('fall', { kind, leap: steps, to: fallTo, duration: jumpDuration, ...detail });
 }
 function collapse() {
   attempts++;
@@ -151,11 +168,12 @@ function collapse() {
   startFall('timeout', { target });
 }
 function recover() {
-  const kind = fallKind;
+  const kind = fallKind, from = steps;
   fallKind = null;
   jumping = false;
+  steps = fallTo; // back to the bottom
   pick(); // a fresh target; its time starts now that Milo is ready
-  emit('recover', { kind, leap: steps });
+  emit('recover', { kind, leap: steps, from });
 }
 // Ignored input is never an attempt; it's only counted by kind (ui.js decides the kind).
 function ignore(kind) { if (state === 'playing') hook('ignored', { kind }); }

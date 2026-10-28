@@ -36,7 +36,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/typing/session/
       lastT: last?.t ?? 0,
       // What the game shows, for resuming: its "attempts" include timeouts.
       resume: {
-        leap: s.summary.furthestLeap,
+        leap: s.summary.leap ?? s.summary.furthestLeap,
         correct: row.correct,
         attempts: row.attempts + row.timeouts,
         streak: s.summary.streak,

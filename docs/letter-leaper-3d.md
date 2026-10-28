@@ -112,6 +112,14 @@ Milo on his platform and show the message).
 | Medium | 8 s | the deadline, or the 3rd wrong letter on a target | no |
 | Hard | 4 s | the deadline, or the 1st wrong letter | no |
 
+- **A fall on medium or hard sends Milo back to the bottom**: leap 0, or the
+  moon (leap 100) for a words-only practice. Accuracy, attempts and time keep
+  counting; the climb's leaps start again.
+- **Hard is words all the way**, from the first leap, ignoring the letter row:
+  2-letter words for the first quarter of the climb, then 3, 4 and 5 letters
+  (`wordLength()` in `core.js`). Words-only and letters-only practices spread
+  the same ladder over their own leaps.
+
 - **Settings:** teachers choose the difficulty on the class's Typing page;
   otherwise students choose it in the game. Settings saved under the older
   names read as relaxed → easy, steady → medium, speedy → hard.
@@ -141,9 +149,12 @@ Milo on his platform and show the message).
   second); the third makes Milo jump, fall short and drop out of view. On hard
   the first does. Misses count per target.
 - **During any fall:** further keys are ignored (`busy`), and nothing advances.
-- **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back on a restored
-  platform for the same leap with "Try again!" or "A little quicker this time!".
-  A fresh target appears and its time starts then.
+- **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back at the bottom
+  with "Back to the bottom — try again!" (or "— a little quicker this time!").
+  If he was already there, it's just "Try again!". A fresh target appears and
+  its time starts then.
+- **Resume:** session summaries keep Milo's current leap (`summary.leap`) as
+  well as the furthest one, so a resumed climb starts where he is now.
 - **Tracking:** no new event types. A wrong letter is one `key` with `ok: false`,
   and the deadline is one `timeout`. Falls and recoveries are view events only.
 
