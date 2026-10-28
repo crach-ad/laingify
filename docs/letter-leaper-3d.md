@@ -129,8 +129,10 @@ Milo on his platform and show the message).
   sessions and climbs count as easy (same rules). Steady and speedy climbs
   (timed, no falls) are no longer ranked.
 - **Header link:** classes of the teachers in `lib/class-features.ts` get a
-  **🐒 Letter Leaper** button in the learner dashboard header, opening
-  `/play/letter-leaper` at the class's settings.
+  **🐒 Letter Leaper** button in the learner dashboard header. It goes to
+  `/play/letter-leaper/full`, which redirects straight to the game full page
+  with the class's settings and tracking (the same address as the embedded
+  game on `/play/letter-leaper`, built by `lib/letter-leaper-play.ts`).
 
 - **Deadline:** each letter must be typed within the difficulty's time,
   counted in typing time. In a word, each letter gets its own time.

@@ -1,47 +1,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireLearner } from "@/lib/learner";
-import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { issueTicket, learnerKey, practiceContext, teacherSettings } from "@/lib/typing-access";
-import { toSessionRow } from "@/lib/typing-data";
+import { practiceContext } from "@/lib/typing-access";
+import { letterLeaperPlay } from "@/lib/letter-leaper-play";
 import { phaseMetrics, poolPhases } from "@/lib/typing-metrics";
-import { PACE_LABEL, SCOPE_LABEL, SET_LABEL, resumableSession, sessionState } from "@/lib/typing-report";
-import { day, encodeCfg, num, pct } from "@/lib/typing-format";
+import { PACE_LABEL, SCOPE_LABEL, SET_LABEL, sessionState } from "@/lib/typing-report";
+import { day, num, pct } from "@/lib/typing-format";
 
 export const metadata = {
   title: "Letter Leaper — Moonbound | laingify",
   description: "Practice typing through six terrains, from the jungle to the moon and stars.",
 };
 
-// Class play: the teacher's practice settings, this learner's own recent
-// progress, and the game. Every player on the roster gets the teacher's
-// settings; only verified sign-ins (PIN, NFC tag, or the device they
-// registered on — see lib/session.ts) also get tracking credentials, so
-// name-only players follow the practice but nothing is recorded or shown.
+// Class play: the practice, recent progress and the game (lib/letter-leaper-play.ts).
+// The dashboard header skips this page and opens the game full page (./full).
 export default async function LetterLeaperPage() {
   await requireLearner();
   const ctx = await practiceContext(await getSession());
   if (!ctx) notFound();
-  const settings = await teacherSettings(ctx.classId);
-
-  // Progress is only shown to verified sign-ins: anyone can type a classmate's
-  // name in an open class.
-  const rows = !ctx.verified ? [] : (
-    await prisma.typingSession.findMany({
-      where: { learnerId: ctx.learnerId, classId: ctx.classId },
-      orderBy: { startedAt: "desc" },
-      take: 6,
-    })
-  ).map(toSessionRow);
-  const resumable = resumableSession(rows, settings);
-
-  // Practice configuration for everyone; tracking credentials only when verified.
-  const tracking = ctx.verified
-    ? { ticket: issueTicket({ l: ctx.learnerId, c: ctx.classId, m: ctx.moduleId }), k: learnerKey(ctx.learnerId, ctx.classId), resume: resumable?.id ?? null }
-    : {};
-  const cfg = settings || ctx.verified ? encodeCfg({ settings, ...tracking }) : null;
-  const src = `/games/letter-leaper/index.html${cfg ? `#cfg=${cfg}` : ""}`;
+  const { settings, rows, resumable, src } = await letterLeaperPlay(ctx);
 
   return (
     <main className="mx-auto w-full max-w-[1440px] flex-1 px-3 py-4 sm:px-6">
