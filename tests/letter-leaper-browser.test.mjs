@@ -41,7 +41,9 @@ async function joinAs(body) {
 async function openGame() {
   await go('/play/letter-leaper');
   const src = await ev("document.querySelector('iframe#game').getAttribute('src')");
-  await go(src);
+  // The dashboard header's link opens the same game, full page.
+  await go('/play/letter-leaper/full');
+  assert.equal(await ev('location.pathname + location.hash'), src);
   return src;
 }
 

@@ -86,13 +86,14 @@ export default async function Dashboard() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           {/* Class extra (lib/class-features.ts): Letter Leaper, one click from the header. */}
           {leaperLink && (
-            <Link
-              href="/play/letter-leaper"
+            // A plain link: the route redirects to the game's static page.
+            <a
+              href="/play/letter-leaper/full"
               className="btn-ghost flex h-9 items-center gap-2 whitespace-nowrap px-3.5 text-sm"
               title="Letter Leaper typing practice"
             >
               <span aria-hidden>🐒</span> Letter Leaper
-            </Link>
+            </a>
           )}
           <div className="flex items-center gap-2.5">
             {learner.photoUrl ? (
