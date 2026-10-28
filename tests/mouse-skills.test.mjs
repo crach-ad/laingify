@@ -33,7 +33,7 @@ test('distinguishes no evidence, practice and secure; averages successes only', 
 test('all 15 levels have usable targets and progressively longer challenges', () => {
   for (let level = 0; level < 15; level++) {
     const c = levelConfig(level);
-    assert.ok(c.size >= 46 && c.dropRadius >= 34 && c.goal >= 4 && c.goal <= 7);
+    assert.ok(c.size >= 42 && c.dropRadius >= 34 && c.goal >= 4 && c.goal <= 7);
     assert.ok(validRecord({ sessionId, kind: 'attempt', sequence: 1, attempt: { ...attempt, level } }));
   }
   assert.equal(summarize(Array(7).fill({ ...attempt, level: 14 }))[1].proficiency, 'Secure in this session');
@@ -52,4 +52,20 @@ test('leaderboard retains only each learner’s best session', () => {
     { learnerId: 'c', sessionId: '4', score: -1, completed: 0 },
   ]);
   assert.deepEqual(rows.map(r => r.learnerId), ['b', 'a']);
+});
+
+test('difficulty increases meaningfully across every stage', () => {
+  for (let i = 1; i < 15; i++) {
+    const before = levelConfig(i - 1), after = levelConfig(i);
+    assert.ok(after.size < before.size);
+    assert.ok(after.dwell > before.dwell);
+    assert.ok(after.doubleClickMs < before.doubleClickMs);
+    assert.ok(after.dropRadius < before.dropRadius);
+    assert.ok(after.decoys >= before.decoys);
+    assert.ok(after.waypoints >= before.waypoints);
+  }
+  assert.equal(levelConfig(0).decoys, 0);
+  assert.equal(levelConfig(14).decoys, 4);
+  assert.equal(levelConfig(6).waypoints, 1);
+  assert.equal(levelConfig(14).waypoints, 2);
 });

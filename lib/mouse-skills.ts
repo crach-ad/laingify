@@ -32,7 +32,18 @@ export function summarize(attempts: Attempt[], levelCount = LEVEL_COUNT) {
 
 export const LEVEL_COUNT = 15;
 export function levelConfig(level: number) {
-  return { size: Math.round(88 - level * 3), goal: 4 + Math.floor(level / 4), dwell: Math.round(450 + level * 29), dropRadius: 62 - level * 2 };
+  const band = Math.floor(level / 3);
+  return {
+    size: [96, 90, 84, 80, 76, 72, 68, 64, 60, 56, 52, 48, 46, 44, 42][level],
+    goal: 4 + Math.floor(level / 4),
+    dwell: 350 + level * 50,
+    dropRadius: 62 - level * 2,
+    doubleClickMs: 650 - level * 20,
+    decoys: band,
+    waypoints: level < 6 ? 0 : level < 12 ? 1 : 2,
+    ringRadius: 38 - Math.max(0, level - 6),
+    band: ['First steps', 'Spot the match', 'Steady control', 'Precision', 'Meadow master'][band],
+  };
 }
 // Score each skill/level once; additional retries cannot farm unlimited points.
 export function sessionScore(attempts: Attempt[]) {

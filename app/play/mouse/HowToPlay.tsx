@@ -2,11 +2,13 @@
 import { useEffect, useRef } from 'react';
 import styles from './mouse.module.css';
 import { MeadowIcon } from './MeadowArt';
+import { levelConfig } from '@/lib/mouse-skills';
 
 export const ACTIONS = ['Move & stop', 'Click', 'Double-click', 'Right-click', 'Drag & drop'];
 const HINTS = ['Rest on the butterfly.', 'One click on the flower.', 'Two quick clicks on the acorn.', 'Use the right mouse button.', 'Hold, move, then let go.'];
 
-export default function HowToPlay({ index, onClose }: { index: number; onClose: () => void }) {
+export default function HowToPlay({ index, level, onClose }: { index: number; level: number; onClose: () => void }) {
+  const config = levelConfig(level);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current;
@@ -16,7 +18,7 @@ export default function HowToPlay({ index, onClose }: { index: number; onClose: 
   function dismiss() { dialog.current?.close(); onClose(); }
   return <dialog ref={dialog} className={styles.lesson} aria-labelledby="mouse-lesson-title" aria-describedby="mouse-lesson-hint" onCancel={e => { e.preventDefault(); dismiss(); }}>
     <div className={styles.lessonBody}>
-      <h2 id="mouse-lesson-title">{ACTIONS[index]}</h2>
+      <h2 id="mouse-lesson-title">{ACTIONS[index]}</h2><span className={styles.lessonLevel}>Level {level + 1} · {config.band}</span>
       <div className={`${styles.demo} ${styles[`demo${index}`]}`} aria-hidden="true">
         <svg className={styles.mouseDiagram} viewBox="0 0 140 190">
           <rect x="12" y="5" width="116" height="175" rx="58" fill="#fffdf1" stroke="#294d3a" strokeWidth="5" />
@@ -33,7 +35,8 @@ export default function HowToPlay({ index, onClose }: { index: number; onClose: 
           {index > 0 && index < 4 && <span className={styles.tapCue}>{index === 2 ? '● ●' : '●'}</span>}
         </div>
       </div>
-      <p id="mouse-lesson-hint">{HINTS[index]}</p>
+      {index === 4 && config.waypoints > 0 ? <div className={styles.routeHint} aria-hidden="true"><span>🌻</span><b>→</b><i>1</i>{config.waypoints === 2 && <><b>→</b><i>2</i></>}<b>→</b><span>◎</span></div> : index !== 4 && config.decoys > 0 && <div className={styles.matchHint} aria-hidden="true"><span><MeadowIcon index={index} />✓</span><span><MeadowIcon index={(index + 1) % 5} />×</span></div>}
+      <p id="mouse-lesson-hint">{index === 4 && config.waypoints ? 'Drag through the numbered gates, then drop.' : index !== 4 && config.decoys > 0 ? `${HINTS[index]} Ignore the other pictures.` : HINTS[index]}{index === 2 && <small className={styles.timingHint}>Two clicks within {config.doubleClickMs / 1000} seconds.</small>}</p>
       <button autoFocus className={styles.primary} onClick={dismiss}>Let’s play <span aria-hidden="true">▶</span></button>
     </div>
   </dialog>;
