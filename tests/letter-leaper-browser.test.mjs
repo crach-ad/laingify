@@ -94,15 +94,15 @@ async function teacherClass(settings, { pins }) {
   return k;
 }
 
-it('a name-only player follows the teacher settings (words, speedy) and nothing is recorded', async () => {
-  const k = await teacherClass({ letterSet: 'top', pace: 'speedy', scope: 'words' }, { pins: false });
+it('a name-only player follows the teacher settings (words, hard) and nothing is recorded', async () => {
+  const k = await teacherClass({ letterSet: 'top', pace: 'hard', scope: 'words' }, { pins: false });
   await joinAs({ classCode: k.classCode, name: 'Kim Open', create: true });
   await joinAs({ classCode: k.classCode, name: 'Kim Open' }); // now name-only
   apiCalls.length = 0;
   const src = await openGame();
   assert.match(src, /#cfg=/);
   const setup = await ev("({pace:$('pace').value,paceLocked:$('pace').disabled,setHidden:$('letter-set').closest('label').hidden,note:document.querySelector('.track-note')?.textContent,tracked:document.body.classList.contains('tracked')})");
-  assert.deepEqual(setup, { pace: 'speedy', paceLocked: true, setHidden: true, note: 'Your teacher set this practice. Sign in with your PIN to save your progress.', tracked: false });
+  assert.deepEqual(setup, { pace: 'hard', paceLocked: true, setHidden: true, note: 'Your teacher set this practice. Sign in with your PIN to save your progress.', tracked: false });
   await ev("$('username').value='KimO'"); await ev("$('start').click()"); await sleep(1500);
   assert.equal(await ev('steps'), 100, 'word practice starts at the moon');
   assert.equal(await ev('target.length > 1'), true, 'targets are words');
@@ -114,7 +114,7 @@ it('a name-only player follows the teacher settings (words, speedy) and nothing 
 
 let klass, ivy;
 it('offline early exit: feedback shows that session’s own results, then uploads on reconnect', async () => {
-  klass = await teacherClass({ letterSet: 'home', pace: 'relaxed', scope: 'words' }, { pins: true });
+  klass = await teacherClass({ letterSet: 'home', pace: 'easy', scope: 'words' }, { pins: true });
   ivy = klass.roster.find((r) => r.learner.displayName === 'Ivy B').learner;
   await joinAs({ classCode: klass.classCode, learnerId: ivy.id, pin: ivy.pin });
   await openGame();
@@ -205,16 +205,16 @@ it('free choice (no teacher settings): a verified player records what they chose
   await joinAs({ classCode: free.classCode, name: 'Lia Free', create: true }); // registered here: verified
   await openGame();
   assert.equal(await ev("$('pace').disabled || $('letter-set').disabled"), false, 'players choose');
-  await ev("$('letter-set').value='top'; $('pace').value='steady'; $('start').click()"); await sleep(500);
+  await ev("$('letter-set').value='top'; $('pace').value='medium'; $('start').click()"); await sleep(500);
   await leap(); await leap();
   await sleep(4500); // let it upload
   await openGame(); // leave mid-climb and come back
   await sleep(800);
   const offer = await ev("({label:$('start').textContent,set:$('letter-set').value,pace:$('pace').value,locked:$('pace').disabled})");
   assert.match(offer.label, /Resume at leap 2/);
-  assert.deepEqual([offer.set, offer.pace, offer.locked], ['top', 'steady', true], 'locked to the climb being resumed');
+  assert.deepEqual([offer.set, offer.pace, offer.locked], ['top', 'medium', true], 'locked to the climb being resumed');
   await ev("$('start-fresh').click()");
   assert.equal(await ev("$('pace').disabled"), false, 'starting fresh restores the choice');
   const s = await prisma.typingSession.findFirst({ where: { classId: free.id }, orderBy: { startedAt: 'asc' } });
-  assert.deepEqual([s.letterSet, s.pace, s.furthestLeap], ['top', 'steady', 2]);
+  assert.deepEqual([s.letterSet, s.pace, s.furthestLeap], ['top', 'medium', 2]);
 });

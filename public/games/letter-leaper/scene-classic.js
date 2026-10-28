@@ -26,7 +26,9 @@
     return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${letterCase(c)}</span>`).join('');
   }
   function draw() {
-    const e = jumping ? (t => t * t * (3 - 2 * t))(jumpProgress()) : 0;
+    // Only a leap moves Milo; a fall (medium and hard) isn't drawn here.
+    const leaping = jumping && !fallKind;
+    const e = leaping ? (t => t * t * (3 - 2 * t))(jumpProgress()) : 0;
     const cam = (steps + e) * GAP;
     const world = $('world');
     world.replaceChildren();
@@ -43,22 +45,22 @@
         l.innerHTML = state === 'intro' ? 'a' : targetMarkup();
         if (state === 'playing' && !jumping) {
           const s = document.createElement('small');
-          s.textContent = pace === 'relaxed' ? 'TYPE TO LEAP' : Math.ceil(remaining / 1000) + ' SECONDS';
+          s.textContent = falls ? Math.ceil(deadlineLeft() / 1000) + ' SECONDS' : 'TYPE TO LEAP';
           l.append(s);
         }
         p.append(l);
       }
       world.append(p);
     }
-    const t = jumpProgress();
-    const x = jumping ? xFor(steps) + (xFor(steps + 1) - xFor(steps)) * e : xFor(steps);
-    const y = jumping ? yFor(steps, cam) + (yFor(steps + 1, cam) - yFor(steps, cam)) * e - Math.sin(t * Math.PI) * 110 : yFor(steps, cam);
+    const t = leaping ? jumpProgress() : 0;
+    const x = leaping ? xFor(steps) + (xFor(steps + 1) - xFor(steps)) * e : xFor(steps);
+    const y = leaping ? yFor(steps, cam) + (yFor(steps + 1, cam) - yFor(steps, cam)) * e - Math.sin(t * Math.PI) * 110 : yFor(steps, cam);
     $('monkey').style.left = x + 'px'; $('monkey').style.top = y + 'px';
   }
   views.push((type) => {
     if (type === 'typed') tone(true);
-    if (type === 'miss' || type === 'timeout') tone(false);
-    if (type === 'miss') { $('monkey').classList.remove('shake'); void $('monkey').offsetWidth; $('monkey').classList.add('shake'); }
+    if (type === 'miss' || type === 'fall') tone(false);
+    if (type === 'miss' || type === 'fall') { $('monkey').classList.remove('shake'); void $('monkey').offsetWidth; $('monkey').classList.add('shake'); }
     draw();
   });
   (function loop() { if (jumping) draw(); requestAnimationFrame(loop); })();

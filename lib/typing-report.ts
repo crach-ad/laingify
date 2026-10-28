@@ -4,6 +4,7 @@
 // deterministic (no AI) — every message is built from the numbers it cites.
 
 import { phaseMetrics, poolPhases, type Phase, type PhaseStats, type SessionSummary } from "./typing-metrics.ts";
+import { PACES } from "./typing-events.ts";
 
 // A session phase needs this many attempts to count toward trends.
 export const MIN_PHASE_ATTEMPTS = 20;
@@ -36,7 +37,13 @@ export type SessionRow = {
 
 export const PHASE_LABEL: Record<Phase, string> = { letter: "Letter practice", word: "Word practice" };
 export const SET_LABEL: Record<string, string> = { all: "All letters", home: "Home row", top: "Top row", bottom: "Bottom row" };
-export const PACE_LABEL: Record<string, string> = { relaxed: "Relaxed (hints on)", steady: "Steady · 8 s", speedy: "Speedy · 4 s", falls: "Falling platforms · 7 s" };
+export const PACE_LABEL: Record<string, string> = {
+  easy: "Easy (hints on, no falls)", medium: "Medium · falls at 8 s or 3 misses", hard: "Hard · falls at 4 s or 1 miss",
+  // Paces played before the difficulties.
+  relaxed: "Relaxed (hints on)", steady: "Steady · 8 s (older)", speedy: "Speedy · 4 s (older)", falls: "Falling platforms · 7 s (older)",
+};
+// Relaxed had exactly easy's rules, so their sessions compare with each other.
+const sameRules = (pace: string) => (pace === "relaxed" ? "easy" : pace);
 export const SCOPE_LABEL: Record<string, string> = { letters: "Letters to the moon (100)", words: "Words to the stars (50)", full: "Full adventure (150)" };
 export const INPUT_LABEL: Record<string, string> = { keyboard: "Physical keyboard", touch: "On-screen keys", mixed: "Mixed input", unknown: "No input yet" };
 
@@ -49,7 +56,8 @@ export function sessionState(s: Pick<SessionRow, "status" | "lastActivityAt">, n
 // An unfinished climb a learner can pick up again: same settings as the
 // class now uses, short of the finish, and touched in the last day.
 export const RESUME_MS = 24 * 60 * 60 * 1000;
-// `settings` null = the teacher hasn't set the practice, so any climb can resume.
+// `settings` null = the teacher hasn't set the practice, so any climb at a
+// current difficulty can resume (never one played under the older paces).
 export function resumableSession(rows: SessionRow[], settings: { letterSet: string; pace: string; scope: string } | null, now = Date.now()) {
   return [...rows]
     .sort((a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime())
@@ -57,16 +65,17 @@ export function resumableSession(rows: SessionRow[], settings: { letterSet: stri
       (r) =>
         ["in progress", "interrupted"].includes(sessionState(r, now)) &&
         now - r.lastActivityAt.getTime() < RESUME_MS &&
+        (PACES as readonly string[]).includes(r.pace) &&
         (!settings || (r.letterSet === settings.letterSet && r.pace === settings.pace && r.scope === settings.scope)) &&
         r.summary.furthestLeap < (r.scope === "letters" ? 100 : 150),
     ) ?? null;
 }
 
 // Sessions are only compared like-for-like: same phase, same keys in play
-// (words always use the whole keyboard), same pace (hints follow pace), and
+// (words always use the whole keyboard), same difficulty (hints follow it), and
 // same input method.
 export function comparableKey(s: Pick<SessionRow, "letterSet" | "pace" | "inputMethod">, phase: Phase) {
-  return `${phase}|${phase === "letter" ? s.letterSet : "words"}|${s.pace}|${s.inputMethod}`;
+  return `${phase}|${phase === "letter" ? s.letterSet : "words"}|${sameRules(s.pace)}|${s.inputMethod}`;
 }
 
 export function comparableLabel(key: string) {
@@ -171,23 +180,24 @@ export function teachingSuggestion(rows: SessionRow[]): { text: string; basis: s
   const m = phaseMetrics(pooled);
 
   // Frequent timeouts come first: they make every timed-out key look hard, and
-  // the fix is pace, not key drills.
-  if (latest.pace !== "relaxed" && (m.timeoutRate ?? 0) >= 0.2) {
+  // the fix is difficulty, not key drills.
+  const easy = sameRules(latest.pace) === "easy";
+  if (!easy && (m.timeoutRate ?? 0) >= 0.2) {
     return {
-      text: `Try relaxed pace for a while: ${pct(m.timeoutRate ?? 0)} of targets timed out across ${scope}, so the timer is getting in the way.`,
+      text: `Try easy for a while: ${pct(m.timeoutRate ?? 0)} of targets timed out across ${scope}, so the timer is getting in the way.`,
       basis: `${pooled.timeouts} timeouts of ${pooled.targetsResolved} targets.`,
     };
   }
   const hard = difficultKeys(group, 2, [phase]).filter((k) => k.errorRate >= 0.15);
   if (hard.length) {
-    const where = latest.pace === "relaxed" ? "in relaxed mode" : "in relaxed mode before returning to timed practice";
+    const where = easy ? "on easy" : "on easy before returning to timed practice";
     return {
       text: `Practise ${joinKeys(hard.map((k) => k.key))} ${where}; ${hard.length === 1 ? "this key had" : "these keys had"} the highest error rate across ${scope}.`,
       basis: hard.map((k) => `${upper(k.key)}: ${pct(k.errorRate)} of ${k.samples} (${k.errors} wrong key${k.errors === 1 ? "" : "s"}, ${k.timeouts} timeout${k.timeouts === 1 ? "" : "s"})`).join(" · "),
     };
   }
   if ((m.accuracy ?? 0) >= 0.95 && pooled.attempts >= 3 * MIN_PHASE_ATTEMPTS) {
-    const next = latest.pace === "relaxed" ? "steady pace" : latest.pace === "steady" ? "speedy pace" : phase === "letter" && latest.letterSet !== "all" ? "all letters" : "word practice";
+    const next = easy ? "medium" : latest.pace === "medium" || latest.pace === "steady" ? "hard" : phase === "letter" && latest.letterSet !== "all" ? "all letters" : "word practice";
     return {
       text: `Ready for a stretch: accuracy was ${pct(m.accuracy ?? 0)} across ${scope}. Consider ${next}.`,
       basis: `${pooled.correct} correct of ${pooled.attempts} attempts.`,
@@ -250,8 +260,8 @@ export function learnerFeedback(session: SessionRow, previous: SessionRow[]) {
     next = `Practise the ${upper(k)} key next. Look for it on the ${ROW_OF[k]}.`;
   } else if (p.timeouts > 0) {
     next = "Take a breath before each leap — finding the right key matters more than speed.";
-  } else if ((m.accuracy ?? 0) >= 0.95 && session.pace === "relaxed" && p.attempts >= MIN_PHASE_ATTEMPTS) {
-    next = "Ask your teacher if you are ready to try a timed pace.";
+  } else if ((m.accuracy ?? 0) >= 0.95 && sameRules(session.pace) === "easy" && p.attempts >= MIN_PHASE_ATTEMPTS) {
+    next = "Ask your teacher if you are ready to try medium.";
   } else {
     next = "Keep your eyes on the screen and try to make your streak a little longer.";
   }

@@ -4,8 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { summarizeSession, phaseMetrics, poolPhases, inputMethodOf, IDLE_CAP_MS } from '../lib/typing-metrics.ts';
-import { parseBatch, planInsert, MEASUREMENT_VERSION } from '../lib/typing-events.ts';
-import { trends, difficultKeys, teachingSuggestion, learnerFeedback, comparableKey, sessionState, resumableSession, STALE_MS } from '../lib/typing-report.ts';
+import { parseBatch, planInsert, paceOf, MEASUREMENT_VERSION } from '../lib/typing-events.ts';
+import { trends, difficultKeys, teachingSuggestion, learnerFeedback, comparableKey, sessionState, resumableSession, PACE_LABEL, STALE_MS } from '../lib/typing-report.ts';
 
 process.env.SESSION_SECRET = 'test-secret';
 const { signToken, verifyToken } = await import('../lib/signed-token.ts');
@@ -34,7 +34,7 @@ const clean = (s, letter, leap, rt = 1000) => s.target(letter, leap).key(letter,
 
 const row = (summary, extra = {}) => ({
   id: crypto.randomUUID(), learnerId: 'L1', startedAt: new Date('2026-10-01T10:00:00Z'), lastActivityAt: new Date('2026-10-01T10:10:00Z'),
-  endedAt: null, status: 'COMPLETED', endReason: 'completed', letterSet: 'all', pace: 'relaxed', scope: 'full', hints: true,
+  endedAt: null, status: 'COMPLETED', endReason: 'completed', letterSet: 'all', pace: 'easy', scope: 'full', hints: true,
   inputMethod: inputMethodOf(summary), startLeap: 0, furthestLeap: summary.furthestLeap, activeMs: 600000, pauseMs: 0, animationMs: 0, hiddenMs: 0,
   summary, ...extra,
 });
@@ -148,7 +148,7 @@ test('input method distinguishes keyboard, on-screen keys, and mixed sessions', 
 const now = Date.parse('2026-10-26T12:00:00Z');
 const batch = (events, extra = {}) => ({
   ticket: 'v1.x.y',
-  session: { id: '0d5f1c5e-4a8b-4c33-9a65-1a2b3c4d5e6f', letterSet: 'all', pace: 'relaxed', scope: 'full', hints: true, gameVersion: '2026.10.1', measurementVersion: MEASUREMENT_VERSION, startedAt: now - 60000 },
+  session: { id: '0d5f1c5e-4a8b-4c33-9a65-1a2b3c4d5e6f', letterSet: 'all', pace: 'easy', scope: 'full', hints: true, gameVersion: '2026.10.1', measurementVersion: MEASUREMENT_VERSION, startedAt: now - 60000 },
   clocks: { activeMs: 1000, pauseMs: 0, animationMs: 0, hiddenMs: 0 },
   ignored: { repeat: 0, modifier: 0, composition: 0, paste: 0, nonletter: 0, busy: 0 },
   events: events.map((e) => ({ id: crypto.randomUUID(), ...e })),
@@ -191,17 +191,17 @@ test('trends only compare like-for-like sessions and say when data is thin', () 
   const rows = [
     row(letterSession({ bad: { a: 's', f: 'g', j: 'k' } }), { startedAt: day(1) }),
     row(letterSession({ bad: { a: 's' } }), { startedAt: day(2) }),
-    row(letterSession(), { startedAt: day(3), pace: 'steady', hints: false }), // different pace
+    row(letterSession(), { startedAt: day(3), pace: 'medium', hints: false }), // different difficulty
     row(letterSession({ src: 'screen' }), { startedAt: day(4) }), // different input
   ];
   const groups = trends(rows);
   assert.equal(groups.length, 3);
-  const relaxedKbd = groups.find((g) => g.key === comparableKey(rows[0], 'letter'));
-  assert.equal(relaxedKbd.points.length, 2);
-  assert.equal(relaxedKbd.change.status, 'ok');
-  assert.ok(relaxedKbd.change.accuracyPts > 0, 'fewer errors in the later session');
-  assert.equal(relaxedKbd.change.recentAttempts, 32, "30 letters cycle a 26-letter alphabet, so 'a' is mistyped twice");
-  for (const g of groups.filter((x) => x !== relaxedKbd)) assert.equal(g.change.status, 'not-enough-data');
+  const easyKbd = groups.find((g) => g.key === comparableKey(rows[0], 'letter'));
+  assert.equal(easyKbd.points.length, 2);
+  assert.equal(easyKbd.change.status, 'ok');
+  assert.ok(easyKbd.change.accuracyPts > 0, 'fewer errors in the later session');
+  assert.equal(easyKbd.change.recentAttempts, 32, "30 letters cycle a 26-letter alphabet, so 'a' is mistyped twice");
+  for (const g of groups.filter((x) => x !== easyKbd)) assert.equal(g.change.status, 'not-enough-data');
   // Too-small phases don't count at all.
   assert.equal(trends([row(letterSession({ n: 5 }))]).length, 0);
 });
@@ -217,15 +217,15 @@ test('difficult keys need enough samples and rank by miss rate (errors + timeout
 test('teaching suggestion cites the keys and the comparable sessions', () => {
   const rows = [1, 2, 3].map((d) => row(letterSession({ n: 78, bad: { f: 'd', g: 'h' } }), { startedAt: new Date(`2026-10-0${d}T10:00:00Z`) }));
   const s = teachingSuggestion(rows);
-  assert.match(s.text, /^Practise [FG] and [FG] in relaxed mode; these keys had the highest error rate across the last 3 comparable sessions/);
+  assert.match(s.text, /^Practise [FG] and [FG] on easy; these keys had the highest error rate across the last 3 comparable sessions/);
   assert.match(s.basis, /F: 50% of 18/);
   assert.match(teachingSuggestion([row(letterSession({ n: 5 }))]).text, /^Not enough data/);
   const timed = [1, 2].map((d) => {
     const sc = script().start();
     for (let i = 0; i < 30; i++) { const L = 'asdfghjkl'[i % 9]; if (i % 3 === 0) sc.target(L, i + 1).timeout(L, 0, 4000); else clean(sc, L, i + 1); }
-    return row(summarizeSession(sc.ev), { startedAt: new Date(`2026-10-0${d}T10:00:00Z`), pace: 'speedy', hints: false });
+    return row(summarizeSession(sc.ev), { startedAt: new Date(`2026-10-0${d}T10:00:00Z`), pace: 'hard', hints: false });
   });
-  assert.match(teachingSuggestion(timed).text, /^Try relaxed pace for a while: 33% of targets timed out/);
+  assert.match(teachingSuggestion(timed).text, /^Try easy for a while: 33% of targets timed out/);
 });
 
 test('learner feedback: one improvement, one next step, a short summary', () => {
@@ -245,9 +245,9 @@ test('session state: unfinished sessions go stale as interrupted; resume candida
   const r = row(letterSession({ n: 10 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - STALE_MS - 1) });
   assert.equal(sessionState(r, now), 'interrupted');
   assert.equal(sessionState({ ...r, lastActivityAt: new Date(now - 1000) }, now), 'in progress');
-  const settings = { letterSet: 'all', pace: 'relaxed', scope: 'full' };
+  const settings = { letterSet: 'all', pace: 'easy', scope: 'full' };
   assert.equal(resumableSession([r], settings, now)?.id, r.id);
-  assert.equal(resumableSession([r], { ...settings, pace: 'steady' }, now), null, 'settings changed since');
+  assert.equal(resumableSession([r], { ...settings, pace: 'medium' }, now), null, 'settings changed since');
   assert.equal(resumableSession([{ ...r, lastActivityAt: new Date(now - 2 * 864e5) }], settings, now), null, 'too old');
 });
 
@@ -293,19 +293,29 @@ test('"highest yet" only compares the same kind of climb', () => {
 });
 
 test('resume when the teacher has not set the practice: any climb, each with its own finish line', () => {
-  const r = row(letterSession({ n: 10 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - 1000), letterSet: 'top', pace: 'speedy', hints: false });
+  const r = row(letterSession({ n: 10 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - 1000), letterSet: 'top', pace: 'hard', hints: false });
   assert.equal(resumableSession([r], null, now)?.id, r.id, 'free choice: whatever they were playing');
   const lettersDone = row(letterSession({ n: 3 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - 1000), scope: 'letters' });
   lettersDone.summary.furthestLeap = 100;
   assert.equal(resumableSession([lettersDone], null, now), null, 'a letters climb is finished at 100');
 });
 
-test('falling-platform sessions: accepted with hints on, kept apart from paced practice', () => {
+test('difficulties: new sessions use easy/medium/hard (hints only on easy); older paces stay readable', () => {
   const ok = script().start().target('a', 1).key('a', 'a', 0, 500).complete('a', 1).ev;
-  const falls = (extra) => batch(ok, { session: { ...batch(ok).session, pace: 'falls', ...extra } });
-  assert.equal(parseBatch(falls({ hints: true }), now).ok, true);
-  assert.equal(parseBatch(falls({ hints: false }), now).ok, false, 'falls play shows hints, like relaxed');
-  assert.equal(parseBatch(batch(ok, { session: { ...batch(ok).session, pace: 'turbo' } }), now).ok, false);
-  const relaxed = row(letterSession()), fell = row(letterSession(), { pace: 'falls' });
-  assert.notEqual(comparableKey(relaxed, 'letter'), comparableKey(fell, 'letter'), 'never compared with relaxed practice');
+  const at = (pace, hints) => parseBatch(batch(ok, { session: { ...batch(ok).session, pace, hints } }), now).ok;
+  assert.equal(at('easy', true), true);
+  assert.equal(at('medium', false), true);
+  assert.equal(at('hard', false), true);
+  assert.equal(at('medium', true), false, 'hints follow the difficulty');
+  for (const old of ['relaxed', 'steady', 'speedy', 'falls', 'turbo']) assert.equal(at(old, old === 'relaxed' || old === 'falls'), false, old);
+  // Relaxed had easy's rules, so they compare; the timed paces without falls don't.
+  const easy = row(letterSession());
+  assert.equal(comparableKey(row(letterSession(), { pace: 'relaxed' }), 'letter'), comparableKey(easy, 'letter'));
+  assert.notEqual(comparableKey(row(letterSession(), { pace: 'steady', hints: false }), 'letter'), comparableKey(row(letterSession(), { pace: 'medium', hints: false }), 'letter'));
+  assert.equal(PACE_LABEL.steady, 'Steady · 8 s (older)');
+  // An unfinished climb from before the difficulties never resumes.
+  const old = row(letterSession({ n: 10 }), { status: 'ACTIVE', endReason: null, lastActivityAt: new Date(now - 1000), pace: 'relaxed' });
+  assert.equal(resumableSession([old], null, now), null);
+  assert.equal(paceOf('steady'), 'medium');
+  assert.equal(paceOf('hard'), 'hard');
 });

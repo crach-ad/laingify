@@ -10,7 +10,7 @@ export default function NewTypingClass({ orgs, bands }: { orgs: { id: string; na
   const [name, setName] = useState("");
   const [band, setBand] = useState("YOUTH");
   const [students, setStudents] = useState("");
-  const [settings, setSettings] = useState({ letterSet: "all", pace: "relaxed", scope: "full" });
+  const [settings, setSettings] = useState({ letterSet: "all", pace: "easy", scope: "full" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 

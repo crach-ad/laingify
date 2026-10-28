@@ -29,10 +29,8 @@
   }
   const KEY = 'leaper-progress:v1:' + cfg.k;
   // The practice a new climb records: the teacher's, else what the player chose.
-  // A falls page whose 3D scene can't start plays (and records) the usual relaxed climb.
-  const fallsPage = new URLSearchParams(location.search).get('falls') === '1';
-  const practice = () => (fixed ? { ...fixed, pace: leaper.practicePace() } : leaper.choice());
-  const hintsFor = (pace) => pace === 'relaxed' || pace === 'falls';
+  const practice = () => (fixed ? { ...fixed, pace: paceOf(fixed.pace) } : leaper.choice());
+  const hintsFor = (pace) => pace === 'easy';
   let mem = { sessions: {} }, cur = null, candidate = null, timer = 0, flushing = false, backoff = 0, lostAt = 0, halted = '', hiddenSince = 0;
 
   // ---- storage (per learner key; in-memory fallback if storage is blocked)
@@ -242,8 +240,8 @@
       return r.ok ? await r.json() : null;
     } catch { return null; }
   }
-  // Falling-platform climbs resume only from the falls page, and paced climbs only from the usual page.
-  const sameSettings = m => (m.pace === 'falls') === fallsPage && (!fixed || (m.letterSet === fixed.letterSet && m.pace === fixed.pace && m.scope === fixed.scope));
+  // Only climbs under the current difficulty names resume (relaxed/steady/speedy/falls climbs had other rules).
+  const sameSettings = m => m.pace in PACE_RULES && (!fixed || (m.letterSet === fixed.letterSet && m.pace === paceOf(fixed.pace) && m.scope === fixed.scope));
   async function prepareResume() {
     await flush();
     const st = load();

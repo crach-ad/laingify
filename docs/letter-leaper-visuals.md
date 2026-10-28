@@ -80,7 +80,7 @@ Node with a fake clock.
 - **Target sign:** a cream sign with dark ink (contrast ≥ 4.5:1).
   - Completed letters are green, the current letter is dark and underlined,
     and the remaining letters are muted.
-  - Timed paces show a countdown bar.
+  - Medium and hard show a countdown bar.
   - The HTML prompt below the scene repeats the target.
 - **Letter case:** students choose "Uppercase · ABC" or "Lowercase · abc" in
   the start form. The choice is remembered per device and applies to the sign,

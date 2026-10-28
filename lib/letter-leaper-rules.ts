@@ -1,5 +1,5 @@
 export const PRACTICES = ["all", "home", "top", "bottom"];
-export const PACES = ["relaxed", "steady", "speedy"];
+export const PACES = ["easy", "medium", "hard"];
 export type Climb = { id: string; practice: string; pace: string; leaps: number; correct: number; attempts: number; streak: number; elapsed: number };
 export function validClimb(value: unknown): value is Climb {
   if (!value || typeof value !== "object") return false;
@@ -18,7 +18,9 @@ export type ClassClimb = Climb & { learnerId: string; classId: string; username:
 export function rankClimbs(rows: ClassClimb[], classId: string, practice: string, pace: string) {
   const best = new Map<string, ClassClimb>();
   const compare = (a: ClassClimb, b: ClassClimb) => (b.correct / b.attempts) - (a.correct / a.attempts) || b.streak - a.streak || a.elapsed - b.elapsed || a.id.localeCompare(b.id);
-  for (const row of rows) {
+  for (const stored of rows) {
+    // Relaxed climbs (before the difficulties) had easy's rules; steady and speedy didn't fall, so they aren't ranked.
+    const row = stored.pace === "relaxed" ? { ...stored, pace: "easy" } : stored;
     if (!validClimb(row) || row.classId !== classId || row.practice !== practice || row.pace !== pace || !validUsername(row.username)) continue;
     const prev = best.get(row.learnerId);
     if (!prev || compare(row, prev) < 0) best.set(row.learnerId, row);

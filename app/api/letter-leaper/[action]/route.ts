@@ -57,7 +57,7 @@ async function handle(req: Request, action: string) {
   }
   if (req.method !== "GET") return json({ error: "Use GET to view the leaderboard." }, 405);
   const query = new URL(req.url).searchParams;
-  const practice = query.get("practice") ?? "all", pace = query.get("pace") ?? "relaxed";
+  const practice = query.get("practice") ?? "all", pace = query.get("pace") ?? "easy";
   if (!PRACTICES.includes(practice) || !PACES.includes(pace)) return json({ error: "Choose a valid practice mode." }, 400);
   const rows = await prisma.learnerEvent.findMany({
     where: { moduleId: ctx.moduleId, type: "leaper_score", meta: { contains: `"classId":${JSON.stringify(ctx.classId)}` }, learner: { roster: { some: { classId: ctx.classId } } } },

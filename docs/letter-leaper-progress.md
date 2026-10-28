@@ -15,7 +15,8 @@ the original Windsor module.
    with PIN sign-in, assigns Letter Leaper, and gives each student a 4-digit PIN.
 2. For an existing class, open it and choose **⌨️ Typing**. Then:
    - Assign Letter Leaper if it isn't assigned.
-   - Set the practice: all letters or one keyboard row; relaxed or timed; and
+   - Set the practice: all letters or one keyboard row; easy, medium or hard
+     (see the 3D doc's *Difficulty* section); and
      letters only (100), words only (50), or the full adventure (150).
    - Turn on PIN sign-in, and add students.
 3. Share the class code, or the entry link `/join?code=CODE`, and print the PIN
@@ -34,7 +35,7 @@ module, then **Play Letter Leaper**. The page shows:
 - **When the teacher has saved settings,** every player on the roster gets
   them locked in the game, whether or not their practice is recorded. That
   includes name-only sign-ins.
-- **When the teacher hasn't,** players choose their letters and pace, as in
+- **When the teacher hasn't,** players choose their letters and difficulty, as in
   the original Windsor module. Verified players' sessions record what they
   actually chose, and resuming such a climb locks the game to that climb's
   settings until it ends.
@@ -94,7 +95,7 @@ learners.
 
 | Table | Purpose |
 |---|---|
-| `TypingAssignment` | A class's practice settings (letter set, pace, scope). Absent = all letters, relaxed, full. |
+| `TypingAssignment` | A class's practice settings (letter set, pace = difficulty, scope). Absent = all letters, easy, full. Rows saved with the old names read as relaxed → easy, steady → medium, speedy → hard. |
 | `TypingSession` | One row per session, including partial ones. Deleted along with its learner or class (cascade), so org wipes and deletion requests work. Holds the settings played, input method, game and measurement version, start / last activity / end, status and end reason, start and furthest leap, client clocks (active, pause, animation, hidden), derived totals, and `summaryJson` (per-phase stats, per-key counts, confusions, timing samples, ignored-input counts). The summary is recomputed from all stored events on every upload, and survives event retention. |
 | `TypingEvent` | Append-only events. The client UUID is the primary key and `(sessionId, seq)` is unique, so retries are idempotent. |
 | `SignInFailure` | Failed PIN attempts for the lockout. Kept out of `LearnerEvent`, because every `LearnerEvent` counts as activity in insights and attendance. |
@@ -116,7 +117,7 @@ environment bands. Consumer:
 ```jsonc
 {
   "ticket": "v1.…",               // from the class page; must match the sign-in
-  "session": { "id": "uuid", "letterSet": "home", "pace": "steady", "scope": "full",
+  "session": { "id": "uuid", "letterSet": "home", "pace": "medium", "scope": "full",
                "hints": false, "gameVersion": "2026.10.1", "measurementVersion": 1,
                "startedAt": 1761480000000 },
   "clocks":  { "activeMs": 0, "pauseMs": 0, "animationMs": 0, "hiddenMs": 0 },   // cumulative
@@ -206,7 +207,8 @@ is reported separately on the session page.
 | Progress over time | per comparable group: the latest half of sessions (≤3) vs the half before, pooled; change in accuracy (points) and correct CPM, with session and attempt counts shown |
 
 **Comparable sessions** share a phase, the keys in play (letter set; words
-always use the whole keyboard), pace (hints follow pace), and input method
+always use the whole keyboard), difficulty (hints follow it; relaxed sessions
+compare with easy, the only older pace with the same rules), and input method
 (physical keyboard, on-screen keys, or mixed).
 
 **Sample-size thresholds.**
@@ -222,10 +224,10 @@ end and no activity for 30 minutes).
 **Teaching suggestion.** Fixed rules, no AI. The first rule that applies wins,
 and the suggestion always cites its numbers:
 1. Under 40 attempts: not enough data.
-2. Timed pace with ≥20% timeouts: suggest relaxed pace. This rule comes first,
+2. Medium or hard with ≥20% timeouts: suggest easy. This rule comes first,
    because timeouts make every timed-out key look hard.
 3. Up to two keys with a ≥15% miss rate in the latest comparable group (last 3
-   sessions): *"Practise F and G in relaxed mode; these keys had the highest
+   sessions): *"Practise F and G on easy; these keys had the highest
    error rate across the last 3 comparable sessions."*
 4. ≥95% accuracy over 60+ attempts: suggest the next step up.
 5. Otherwise: keep a steady routine.
@@ -252,8 +254,10 @@ leaps, accuracy, and minutes.
 - **No inferences about the student.** Nothing here infers disability,
   diagnosis, intelligence, or motivation, and the UI doesn't either.
 - **Moon break.** The moon break counts as pause time, not practice time.
-- **Hints follow pace.** Relaxed pace always lights up the next key; there's
-  no hint-free relaxed setting.
+- **Hints follow difficulty.** Easy always lights up the next key; medium and
+  hard never do. New sessions must use easy, medium or hard; sessions played
+  before the difficulties keep their old pace and labels (relaxed, steady,
+  speedy, falls) and never resume.
 
 ## Retention
 
