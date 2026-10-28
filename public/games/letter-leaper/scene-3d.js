@@ -628,8 +628,10 @@ function init() {
         refreshCard();
         break;
       case 'recover':
+        restorePlatform(platforms.get(d.from));
         restorePlatform(platforms.get(steps));
         resetMilo();
+        if (d.from !== steps) { animator.play('Idle', { fade: 0 }); layout(); } // back to the bottom
         play('land');
         animator.play('Land', { once: true, fade: 0.08 });
         burst(standPos(steps, tmp).clone().add(new THREE.Vector3(0, 0.3, 0)), { n: 12, color: '#fff3c4', speed: 1.4, up: 1.2, life: 0.7, size: 0.18 });
@@ -640,13 +642,14 @@ function init() {
 
   // ---- falls (medium and hard) ---------------------------------------------------------------------------
   // Both play inside the rules' fall time: a near miss (jump short, drop out
-  // of view) or the platform giving way, then Milo pops back onto a restored
-  // platform for the same leap. Calm mode: a simple sink-and-return.
+  // of view) or the platform giving way. Milo then pops back onto a restored
+  // platform — or, when the fall sends him to the bottom (fallTo), stays out
+  // of view until recover() moves him there. Calm mode: a simple sink-and-return.
   const fallPoint = new THREE.Vector3();
   function fallMotion(p, from, to, plat, still) {
     if (still) {
       const out = p < 0.5 ? smooth(p / 0.45) : 1 - smooth((p - 0.55) / 0.4);
-      milo.scale.setScalar(Math.max(0.001, 1 - out));
+      milo.scale.setScalar(Math.max(0.001, 1 - (fallTo !== steps && p >= 0.5 ? 1 : out)));
       focus.copy(from).y -= out * 0.5;
       if (plat && fallKind === 'timeout') plat.position.y = plat.userData.baseY - out * 0.35;
       return 0;
@@ -662,6 +665,8 @@ function init() {
         fallPoint.copy(from).lerp(to, 0.5 + q * 0.12).y += Math.sin(Math.PI * 0.8) * 0.95 - 10 * q * q;
         focus.copy(fallPoint);
         milo.rotation.x = q * 1.1;
+      } else if (fallTo !== steps) { // gone: he reappears at the bottom
+        milo.visible = false;
       } else { // back on the start platform, dropping in from above
         const q = (p - 0.72) / 0.28;
         milo.rotation.x = 0;
@@ -684,7 +689,7 @@ function init() {
         plat.scale.setScalar(0.6 + 0.4 * smooth(q / 0.6));
       }
       milo.rotation.x = 0;
-      milo.visible = q > 0.45;
+      milo.visible = q > 0.45 && fallTo === steps;
       focus.copy(from).y += (1 - smooth((q - 0.45) / 0.55)) * 1.8;
       if (milo.visible && animator.current() !== 'Air') animator.play('Air', { fade: 0.05 });
     }

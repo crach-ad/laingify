@@ -3,7 +3,8 @@
 // per-letter deadline on the active clock (medium 8 s, hard 4 s), wrong-letter
 // falls (medium on the third miss, hard on the first), timeout collapses,
 // recovery to the same leap, deadline races, pauses, and exactly-once
-// tracking. Easy never falls.
+// tracking. A fall sends Milo back to the bottom. Hard is words from the first
+// leap, 2 → 5 letters. Easy never falls.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -34,8 +35,10 @@ function game({ reduced = false, pace = 'hard' } = {}) {
     advance(ms, step = 16) { for (let t = 0; t < ms; t += step) { now += Math.min(step, ms - t); rafCb(now); } },
     // Time passes with no frame (an input arriving between frames).
     pass(ms) { now += ms; },
-    start(opts = {}) { run(`readSettings = () => (${JSON.stringify({ set: 'all', pace })}); scope = ${JSON.stringify(opts.scope ?? 'full')};`); run('start()'); },
+    start(opts = {}) { run(`readSettings = () => (${JSON.stringify({ set: opts.set ?? 'all', pace })}); scope = ${JSON.stringify(opts.scope ?? 'full')};`); run('start()'); },
     type(ch) { run(`input(${JSON.stringify(ch)}, 'kbd')`); },
+    // The rest of the current target, letter by letter.
+    word() { for (const ch of g.target.slice(g.run('typed'))) g.type(ch); },
     wrong() { const t = run('target[typed]'); return t === 'q' ? 'w' : 'q'; },
     hooks: (type) => ctx.__hooks.filter(([t]) => t === type),
     views: (type) => ctx.__views.filter(([t]) => t === type),
@@ -64,7 +67,7 @@ test('a correct letter before the deadline leaps exactly once', () => {
   const g = game({ pace: 'medium' });
   g.start();
   g.advance(5000);
-  g.type(g.target);
+  g.word();
   g.advance(500);
   assert.equal(g.steps, 1);
   assert.equal(g.hooks('complete').length, 1);
@@ -73,28 +76,30 @@ test('a correct letter before the deadline leaps exactly once', () => {
   assert.ok(g.left > MEDIUM - 100 && g.left <= MEDIUM, `left ${g.left}`);
 });
 
-test('hard: one wrong letter is one incorrect attempt and a fall, then the same leap again', () => {
+test('hard: one wrong letter is one incorrect attempt and a fall, then back to the bottom', () => {
   const g = game();
   g.start();
-  g.leap = () => { g.type(g.target); g.advance(500); };
-  g.leap(); g.leap(); // progress already earned is kept
-  const before = g.target;
+  g.leap = () => { g.word(); g.advance(500); };
+  g.leap(); g.leap();
+  const before = g.target[0];
   g.advance(1200);
   g.type(g.wrong());
   assert.equal(g.views('fall').length, 1);
   assert.equal(g.views('fall')[0][1].kind, 'miss');
   const keys = g.hooks('key');
   assert.equal(keys.at(-1)[1].ok, false);
-  assert.equal(g.run('attempts'), 3);
+  assert.equal(g.run('attempts'), 5, 'two 2-letter words, then one wrong letter');
   // Input during the failed jump and fall is ignored (not attempts, not keys).
   g.type(before); g.type(g.wrong());
   assert.equal(g.hooks('key').length, keys.length);
   g.advance(FALL + 32);
   assert.equal(g.views('recover').length, 1);
-  assert.equal(g.steps, 2, 'leap counter unchanged');
+  assert.deepEqual([g.views('recover')[0][1].from, g.views('recover')[0][1].leap], [2, 0]);
+  assert.equal(g.steps, 0, 'back to the bottom');
   assert.equal(g.hooks('complete').length, 2, 'no leap awarded for the fall');
   assert.equal(g.hooks('timeout').length, 0, 'a wrong letter is not a timeout');
-  assert.equal(g.hooks('target').at(-1)[1].leap, 3, 'a fresh target for the same leap');
+  assert.equal(g.hooks('target').at(-1)[1].leap, 1, 'a fresh target for the first leap');
+  assert.equal(g.target.length, 2, 'two-letter words again');
   assert.ok(g.left > HARD - 100, 'the timer restarts once Milo is back');
 });
 
@@ -115,7 +120,7 @@ test('medium: the third wrong letter on a target is the fall; the first two are 
   g.advance(FALL + 32);
   g.type(g.wrong()); g.type(g.wrong());
   assert.equal(g.views('fall').length, 1);
-  g.type(g.target);
+  g.word();
   g.advance(500);
   g.type(g.wrong()); g.type(g.wrong());
   assert.equal(g.views('fall').length, 1);
@@ -147,7 +152,7 @@ test('deadline races: just before is a leap; at or after the deadline is a timeo
   early.start();
   early.advance(HARD - 8);
   early.pass(7); // 3999 ms
-  early.type(early.target);
+  early.word();
   early.advance(500);
   assert.equal(early.steps, 1);
   assert.equal(early.hooks('timeout').length, 0);
@@ -156,7 +161,7 @@ test('deadline races: just before is a leap; at or after the deadline is a timeo
   late.start();
   late.advance(HARD - 8);
   late.pass(8); // exactly 4000 ms, before the next frame
-  late.type(late.target);
+  late.type(late.target[0]);
   assert.equal(late.hooks('timeout').length, 1);
   assert.equal(late.hooks('key').length, 0);
   assert.equal(late.views('fall')[0][1].kind, 'timeout');
@@ -233,22 +238,21 @@ test('calm motion shortens the fall', () => {
   assert.equal(g.views('recover').length, 1);
 });
 
-test('mixed run on hard: every failure recorded once, only correct answers advance', () => {
+test('mixed run on hard: every failure recorded once, only correct answers advance, each fall restarts', () => {
   const g = game();
   g.start();
   let ok = 0, wrong = 0, timeouts = 0;
   for (let i = 0; i < 30; i++) {
     const r = i % 3;
-    if (r === 0) { g.advance(800); g.type(g.target); g.advance(500); ok++; }
+    if (r === 0) { g.advance(800); g.word(); g.advance(500); ok++; }
     else if (r === 1) { g.advance(800); g.type(g.wrong()); g.advance(FALL + 32); wrong++; }
     else { g.advance(HARD + 100); g.advance(FALL + 32); timeouts++; }
   }
-  assert.equal(g.steps, ok);
+  assert.equal(g.steps, 0, 'the last failure sent Milo to the bottom');
   assert.equal(g.hooks('complete').length, ok);
   assert.equal(g.hooks('key').filter(([, d]) => !d.ok).length, wrong);
   assert.equal(g.hooks('timeout').length, timeouts);
-  assert.equal(g.run('attempts'), ok + wrong + timeouts);
-  assert.equal(g.run('correct'), ok);
+  assert.equal(g.run('attempts') - g.run('correct'), wrong + timeouts);
   assert.equal(g.views('recover').length, wrong + timeouts);
 });
 
@@ -265,4 +269,42 @@ test('a finished climb is posted to its own difficulty’s leaderboard', () => {
     assert.equal(g.run('state'), 'finished');
     assert.equal(g.run('globalThis.__done.join()'), pace);
   }
+});
+
+test('medium: a fall partway up sends Milo back to leap 0; a words-only practice goes back to the moon', () => {
+  const g = game({ pace: 'medium' });
+  g.start();
+  for (let i = 0; i < 25; i++) { g.word(); g.advance(500); }
+  assert.equal(g.steps, 25);
+  g.advance(MEDIUM + 50);
+  g.advance(FALL + 32);
+  assert.equal(g.steps, 0);
+  assert.equal(g.target.length, 1, 'medium keeps single letters below the moon');
+  assert.match(g.run('terrainFor(steps).id'), /jungle/);
+  const w = game({ pace: 'medium' });
+  w.start({ scope: 'words' });
+  for (let i = 0; i < 5; i++) { w.word(); w.advance(500); }
+  w.type(w.wrong()); w.type(w.wrong()); w.type(w.wrong());
+  w.advance(FALL + 32);
+  assert.equal(w.steps, 100);
+});
+
+test('hard: words from the first leap, ignoring the letter row, growing from 2 to 5 letters', () => {
+  const g = game();
+  g.start({ set: 'home' });
+  const lengths = new Map();
+  for (let i = 0; i < 150; i++) {
+    if (g.run('state') === 'moon') g.run('continueStars()');
+    lengths.set(g.steps, g.target.length);
+    g.word(); g.advance(500);
+  }
+  assert.equal(g.run('state'), 'finished');
+  const at = (n) => lengths.get(n);
+  assert.deepEqual([at(0), at(37), at(38), at(74), at(75), at(112), at(113), at(149)], [2, 2, 3, 3, 4, 4, 5, 5]);
+  // Words-only and letters-only practice spread the same ladder over their own climb.
+  const words = game(); words.start({ scope: 'words' });
+  assert.equal(words.target.length, 2);
+  assert.equal(words.run('wordLength(149)'), 5);
+  const letters = game(); letters.start({ scope: 'letters' });
+  assert.deepEqual(letters.run('[wordLength(0), wordLength(24), wordLength(25), wordLength(99)].join()'), '2,2,3,5');
 });

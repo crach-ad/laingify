@@ -8,8 +8,8 @@ readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value });
 // What each difficulty means, shown under the settings and in the help.
 const PACE_TEXT = {
   easy: 'Easy: no rush, and the next key lights up. Platforms never fall.',
-  medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter. Milo comes straight back to try again — you never lose a leap.',
-  hard: 'Hard: 4 seconds for each letter, and one wrong letter makes Milo fall. He comes straight back to try again — you never lose a leap.',
+  medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter — and a fall sends Milo back to the bottom.',
+  hard: 'Hard: words from the very first leap, growing from 2 to 5 letters. 4 seconds for each letter, and one wrong letter or running out of time sends Milo back to the bottom.',
 };
 
 // ---- preferences (remembered per device) --------------------------------------
@@ -97,7 +97,7 @@ function stats() {
     : state === 'finished' ? (scope === 'letters' ? 'You reached the moon!' : 'You reached the stars!')
     : 'Ready when you are.';
   $('tip').textContent = state === 'playing'
-    ? (steps >= MOON ? 'Type each letter in order. One word, one leap.' : pace === 'easy' ? 'No rush. Every leap is progress.' : 'Stay focused. You’ve got this.')
+    ? (target.length > 1 ? 'Type each letter in order. One word, one leap.' : pace === 'easy' ? 'No rush. Every leap is progress.' : 'Stay focused. You’ve got this.')
     : 'Find your rhythm. Reach new heights.';
   if (state !== 'intro')
     $('stage-label').textContent = steps < MOON ? `${MOON - steps} LEAPS TO THE MOON · ${steps} / ${TOTAL} TOTAL` : `${TOTAL - steps} WORD LEAPS TO THE STARS · ${steps} / ${TOTAL} TOTAL`;
@@ -134,9 +134,16 @@ views.push((type, d) => {
       if (btn) { btn.classList.add('wrong'); clearTimeout(keyFlash); keyFlash = setTimeout(() => btn.classList.remove('wrong'), 250); }
       break;
     }
-    case 'recover': message(d.kind === 'miss' ? 'Try again!' : 'A little quicker this time!'); break;
+    case 'recover':
+      message(d.from !== d.leap ? 'Back to the bottom — ' + (d.kind === 'miss' ? 'try again!' : 'a little quicker this time!')
+        : d.kind === 'miss' ? 'Try again!' : 'A little quicker this time!');
+      break;
     case 'countdown': if (falls && d.seconds === 2) message('Quick — the platform is wobbling!'); break;
-    case 'land': if (d.leap === WORDS3_FROM) message('Ready for three-letter words!'); break;
+    case 'land': {
+      const n = wordLength(d.leap);
+      if (n >= 3 && n !== wordLength(d.leap - 1)) message(`Ready for ${['three', 'four', 'five'][n - 3]}-letter words!`);
+      break;
+    }
     case 'continue':
       $('moon-overlay').hidden = true;
       $('pause').disabled = false;
@@ -281,8 +288,11 @@ function startRenderer(name) {
 }
 startRenderer(renderer);
 function paintPace() {
-  $('pace-rule').textContent = PACE_TEXT[paceOf($('pace').value)];
-  document.body.dataset.pace = paceOf($('pace').value);
+  const p = paceOf($('pace').value);
+  $('pace-rule').textContent = PACE_TEXT[p];
+  document.body.dataset.pace = p;
+  // Words-only practice and hard climbs don't use the letter rows.
+  $('letter-set').closest('label').hidden = scope === 'words' || p === 'hard';
 }
 $('pace').addEventListener('change', paintPace);
 paintPace();
@@ -298,14 +308,13 @@ window.leaper = {
   snapshot: () => ({ state, leap: steps, correct, attempts, streak, bestStreak, elapsed: Math.round(elapsed) }),
   configure(c) {
     $('letter-set').value = c.letterSet; $('pace').value = paceOf(c.pace); scope = c.scope;
-    paintPace();
     for (const id of ['letter-set', 'pace']) $(id).disabled = true;
-    $('letter-set').closest('label').hidden = scope === 'words';
+    paintPace();
   },
   unlock() {
     scope = 'full';
     for (const id of ['letter-set', 'pace']) $(id).disabled = false;
-    $('letter-set').closest('label').hidden = false;
+    paintPace();
   },
   choice: () => ({ letterSet: $('letter-set').value, pace: $('pace').value, scope }),
   resumeFrom(r) { pendingResume = r; },
