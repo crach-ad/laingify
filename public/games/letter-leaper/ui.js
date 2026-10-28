@@ -8,8 +8,8 @@ readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value });
 // What each difficulty means, shown under the settings and in the help.
 const PACE_TEXT = {
   easy: 'Easy: no rush, and the next key lights up. Platforms never fall.',
-  medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter — and a fall sends Milo back to the bottom.',
-  hard: 'Hard: words from the very first leap, growing from 2 to 5 letters. 4 seconds for each letter, and one wrong letter or running out of time sends Milo back to the bottom.',
+  medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter — and a fall sends Milo 10 leaps back down.',
+  hard: 'Hard: words from the very first leap, growing from 2 to 5 letters. 4 seconds for each letter, and one wrong letter or running out of time sends Milo 10 leaps back down.',
 };
 
 // ---- preferences (remembered per device) --------------------------------------
@@ -29,6 +29,8 @@ calmChoice = prefs.calm;
 // never changes what is measured. Used by the scenes too (shared scope).
 prefs.letterCase = prefStore.get('leaper-case') === 'lower' ? 'lower' : 'upper';
 function letterCase(s) { return prefs.letterCase === 'lower' ? s.toLowerCase() : s.toUpperCase(); }
+// Lowercase targets use a font whose l has a tail, so it can't be read as I (style.css does the same for the HTML).
+function letterFont() { return prefs.letterCase === 'lower' ? '"Atkinson Hyperlegible", sans-serif' : '"Space Grotesk", sans-serif'; }
 function paintCase() {
   $('letter-case').value = prefs.letterCase;
   document.body.dataset.case = prefs.letterCase;
@@ -134,10 +136,12 @@ views.push((type, d) => {
       if (btn) { btn.classList.add('wrong'); clearTimeout(keyFlash); keyFlash = setTimeout(() => btn.classList.remove('wrong'), 250); }
       break;
     }
-    case 'recover':
-      message(d.from !== d.leap ? 'Back to the bottom — ' + (d.kind === 'miss' ? 'try again!' : 'a little quicker this time!')
-        : d.kind === 'miss' ? 'Try again!' : 'A little quicker this time!');
+    case 'recover': {
+      const again = d.kind === 'miss' ? 'try again!' : 'a little quicker this time!';
+      const down = d.from - d.leap;
+      message(down > 0 ? `Down ${down} leap${down === 1 ? '' : 's'} — ${again}` : again[0].toUpperCase() + again.slice(1));
       break;
+    }
     case 'countdown': if (falls && d.seconds === 2) message('Quick — the platform is wobbling!'); break;
     case 'land': {
       const n = wordLength(d.leap);

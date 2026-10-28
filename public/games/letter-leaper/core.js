@@ -11,7 +11,7 @@
 
 const sets = { all: 'abcdefghijklmnopqrstuvwxyz', home: 'asdfghjkl', top: 'qwertyuiop', bottom: 'zxcvbnm' };
 const MOON = 100, TOTAL = 150, WORDS3_FROM = 120;
-const GAME_VERSION = '2026.10.4';
+const GAME_VERSION = '2026.10.5';
 const words2 = ['an','at','as','am','be','by','do','go','he','hi','if','in','is','it','me','my','no','of','on','or','so','to','up','us','we'];
 const words3 = ['ant','bat','bed','bee','big','box','bug','bus','car','cat','cow','cup','dog','dot','dry','egg','fan','far','fig','fin','fit','fly','fox','fun','hat','hen','hop','hot','ice','jam','jar','jet','joy','key','leg','lip','log','map','mat','mix','mud','net','new','nut','old','owl','pan','pen','pet','pig','pot','red','row','run','sad','sea','sky','sit','six','sun','tap','tea','ten','tin','top','toy','two','van','vet','wet','win','yes','zip','zoo'];
 // Hard climbs: words from the first leap, 2 → 3 → 4 → 5 letters (wordLength()).
@@ -41,9 +41,9 @@ const jumpMs = () => (reducedMotion() ? 80 : 410);
 // hard: each letter must be typed within `deadline` ms of typing time,
 // measured on the active clock (so pauses, hidden tabs, leaps, falls, and
 // recovery never count), and the `misses`-th wrong letter on a target is a
-// fall. A fall sends Milo back to the bottom of the climb (fallTo: leap 0,
-// or the moon for a words-only practice) with a fresh target; it never
-// awards a leap. Hard is also words all the way (wordLength()).
+// fall. A fall sends Milo FALL_BACK leaps down (fallTo; never below the
+// bottom of the climb: leap 0, or the moon for a words-only practice) with a
+// fresh target; it never awards a leap. Hard is also words all the way (wordLength()).
 const PACE_RULES = {
   easy: { deadline: Infinity, misses: Infinity },
   medium: { deadline: 8000, misses: 3 },
@@ -52,6 +52,7 @@ const PACE_RULES = {
 // Earlier pace names (saved settings, old links) map onto the new ones.
 const PACE_ALIASES = { relaxed: 'easy', steady: 'medium', speedy: 'hard', falls: 'medium' };
 const paceOf = p => PACE_RULES[p] ? p : PACE_ALIASES[p] ?? 'easy';
+const FALL_BACK = 10;
 const fallMs = () => (reducedMotion() ? 700 : 1500);
 
 let typed = 0, correct = 0;
@@ -154,7 +155,7 @@ function input(key, src = 'kbd') {
 // as animation, never typing; recover() brings Milo back to the same leap.
 function startFall(kind, detail = {}) {
   fallKind = kind;
-  fallTo = firstLeap();
+  fallTo = Math.max(firstLeap(), steps - FALL_BACK);
   typed = 0;
   jumping = true;
   jumpStart = performance.now();
@@ -171,7 +172,7 @@ function recover() {
   const kind = fallKind, from = steps;
   fallKind = null;
   jumping = false;
-  steps = fallTo; // back to the bottom
+  steps = fallTo; // 10 leaps down
   pick(); // a fresh target; its time starts now that Milo is ready
   emit('recover', { kind, leap: steps, from });
 }

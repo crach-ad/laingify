@@ -112,8 +112,9 @@ Milo on his platform and show the message).
 | Medium | 8 s | the deadline, or the 3rd wrong letter on a target | no |
 | Hard | 4 s | the deadline, or the 1st wrong letter | no |
 
-- **A fall on medium or hard sends Milo back to the bottom**: leap 0, or the
-  moon (leap 100) for a words-only practice. Accuracy, attempts and time keep
+- **A fall on medium or hard sends Milo 10 leaps back down** (`FALL_BACK`),
+  never below the bottom of the climb: leap 0, or the moon (leap 100) for a
+  words-only practice. Accuracy, attempts and time keep
   counting; the climb's leaps start again.
 - **Hard is words all the way**, from the first leap, ignoring the letter row:
   2-letter words for the first quarter of the climb, then 3, 4 and 5 letters
@@ -149,9 +150,9 @@ Milo on his platform and show the message).
   second); the third makes Milo jump, fall short and drop out of view. On hard
   the first does. Misses count per target.
 - **During any fall:** further keys are ignored (`busy`), and nothing advances.
-- **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back at the bottom
-  with "Back to the bottom — try again!" (or "— a little quicker this time!").
-  If he was already there, it's just "Try again!". A fresh target appears and
+- **Recovery:** after 1.5 s (0.7 s in calm motion), Milo is back on the platform
+  10 leaps down with "Down 10 leaps — try again!" (or "— a little quicker this
+  time!"). Near the bottom it's fewer leaps; at the bottom it's just "Try again!". A fresh target appears and
   its time starts then.
 - **Resume:** session summaries keep Milo's current leap (`summary.leap`) as
   well as the furthest one, so a resumed climb starts where he is now.

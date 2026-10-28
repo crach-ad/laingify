@@ -40,7 +40,7 @@ export type SessionSummary = {
   v: 1;
   phases: Record<Phase, PhaseStats>;
   furthestLeap: number;
-  // Where Milo is now (falls on medium and hard send him back to the bottom).
+  // Where Milo is now (falls on medium and hard send him 10 leaps down).
   // Absent from summaries stored before falls reset the climb.
   leap?: number;
   // Consecutive targets completed with no wrong key or timeout (as the game shows it).

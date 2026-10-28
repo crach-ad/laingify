@@ -631,7 +631,7 @@ function init() {
         restorePlatform(platforms.get(d.from));
         restorePlatform(platforms.get(steps));
         resetMilo();
-        if (d.from !== steps) { animator.play('Idle', { fade: 0 }); layout(); } // back to the bottom
+        if (d.from !== steps) { animator.play('Idle', { fade: 0 }); layout(); } // moved down
         play('land');
         animator.play('Land', { once: true, fade: 0.08 });
         burst(standPos(steps, tmp).clone().add(new THREE.Vector3(0, 0.3, 0)), { n: 12, color: '#fff3c4', speed: 1.4, up: 1.2, life: 0.7, size: 0.18 });
@@ -643,7 +643,7 @@ function init() {
   // ---- falls (medium and hard) ---------------------------------------------------------------------------
   // Both play inside the rules' fall time: a near miss (jump short, drop out
   // of view) or the platform giving way. Milo then pops back onto a restored
-  // platform — or, when the fall sends him to the bottom (fallTo), stays out
+  // platform — or, when the fall sends him further down (fallTo), stays out
   // of view until recover() moves him there. Calm mode: a simple sink-and-return.
   const fallPoint = new THREE.Vector3();
   function fallMotion(p, from, to, plat, still) {
@@ -665,7 +665,7 @@ function init() {
         fallPoint.copy(from).lerp(to, 0.5 + q * 0.12).y += Math.sin(Math.PI * 0.8) * 0.95 - 10 * q * q;
         focus.copy(fallPoint);
         milo.rotation.x = q * 1.1;
-      } else if (fallTo !== steps) { // gone: he reappears at the bottom
+      } else if (fallTo !== steps) { // gone: he reappears lower down
         milo.visible = false;
       } else { // back on the start platform, dropping in from above
         const q = (p - 0.72) / 0.28;
