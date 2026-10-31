@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
+import VideoCheckpoint from "@/components/VideoCheckpoint";
 import SlideShow from "@/components/SlideShow";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { track as logEvent, flushEvents } from "@/lib/track";
@@ -36,7 +37,7 @@ type Block = {
   program?: MicrobitProgram; // the microbit block's canned behavior
   // --- knex blocks: an interactive 3D build guide assembled step by step ---
   builds?: KnexStep[]; // each step adds rods ([[x,y,z],[x,y,z]] pairs)
-  capture?: "photo" | "audio" | "text" | "choice" | "fields";
+  capture?: "video" | "photo" | "audio" | "text" | "choice" | "fields";
   // fields checkpoints: one box per part, each pre-started with its sentence
   // opener; the answers join (one per line) into a single TEXT answer.
   fields?: PitchField[];
@@ -1216,7 +1217,9 @@ export default function Tutorial({
         ) : isCheckpoint ? (
           <>
             <span className="overline">
-              {current!.block.capture === "audio"
+              {current!.block.capture === "video"
+                ? "🎬 Watch your pitch"
+                : current!.block.capture === "audio"
                 ? "🎙️ Say it out loud"
                 : current!.block.capture === "choice"
                   ? "👆 Pick one"
@@ -1228,7 +1231,13 @@ export default function Tutorial({
               {current!.block.optional && " · optional"}
             </span>
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
-            {current!.block.capture === "audio" ? (
+            {current!.block.capture === "video" && currentCrit ? (
+              <VideoCheckpoint moduleId={moduleId} criterionId={currentCrit.id} savedUrl={media.get(currentCrit.id) ?? null} onSaved={e => {
+                setDone(d => new Set(d).add(currentCrit.id));
+                setMedia(m => new Map(m).set(currentCrit.id, e.url));
+                setEvidenceIds(m => new Map(m).set(currentCrit.id, e.id));
+              }} />
+            ) : current!.block.capture === "audio" ? (
               <AudioCheckpoint
                 done={currentDone}
                 savedUrl={currentCrit ? (media.get(currentCrit.id) ?? null) : null}

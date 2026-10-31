@@ -1700,6 +1700,8 @@ async function main() {
 
   const modules = [module1, fc2, fc3, module2, cad2, e1, e2, e3, e4, e5, e6, e7, e8, m1, m2, m3, m4, m5, m6, m7, m8, module4, hitl1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, empower1, empower2, empower3];
 
+  modules.push(await createModule(elevatorPitchAnalysisData()), await createModule(inspireHerShowcaseData()));
+
   if (UPDATE) {
     // Sync class assignments to the seed's module list and order.
     const klass = await prisma.class.findFirst({ where: { orgId: org.id, classCode: CLASS_CODE } });

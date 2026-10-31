@@ -19,6 +19,8 @@ function itemHtml(item: PortfolioItem): string {
   if (item.kind === "submission") {
     body = `<p class="text">${esc(item.text ?? "")}</p>`;
     if (item.feedbackSummary) body += `<p class="feedback">Feedback: ${esc(item.feedbackSummary)}</p>`;
+  } else if (item.type === "VIDEO") {
+    body = `<p>Video: ${esc(item.caption ?? "Elevator pitch")}. Open your signed-in Laingify portfolio to watch this private video; it is not embedded in this download.</p>`;
   } else if (item.type === "PHOTO" && item.url) {
     body = `<img src="${item.url}" alt="${esc(item.caption ?? "Work photo")}" />`;
     if (item.caption) body += `<p class="muted">${esc(item.caption)}</p>`;

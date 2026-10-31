@@ -182,8 +182,9 @@ export default async function ReviewPage({
                     className="mb-2 max-h-64 rounded-lg border border-[var(--border-soft)]"
                   />
                 )}
+                {e.url && e.type === "VIDEO" && <video controls playsInline preload="metadata" src={e.url} className="mb-2 w-full rounded-lg" />}
                 {e.text && <p className="whitespace-pre-wrap leading-relaxed">{e.text}</p>}
-                {e.url && e.type !== "PHOTO" && (
+                {e.url && e.type !== "PHOTO" && e.type !== "VIDEO" && (
                   <a href={e.url} className="underline" style={{ color: "var(--info-text)" }}>
                     {e.url}
                   </a>

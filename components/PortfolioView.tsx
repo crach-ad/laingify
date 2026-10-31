@@ -52,6 +52,7 @@ function ItemBody({ item }: { item: PortfolioItem }) {
       </>
     );
   }
+  if (item.type === "VIDEO" && item.url) return <div><video controls playsInline preload="metadata" src={item.url} className="w-full rounded-lg" /><p className="muted mt-2 text-sm">{item.caption} · Video playback requires signing in.</p></div>;
   if (item.type === "PHOTO" && item.url) {
     return (
       <>
@@ -110,7 +111,9 @@ function ItemBody({ item }: { item: PortfolioItem }) {
 const KIND_LABEL = (item: PortfolioItem) =>
   item.kind === "submission"
     ? "✍️ Writing"
-    : item.type === "PHOTO"
+    : item.type === "VIDEO"
+      ? "🎬 Video"
+      : item.type === "PHOTO"
       ? "📸 Photo"
       : item.type === "AUDIO"
         ? "🎙️ Voice note"
