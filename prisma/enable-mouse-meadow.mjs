@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 try {
   const code = process.argv.find(arg => arg.startsWith('--class-code='))?.split('=')[1];
   if ((!code && !process.argv.includes('--all')) || (code && process.argv.includes('--all'))) throw new Error('Choose --all or --class-code=CODE.');
-  const classes = await prisma.class.findMany({ where: code ? { classCode: code.toUpperCase() } : {}, select: { id: true, orgId: true } });
+  const classes = await prisma.class.findMany({ where: { ...(code ? { classCode: code.toUpperCase() } : {}), org: { name: { not: 'IgniteHer' } } }, select: { id: true, orgId: true } });
   if (!classes.length) throw new Error('No matching classes.');
   const orgIds = [...new Set(classes.map(row => row.orgId))];
   console.log(JSON.stringify({ module: MOUSE_MEADOW_TITLE, organizations: orgIds.length, classes: classes.length, apply: process.argv.includes('--apply') }));

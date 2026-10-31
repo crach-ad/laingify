@@ -19,6 +19,7 @@ const SHOW_PROFILE_SETUP = false;
 export default async function Dashboard() {
   const { learner, klass, sprite } = await requireLearner();
   const band = bandConfig(klass.band);
+  const isIgniteHer = (await prisma.org.findUnique({ where: { id: klass.orgId }, select: { name: true } }))?.name === "IgniteHer";
   const resources = classResources(klass.classCode);
   // Only where the class has Letter Leaper (the game plays from that module).
   const leaperLink = (await offersLetterLeaperLink(klass.orgId)) && (await letterLeaperModuleId(klass.id, klass.orgId)) !== null;
@@ -226,11 +227,11 @@ export default async function Dashboard() {
         </div>
       </section>
 
-      <Link href={mouseModule ? `/learn/${mouseModule.m.id}` : "/play/mouse"} className="card card-interactive mt-8 flex items-center gap-4 p-6">
+      {!isIgniteHer && <Link href={mouseModule ? `/learn/${mouseModule.m.id}` : "/play/mouse"} className="card card-interactive mt-8 flex items-center gap-4 p-6">
         <span className="text-4xl">🌻</span>
         <div><h2 className="text-lg font-semibold">Mouse Meadow</h2><p className="muted mt-1 text-sm">75 mouse-skill challenges, class scores, and a Meadow Explorer badge.</p></div>
         <span className="ml-auto">→</span>
-      </Link>
+      </Link>}
 
       {/* Resources — class-specific links (lib/class-resources.ts) */}
       {resources.length > 0 && (
