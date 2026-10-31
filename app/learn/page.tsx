@@ -84,6 +84,16 @@ export default async function Dashboard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+          {klass.classCode.toUpperCase() === "IGNITE" && (
+            <a
+              href="/resources/igniteher/inspireher.pptx"
+              download="InspireHER.pptx"
+              className="btn-primary flex h-10 items-center gap-2 whitespace-nowrap px-4 text-sm"
+              title="Download the InspireHER PowerPoint presentation"
+            >
+              InspireHER <span aria-hidden>↓</span>
+            </a>
+          )}
           {/* Class extra (lib/class-features.ts): Letter Leaper, one click from the header. */}
           {leaperLink && (
             // A plain link: the route redirects to the game's static page.
