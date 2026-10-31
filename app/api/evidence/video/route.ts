@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const path = objectPath(ticket.learner, ticket.module, ticket.criterion, ticket.id);
     const info = await storage(`/object/info/${VIDEO_BUCKET}/${path}`);
     const size = Number(info.metadata?.size ?? info.size);
-    const mime = info.metadata?.mimetype ?? info.contentType;
+    const mime = info.metadata?.mimetype ?? info.content_type ?? info.contentType;
     if (size !== ticket.size || size > VIDEO_LIMIT || !VIDEO_TYPES.includes(mime)) return NextResponse.json({ error: 'Uploaded video does not match. Please upload it again.' }, { status: 400 });
     const url = `/api/evidence/video/${ticket.id}`;
     const evidence = await prisma.evidence.upsert({ where: { id: ticket.id }, update: {}, create: { id: ticket.id, learnerId: s.learnerId, moduleId, criterionId, type: 'VIDEO', url, caption: ticket.name } });

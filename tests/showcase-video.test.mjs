@@ -28,7 +28,7 @@ function setup() {
       module: { findUnique: async () => ({ orgId: 'org-a' }) },
       evidence: { findUnique: async () => state.evidence, upsert: async ({ create }) => { state.writes++; state.evidence ??= create; return state.evidence; } },
     } },
-    '@/lib/video-storage': { VIDEO_BUCKET: 'private', VIDEO_LIMIT: 50 * 1024 * 1024, VIDEO_TYPES: ['video/mp4','video/webm','video/quicktime'], objectPath: (...p) => p.join('/'), videoConfig: () => ({ base: 'https://storage.test/storage/v1' }), storage: async (path) => { state.calls.push(path); if(path.startsWith('/object/info/'))return {metadata:{size:state.size,mimetype:state.mime}};return path.startsWith('/object/upload/') ? {url:'/object/upload/sign/private/test?token=upload'} : {signedURL:'/object/sign/private/test?token=read'}; } },
+    '@/lib/video-storage': { VIDEO_BUCKET: 'private', VIDEO_LIMIT: 50 * 1024 * 1024, VIDEO_TYPES: ['video/mp4','video/webm','video/quicktime'], objectPath: (...p) => p.join('/'), videoConfig: () => ({ base: 'https://storage.test/storage/v1' }), storage: async (path) => { state.calls.push(path); if(path.startsWith('/object/info/'))return {size:state.size,content_type:state.mime,metadata:{}};return path.startsWith('/object/upload/') ? {url:'/object/upload/sign/private/test?token=upload'} : {signedURL:'/object/sign/private/test?token=read'}; } },
   };
   const { POST } = load('app/api/evidence/video/route.ts', mocks);
   const { GET } = load('app/api/evidence/video/[id]/route.ts', mocks);
