@@ -4,6 +4,8 @@ An additive private class under Coach Crachad's main instructor account
 (`crachad.laing@gmail.com`), in the Private Lessons organization. Class code:
 `ROWAN`. Rowan has a PIN-protected roster profile; setup generates the initial
 PIN once and preserves existing learners, PINs, evidence, and assignments on reruns.
+Both Coach Crachad logins (including `crachad@lainglaing.com`, when present)
+receive access to this same private organization without changing their other access.
 
 The project is six ordered modules in the PiCar-Pro topic. Together they cover
 48 assembly tasks and all 62 pages of the user-supplied Adeept Lesson 6 manual:

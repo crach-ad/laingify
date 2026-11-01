@@ -7,9 +7,12 @@ export const ROWAN_ORG_ID='laingify-private-lessons-crachad';
 export const ROWAN_CLASS_CODE='ROWAN';
 export const ROWAN_CLASS_NAME='Lessons with Rowan';
 export const ROWAN_INSTRUCTOR_EMAIL='crachad.laing@gmail.com';
+export const ROWAN_ALTERNATE_INSTRUCTOR_EMAIL='crachad@lainglaing.com';
 export async function setupRowan(prisma,{apply=false}={}) {
   const instructor=await prisma.instructor.findUnique({where:{email:ROWAN_INSTRUCTOR_EMAIL},select:{id:true,displayName:true}});
   if (!instructor) throw new Error('The main Coach Crachad account could not be verified.');
+  const alternate=await prisma.instructor.findUnique({where:{email:ROWAN_ALTERNATE_INSTRUCTOR_EMAIL},select:{id:true,displayName:true}});
+  const instructorIds=[...new Set([instructor.id,...(alternate ? [alternate.id] : [])])];
   const existing=await prisma.class.findUnique({where:{classCode:ROWAN_CLASS_CODE},select:{id:true,orgId:true,name:true}});
   if (existing && (existing.orgId!==ROWAN_ORG_ID || existing.name!==ROWAN_CLASS_NAME)) throw new Error('ROWAN is already used by another class. No changes were made.');
   const plan={className:ROWAN_CLASS_NAME,classCode:ROWAN_CLASS_CODE,organization:'Private Lessons',instructor:ROWAN_INSTRUCTOR_EMAIL,lessons:picarModuleDefinitions().map(m=>m.title),apply};
@@ -17,7 +20,7 @@ export async function setupRowan(prisma,{apply=false}={}) {
   const result=await prisma.$transaction(async tx=>{
     const org=await tx.org.upsert({where:{id:ROWAN_ORG_ID},update:{},create:{id:ROWAN_ORG_ID,name:'Private Lessons',context:'community'}});
     // Preserve the instructor's home organization and all existing access.
-    await tx.instructor.update({where:{id:instructor.id},data:{accessOrgs:{connect:{id:org.id}}}});
+    for (const id of instructorIds) await tx.instructor.update({where:{id},data:{accessOrgs:{connect:{id:org.id}}}});
     const klass=await tx.class.upsert({where:{classCode:ROWAN_CLASS_CODE},update:{},create:{orgId:org.id,name:ROWAN_CLASS_NAME,classCode:ROWAN_CLASS_CODE,band:'YOUTH',minAuthTier:1}});
     const modules=await createPicarModules(moduleWriter(tx,org,true));
     await checkCheckpoints(tx,modules);
