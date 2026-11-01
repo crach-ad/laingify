@@ -33,8 +33,8 @@ export default async function ModulePage({
   });
   if (!assigned) notFound();
 
-  const module = await prisma.module.findUnique({ where: { id: moduleId } });
-  if (!module) notFound();
+  const lessonModule = await prisma.module.findUnique({ where: { id: moduleId } });
+  if (!lessonModule) notFound();
 
   // First visit starts the clock; never downgrade a completed module.
   const existingProgress = await prisma.moduleProgress.findUnique({
@@ -72,10 +72,21 @@ export default async function ModulePage({
     }),
   ]);
 
-  const blocks: Block[] = JSON.parse(module.contentJson || "[]");
+  const blocks: Block[] = JSON.parse(lessonModule.contentJson || "[]");
   // Checkpoint modules (camp format) use the gated step-by-step Tutorial
   // instead of the read-then-workspace Lesson flow.
   const isTutorial = blocks.some((b) => b.type === "checkpoint");
+  // For long physical builds, replay the last recorded step rather than jumping
+  // past all construction cards to the next evidence upload.
+  let initialStep: number | undefined;
+  if (blocks.some(b => b.type === "assembly")) {
+    const lastView = await prisma.learnerEvent.findFirst({ where: { learnerId: learner.id, moduleId, type: "step_view" }, orderBy: { createdAt: "desc" }, select: { meta: true } });
+    try {
+      const value = lastView ? JSON.parse(lastView.meta).step : undefined;
+      if (Number.isInteger(value) && value >= 0) initialStep = value;
+    } catch { /* A missing cursor safely starts the assembly lesson at the beginning. */ }
+  }
+
   // Returning learners (anyone with prior work) skip straight to the activity.
   const hasActivity = complete || evidence.length > 0 || !!lastSubmission || threads.length > 0;
   const fb = lastSubmission?.feedback;
@@ -92,39 +103,40 @@ export default async function ModulePage({
   return (
     <main className={`mx-auto w-full max-w-2xl flex-1 px-6 py-8 ${band.textScale}`}>
       <Link
-        href={module.topic ? `/learn/topic/${slugifyTopic(module.topic)}` : "/learn"}
+        href={lessonModule.topic ? `/learn/topic/${slugifyTopic(lessonModule.topic)}` : "/learn"}
         className="text-sm font-medium transition-colors hover:text-[var(--text)]"
         style={{ color: "var(--faint)" }}
       >
-        ← {module.topic || "All topics"}
+        ← {lessonModule.topic || "All topics"}
       </Link>
 
       <header className="animate-fade-up mt-5 flex items-start gap-4">
         <span className="tile flex h-14 w-14 shrink-0 items-center justify-center rounded-[13px] text-3xl">
-          {module.badgeIcon}
+          {lessonModule.badgeIcon}
         </span>
         <div>
           <div className="overline mb-1.5">Module</div>
-          <h1 className="text-3xl font-semibold tracking-tight">{module.title}</h1>
-          <p className="muted mt-1.5 text-sm">{module.summary}</p>
+          <h1 className="text-3xl font-semibold tracking-tight">{lessonModule.title}</h1>
+          <p className="muted mt-1.5 text-sm">{lessonModule.summary}</p>
         </div>
       </header>
 
       {isTutorial ? (
         <Tutorial
           moduleId={moduleId}
-          badge={{ name: module.badgeName, icon: module.badgeIcon }}
+          badge={{ name: lessonModule.badgeName, icon: lessonModule.badgeIcon }}
           blocks={blocks}
           criteria={criteria.map((c) => ({ id: c.id, label: c.label, status: c.status }))}
           evidence={evidence.map((e) => ({ id: e.id, criterionId: e.criterionId, type: e.type, url: e.url, text: e.text }))}
           initialComplete={complete}
           hasSubmission={!!lastSubmission}
+          initialStep={initialStep}
         />
       ) : (
         <Lesson blocks={blocks} startRevealed={hasActivity}>
           <ModuleWorkspace
             moduleId={moduleId}
-            badge={{ name: module.badgeName, icon: module.badgeIcon, description: module.badgeDescription }}
+            badge={{ name: lessonModule.badgeName, icon: lessonModule.badgeIcon, description: lessonModule.badgeDescription }}
             spriteName={sprite.name}
             initialCriteria={criteria}
             initialEvidence={evidence.map((e) => ({

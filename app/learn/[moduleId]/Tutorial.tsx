@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import VideoCheckpoint from "@/components/VideoCheckpoint";
 import SlideShow from "@/components/SlideShow";
+import AssemblyStep from "@/components/AssemblyStep";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { track as logEvent, flushEvents } from "@/lib/track";
 import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
@@ -25,6 +26,9 @@ type Block = {
   text?: string;
   url?: string;
   urls?: string[];
+  materials?: string[];
+  sourcePages?: number[];
+  sourceUrl?: string;
   // --- circuit blocks: an in-page Arduino simulator running an authored sketch ---
   // --- microbit blocks: an in-page micro:bit simulator running one canned,
   // authored behavior (`program`) — same "one fixed program per block" model
@@ -173,9 +177,11 @@ function TextCheckpoint({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(savedText ?? "");
 
-  useEffect(() => {
+  const [previousDone, setPreviousDone] = useState(done);
+  if (done !== previousDone) {
+    setPreviousDone(done);
     if (done) setEditing(false);
-  }, [done]);
+  }
 
   const showForm = !done || editing;
 
@@ -710,6 +716,7 @@ export default function Tutorial({
   evidence: initialEvidence,
   initialComplete,
   hasSubmission,
+  initialStep,
 }: {
   moduleId: string;
   badge: { name: string; icon: string };
@@ -718,6 +725,7 @@ export default function Tutorial({
   evidence: EvidenceRow[];
   initialComplete: boolean;
   hasSubmission: boolean;
+  initialStep?: number;
 }) {
   // Track choice reshapes the tutorial: blocks tagged for another track are
   // filtered out entirely, so learners only ever see their own path.
@@ -775,6 +783,10 @@ export default function Tutorial({
     steps[steps.length - 1]?.block.type === "prompt" ? steps.length - 1 : steps.length;
   const [stepRaw, setStep] = useState(() => {
     if (initialComplete || hasSubmission) return steps.length;
+    if (blocks.some(b => b.type === "assembly")) {
+      const lastSafe = firstPending === -1 ? wrapUpStep : firstPending;
+      return Number.isInteger(initialStep) && initialStep! >= 0 ? Math.min(initialStep!, lastSafe) : 0;
+    }
     if (initiallyDone.size === 0) return 0;
     return firstPending === -1 ? wrapUpStep : firstPending;
   });
@@ -784,8 +796,9 @@ export default function Tutorial({
   // --- analytics (ANALYTICS.md Phase A): session start + per-step dwell -----
   // Dwell counts visible-tab time only; the event API caps each step_view so
   // an abandoned open tab can't inflate time-on-task.
-  const dwellRef = useRef<{ step: number; since: number; acc: number }>({ step, since: Date.now(), acc: 0 });
+  const dwellRef = useRef<{ step: number; since: number; acc: number }>({ step, since: 0, acc: 0 });
   useEffect(() => {
+    dwellRef.current.since = Date.now();
     logEvent("session_start", moduleId);
     const onVisibility = () => {
       const d = dwellRef.current;
@@ -1380,6 +1393,8 @@ export default function Tutorial({
           </pre>
         ) : current!.block.type === "video" && current!.block.url ? (
           <video controls src={current!.block.url} className="w-full rounded-xl" />
+        ) : current!.block.type === "assembly" && current!.block.urls?.length ? (
+          <AssemblyStep key={`assembly-${step}`} text={current!.block.text} materials={current!.block.materials} urls={current!.block.urls} sourcePages={current!.block.sourcePages} sourceUrl={current!.block.sourceUrl} />
         ) : current!.block.type === "slides" && current!.block.urls?.length ? (
           <SlideShow urls={current!.block.urls} caption={current!.block.text} />
         ) : current!.block.type === "model" && current!.block.url ? (
