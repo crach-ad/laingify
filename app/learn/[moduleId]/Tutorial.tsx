@@ -747,6 +747,7 @@ export default function Tutorial({
     () => buildSteps(blocks.filter((b) => !b.track || b.track === track)),
     [blocks, track],
   );
+  const assemblyTouch = useRef<{ x: number; y: number } | null>(null);
   const trackPickIndex = steps.findIndex((s) => s.block.type === "trackpick");
   const critByLabel = new Map(initialCriteria.map((c) => [c.label, c]));
 
@@ -1120,7 +1121,20 @@ export default function Tutorial({
   const lastIsPrompt = steps[steps.length - 1]?.block.type === "prompt";
   const isFinalPrompt = current!.block.type === "prompt" && step === steps.length - 1;
   return (
-    <div className="mt-8 flex flex-col gap-4">
+    <div className="mt-8 flex flex-col gap-4" onTouchStart={event => {
+      assemblyTouch.current = null;
+      if (!blocks.some(b => b.type === "assembly") || (event.target as HTMLElement).closest("button,a,input,textarea,select,dialog")) return;
+      if (event.touches.length === 1) assemblyTouch.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }} onTouchCancel={() => { assemblyTouch.current = null; }} onTouchEnd={event => {
+      const start = assemblyTouch.current;
+      assemblyTouch.current = null;
+      if (!start || !event.changedTouches.length) return;
+      const dx = event.changedTouches[0].clientX - start.x;
+      const dy = event.changedTouches[0].clientY - start.y;
+      if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (dx > 0 && step > 0) setStep(step - 1);
+      else if (dx < 0 && step < steps.length - 1 && (currentDone || canSkip)) setStep(step + 1);
+    }}>
       {/* Progress */}
       <div className="flex items-center gap-3">
         <div className="flex flex-1 gap-1.5">

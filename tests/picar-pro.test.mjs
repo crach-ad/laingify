@@ -12,6 +12,15 @@ test('six ordered lessons cover all 62 source pages in 48 visual tasks',()=>{
  assert.deepEqual([...new Set(tasks.flatMap(b=>b.sourcePages))].sort((a,b)=>a-b),Array.from({length:62},(_,i)=>i+1));
  for(const task of tasks){assert.equal(task.urls.length,task.sourcePages.length);assert.equal(task.sourceUrl,PICAR_MANUAL);assert(task.materials.length);assert(task.actions.length>=2);assert(!task.autoplay);}
 });
+test('student lessons open with an embedded visual and never send learners to a PDF step',()=>{
+ for(const m of modules){
+  const first=m.blocks.find(b=>b.type!=='heading');
+  assert.equal(first.type,'text');assert(first.url.startsWith('/tutorial/picar-pro/page-'));
+  assert(first.text.includes('Tap Next or swipe left'));
+  assert(!m.blocks.some(b=>b.type==='link'&&b.url?.includes('.pdf')));
+  assert(m.blocks.some(b=>b.type==='assembly'&&b.urls.length&&b.actions.length));
+ }
+});
 test('checkpoints and required criteria align, and safety approval stays instructor-controlled',()=>{
  for(const m of modules){
   const labels=m.criteria.map(c=>c.label);assert.equal(new Set(labels).size,labels.length);

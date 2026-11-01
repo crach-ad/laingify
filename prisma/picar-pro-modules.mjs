@@ -9,13 +9,14 @@ const task = (title, pages, text, materials, actions, extra = {}) => [
 const poweredOff = 'Keep batteries removed and external power disconnected throughout assembly. Do not power up to test movement in this lesson.';
 const pivot = 'This is a moving pivot. Do not overtighten the lock nut; check for free movement with your coach.';
 function phase({ title, summary, badgeName, badgeIcon, firstPage, intro = [], steps, photoLabel, photoText, checks, extraCriteria = [] }) {
+  summary = summary.replace(/ Follow (?:manual )?section [^.]+\./, '');
+  const overviewPage = steps.at(-1)[1].sourcePages.at(-1);
   return {
     topic: PICAR_TOPIC, board: 'raspberry-pi', title, summary,
     badgeName, badgeIcon, badgeDescription: `Documented this PiCar-Pro build phase: ${photoLabel.toLowerCase()}.`,
     blocks: [
       { type: 'heading', text: 'Before you build' },
-      { type: 'text', kind: 'learn', text: `${summary}\n\nWork through one task at a time. Compare your assembly with each diagram before moving on. You can enlarge every diagram.`, warn: poweredOff },
-      { type: 'link', url: `${PICAR_MANUAL}#page=${firstPage}`, text: `Open the original Adeept instructions - page ${firstPage}` },
+      { type: 'text', kind: 'learn', url: page(overviewPage), text: `${summary}\n\nYour illustrated build tutorial is right here. Tap Next or swipe left to work through the parts, diagrams, and actions for each task. Tap any assembly diagram to enlarge it.`, warn: poweredOff },
       ...intro,
       ...steps.flat(),
       { type: 'heading', text: 'Check your build' },
@@ -37,7 +38,6 @@ export function picarModuleDefinitions() {
       summary: 'Prepare the servos, assemble the A01-A06 arm and camera mount, and fit the camera. Follow manual section 6.1, pages 1-17.',
       badgeName: 'Arm Builder', badgeIcon: '🦾',
       intro: [
-        { type: 'image', url: page(62), text: 'The completed PiCar-Pro. We will build it in six phases using the actual Adeept diagrams.' },
         { type: 'text', kind: 'learn', text: 'Sort the labeled A01-A19 parts, screws, nuts, washers, bearings, servos, motor couplings, cables, and electronics into small trays. Use the kit-supplied screwdriver and L-shaped wrench, a ruler to distinguish screw lengths, and a clear work mat.', tip: 'M3 and M2 screws are different diameters. Match the full printed screw size before using it; do not substitute a longer screw.' },
         { type: 'text', kind: 'learn', text: 'STOP: the supplied guide starts at Lesson 6. It requires every servo to be centered at 90 degrees using Lesson 5, Preparations before Assembly. Lesson 5 is not included here. Complete that preparation with your coach before fitting any servo arms, then disconnect power.', warn: 'Do not guess servo positions or force the servo shaft by hand. The 90-, 180-, and 30-degree labels later in this build are assembly orientations shown in the diagrams.' },
         { type: 'checkpoint', capture: 'choice', criterionLabel: 'Servo preparation confirmed', text: 'Ask your coach to verify the Lesson 5 preparation. Continue only when all servos are centered and power is disconnected.', options: ['Coach has checked that every servo was centered at 90 degrees using Lesson 5, and power is now disconnected.'] },

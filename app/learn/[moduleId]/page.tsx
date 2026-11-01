@@ -76,6 +76,12 @@ export default async function ModulePage({
   // Checkpoint modules (camp format) use the gated step-by-step Tutorial
   // instead of the read-then-workspace Lesson flow.
   const isTutorial = blocks.some((b) => b.type === "checkpoint");
+  const isAssembly = blocks.some(b => b.type === "assembly");
+  const buildModules = isAssembly ? await prisma.classModule.findMany({
+    where: { classId: klass.id, module: { topic: lessonModule.topic } },
+    orderBy: { order: "asc" },
+    include: { module: { select: { id: true, title: true, badgeIcon: true } } },
+  }) : [];
   // For long physical builds, replay the last recorded step rather than jumping
   // past all construction cards to the next evidence upload.
   let initialStep: number | undefined;
@@ -120,6 +126,12 @@ export default async function ModulePage({
           <p className="muted mt-1.5 text-sm">{lessonModule.summary}</p>
         </div>
       </header>
+
+      {isAssembly && <nav className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3" aria-label="PiCar-Pro build modules">
+        {buildModules.map(({ module: part }) => <Link key={part.id} href={`/learn/${part.id}`} aria-current={part.id === moduleId ? "page" : undefined} className={`rounded-xl border p-3 text-sm ${part.id === moduleId ? "border-[var(--accent)] bg-[var(--tile)]" : "border-[var(--border)]"}`}>
+          <span aria-hidden="true">{part.badgeIcon} </span>{part.title.replace(/^PiCar-Pro /, "")}
+        </Link>)}
+      </nav>}
 
       {isTutorial ? (
         <Tutorial
