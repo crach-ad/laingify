@@ -55,6 +55,13 @@ modules keep their existing resume behavior.
 
 ## Checks
 
+Rowan's student assembly view uses a simplified diagram walkthrough: one image
+per slide, freely available Next/Back buttons, touch swipes, and the six build
+module links. It omits response widgets, action checklists, evidence capture,
+reflection prompts, parts lists, and chat. Browsing records a diagram cursor
+(`step_view` with `mode: diagrams`) but does not award a badge or submit work.
+Teacher previews retain the full instructions and criteria.
+
 ```sh
 node --test tests/picar-pro.test.mjs
 npx tsc --noEmit

@@ -9,11 +9,14 @@ import SpriteChat from "../SpriteChat";
 import ModuleWorkspace from "./ModuleWorkspace";
 import Lesson from "./Lesson";
 import Tutorial from "./Tutorial";
+import AssemblyStep from "@/components/AssemblyStep";
+import StepThroughTutorial from "@/components/StepThroughTutorial";
 
 type Block = {
   type: string;
   text?: string;
   url?: string;
+  urls?: string[];
   capture?: "photo" | "audio";
   criterionLabel?: string;
 };
@@ -86,11 +89,17 @@ export default async function ModulePage({
   // past all construction cards to the next evidence upload.
   let initialStep: number | undefined;
   if (blocks.some(b => b.type === "assembly")) {
-    const lastView = await prisma.learnerEvent.findFirst({ where: { learnerId: learner.id, moduleId, type: "step_view" }, orderBy: { createdAt: "desc" }, select: { meta: true } });
+    const lastView = await prisma.learnerEvent.findFirst({ where: { learnerId: learner.id, moduleId, type: "step_view", meta: { contains: '"mode":"diagrams"' } }, orderBy: { createdAt: "desc" }, select: { meta: true } });
     try {
       const value = lastView ? JSON.parse(lastView.meta).step : undefined;
       if (Number.isInteger(value) && value >= 0) initialStep = value;
     } catch { /* A missing cursor safely starts the assembly lesson at the beginning. */ }
+  }
+  let heading = "Build step";
+  const diagramSteps: { title: string; url: string }[] = [];
+  for (const b of blocks) {
+    if (b.type === "heading") heading = b.text ?? "Build step";
+    if (b.type === "assembly") for (const url of b.urls ?? []) diagramSteps.push({ title: heading, url });
   }
 
   // Returning learners (anyone with prior work) skip straight to the activity.
@@ -123,7 +132,7 @@ export default async function ModulePage({
         <div>
           <div className="overline mb-1.5">Module</div>
           <h1 className="text-3xl font-semibold tracking-tight">{lessonModule.title}</h1>
-          <p className="muted mt-1.5 text-sm">{lessonModule.summary}</p>
+          {!isAssembly && <p className="muted mt-1.5 text-sm">{lessonModule.summary}</p>}
         </div>
       </header>
 
@@ -133,7 +142,11 @@ export default async function ModulePage({
         </Link>)}
       </nav>}
 
-      {isTutorial ? (
+      {isAssembly ? (
+        <StepThroughTutorial key={moduleId} titles={diagramSteps.map(s => s.title)} preview={false} moduleId={moduleId} initialStep={initialStep}>
+          {diagramSteps.map((s, i) => <AssemblyStep key={i} urls={[s.url]} />)}
+        </StepThroughTutorial>
+      ) : isTutorial ? (
         <Tutorial
           moduleId={moduleId}
           badge={{ name: lessonModule.badgeName, icon: lessonModule.badgeIcon }}
@@ -166,7 +179,7 @@ export default async function ModulePage({
         </Lesson>
       )}
 
-      <SpriteChat
+      {!isAssembly && <SpriteChat
         sprite={{
           name: sprite.name,
           avatar: sprite.avatar,
@@ -177,7 +190,7 @@ export default async function ModulePage({
           avatarColors: sprite.avatarColors,
         }}
         moduleId={moduleId}
-      />
+      />}
     </main>
   );
 }

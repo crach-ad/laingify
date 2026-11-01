@@ -1,9 +1,13 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { track } from "@/lib/track";
 
-export default function StepThroughTutorial({ titles, children }: { titles: string[]; children: ReactNode[] }) {
-  const [step, setStep] = useState(0);
+export default function StepThroughTutorial({ titles, children, preview = true, moduleId, initialStep = 0 }: { titles: string[]; children: ReactNode[]; preview?: boolean; moduleId?: string; initialStep?: number }) {
+  const [step, setStep] = useState(Math.max(0, Math.min(initialStep, children.length - 1)));
+  useEffect(() => {
+    if (moduleId) track("step_view", moduleId, { step, mode: "diagrams" });
+  }, [moduleId, step]);
   const root = useRef<HTMLElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const count = children.length;
@@ -26,7 +30,10 @@ export default function StepThroughTutorial({ titles, children }: { titles: stri
     </div>
     <div className="py-5" onTouchStart={event => {
       touch.current = null;
-      if ((event.target as HTMLElement).closest("button,a,input,textarea,select,dialog")) return;
+      const target = event.target as HTMLElement;
+      if (target.closest("a,input,textarea,select,dialog")) return;
+      const button = target.closest("button");
+      if (button && !button.getAttribute("aria-label")?.startsWith("Enlarge assembly")) return;
       if (event.touches.length === 1) touch.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
     }} onTouchCancel={() => { touch.current = null; }} onTouchEnd={event => {
       const start = touch.current;
@@ -34,13 +41,16 @@ export default function StepThroughTutorial({ titles, children }: { titles: stri
       if (!start || !event.changedTouches.length) return;
       const dx = event.changedTouches[0].clientX - start.x;
       const dy = event.changedTouches[0].clientY - start.y;
-      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) go(step + (dx < 0 ? 1 : -1));
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        event.preventDefault();
+        go(step + (dx < 0 ? 1 : -1));
+      }
     }}>
       <h2 className="mb-4 text-xl font-semibold" aria-live="polite">{titles[step]}</h2>
       <div key={step}>{children[step]}</div>
     </div>
     {controls}
     {step === count - 1 && <p className="muted mt-4 text-center text-sm">End of this lesson. Choose the next lesson from the class projects.</p>}
-    <p className="muted mt-4 text-center text-xs">Teacher preview · browsing steps does not submit Rowan’s work.</p>
+    {preview && <p className="muted mt-4 text-center text-xs">Teacher preview · browsing steps does not submit Rowan’s work.</p>}
   </section>;
 }
