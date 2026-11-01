@@ -6,6 +6,7 @@ import { stepAnalytics } from "@/lib/insights";
 import { slugifyTopic } from "@/lib/topics";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import AssemblyStep from "@/components/AssemblyStep";
+import StepThroughTutorial from "@/components/StepThroughTutorial";
 import { ConsoleHeader } from "../../../../ConsoleParts";
 
 // Instructor preview of one module as assigned to one class: every step card
@@ -181,6 +182,7 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
   const active = klass.roster.filter((r) => activeIds.has(r.learnerId));
 
   const blocks = JSON.parse(mod.contentJson) as Block[];
+  const isAssembly = blocks.some(b => b.type === "assembly");
   // Group into steps: each heading opens a new step that collects the blocks after it.
   const steps: { heading: string | null; blocks: Block[] }[] = [];
   for (const b of blocks) {
@@ -190,6 +192,7 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
       steps[steps.length - 1].blocks.push(b);
     }
   }
+  const guidedSteps = steps.flatMap(s => s.blocks.map(b => ({ heading: s.heading ?? "Build tutorial", block: b })));
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
       <ConsoleHeader orgLabel={orgs.map((o) => o.name).join(" · ")} instructorName={instructor.displayName} />
@@ -213,6 +216,12 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
         </div>
       </section>
 
+      {isAssembly && <StepThroughTutorial titles={guidedSteps.map(s => s.heading)}>
+        {guidedSteps.map((s, i) => <StepCard key={i} b={s.block} />)}
+      </StepThroughTutorial>}
+
+      <details className="mt-6" open={!isAssembly}>
+      <summary className="cursor-pointer text-sm font-semibold">Coach notes and class progress</summary>
       {/* Criteria + who's done it */}
       <section className="mt-8 grid gap-4 sm:grid-cols-2">
         <div className="card p-5">
@@ -319,8 +328,10 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
         </section>
       )}
 
-      {/* Steps */}
-      <section className="mt-10">
+      </details>
+
+      {/* Other project previews retain their existing overview. */}
+      {!isAssembly && <section className="mt-10">
         <div className="overline mb-3">Learner view · all steps</div>
         <h2 className="text-xl font-semibold tracking-tight">What the learner sees</h2>
         <div className="mt-5 flex flex-col gap-6">
@@ -338,7 +349,7 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
             </div>
           ))}
         </div>
-      </section>
+      </section>}
     </main>
   );
 }

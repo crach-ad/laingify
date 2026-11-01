@@ -42,7 +42,12 @@ changing the instructor's home organization, and upserts only these modules.
 No reset, migration, deletion, or broad content seed is used.
 
 Deploy the AssemblyStep renderer and assets before applying to a live database.
-Instructor class/module previews render the same assembly visuals. On returning
+Instructor class/module previews show one block or assembly task at a time,
+with Next/Back buttons, a position indicator, and horizontal touch swipes.
+Parts, diagrams, and actions stay together for each assembly task. Coach notes
+and class analytics are collapsed below the tutorial; preview navigation never
+submits learner work. Other project previews keep their existing overview.
+On returning
 to an assembly lesson, the player resumes at its last recorded analytics step,
 clamped before the first unfinished checkpoint. If no step is recorded, it starts
 at the beginning instead of skipping construction to an upload. Other tutorial
