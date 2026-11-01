@@ -9,14 +9,14 @@ const task = (title, pages, text, materials, actions, extra = {}) => [
 const poweredOff = 'Keep batteries removed and external power disconnected throughout assembly. Do not power up to test movement in this lesson.';
 const pivot = 'This is a moving pivot. Do not overtighten the lock nut; check for free movement with your coach.';
 function phase({ title, summary, badgeName, badgeIcon, firstPage, intro = [], steps, photoLabel, photoText, checks, extraCriteria = [] }) {
-  summary = summary.replace(/ Follow (?:manual )?section [^.]+\./, '');
+  summary = summary.replace(/ Follow (?:manual )?section .*$/, '');
   const overviewPage = steps.at(-1)[1].sourcePages.at(-1);
   return {
     topic: PICAR_TOPIC, board: 'raspberry-pi', title, summary,
     badgeName, badgeIcon, badgeDescription: `Documented this PiCar-Pro build phase: ${photoLabel.toLowerCase()}.`,
     blocks: [
       { type: 'heading', text: 'Before you build' },
-      { type: 'text', kind: 'learn', url: page(overviewPage), text: `${summary}\n\nYour illustrated build tutorial is right here. Tap Next or swipe left to work through the parts, diagrams, and actions for each task. Tap any assembly diagram to enlarge it.`, warn: poweredOff },
+      { type: 'image', kind: 'learn', url: page(overviewPage), text: `${summary}\n\nYour illustrated build tutorial is right here. Tap Next or swipe left to work through the parts, diagrams, and actions for each task. Tap any assembly diagram to enlarge it.`, warn: poweredOff },
       ...intro,
       ...steps.flat(),
       { type: 'heading', text: 'Check your build' },

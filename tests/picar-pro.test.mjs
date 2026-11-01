@@ -15,7 +15,7 @@ test('six ordered lessons cover all 62 source pages in 48 visual tasks',()=>{
 test('student lessons open with an embedded visual and never send learners to a PDF step',()=>{
  for(const m of modules){
   const first=m.blocks.find(b=>b.type!=='heading');
-  assert.equal(first.type,'text');assert(first.url.startsWith('/tutorial/picar-pro/page-'));
+  assert.equal(first.type,'image');assert(first.url.startsWith('/tutorial/picar-pro/page-'));
   assert(first.text.includes('Tap Next or swipe left'));
   assert(!m.blocks.some(b=>b.type==='link'&&b.url?.includes('.pdf')));
   assert(m.blocks.some(b=>b.type==='assembly'&&b.urls.length&&b.actions.length));
