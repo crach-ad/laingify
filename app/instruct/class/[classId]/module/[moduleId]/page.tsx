@@ -9,7 +9,7 @@ import AssemblyStep from "@/components/AssemblyStep";
 import StepThroughTutorial from "@/components/StepThroughTutorial";
 import { ConsoleHeader } from "../../../../ConsoleParts";
 
-// Instructor preview of one module as assigned to one class: every step card
+// Instructor preview of one module as assigned to one class: the guided steps
 // the learner will see (read-only, all tracks shown), the criteria that earn
 // the badge, and which learners on this roster have done it.
 
@@ -211,7 +211,7 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
           <h1 className="text-3xl font-semibold tracking-tight">{mod.title}</h1>
           <p className="muted mt-2 text-sm">{mod.summary}</p>
           <p className="mono-label mt-3">
-            {mod.badgeIcon} {mod.badgeName} badge · {steps.length} step{steps.length === 1 ? "" : "s"} · {mod.criteria.filter((c) => c.required).length} required criteria
+            {mod.badgeIcon} {mod.badgeName} badge · {isAssembly ? guidedSteps.length : steps.length} step{(isAssembly ? guidedSteps.length : steps.length) === 1 ? "" : "s"} · {mod.criteria.filter((c) => c.required).length} required criteria
           </p>
         </div>
       </section>
