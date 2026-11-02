@@ -54,7 +54,14 @@ async function loadBoard(prefix='board') {
   boardElement('status').textContent='Loading climbers…';
   boardElement('table').hidden=true;
   try {
-    const result=await api('/leaderboard?'+new URLSearchParams({practice:(prefix==='home-board'?$('letter-set'):boardElement('practice')).value,pace:(prefix==='home-board'?$('pace'):boardElement('pace')).value}));
+    const globalBoard = prefix === 'home-board' || $('board-scope').value === 'global';
+    if(prefix === 'board') {
+      $('board-practice').closest('label').hidden=globalBoard;
+      $('board-pace').closest('label').hidden=globalBoard;
+      $('board-description').textContent=globalBoard?'All classes · best saved progress per explorer, including unfinished climbs.':'Your class · best completed climb per player.';
+      $('board-ranking').textContent=globalBoard?'Furthest leap, then accuracy, streak and recorded time. All modes combined; mode shown beside each result.':'Accuracy first, then streak, then fastest time.';
+    }
+    const result=await api('/leaderboard?'+new URLSearchParams(globalBoard?{scope:'global'}:{scope:'class',practice:boardElement('practice').value,pace:boardElement('pace').value}));
     if(sequence!==boardRequests[prefix])return;
     boardElement('entries').replaceChildren();
     const entries=prefix==='home-board'?result.entries.slice(0,5):result.entries;
@@ -63,18 +70,19 @@ async function loadBoard(prefix='board') {
         const card=document.createElement('li');
         if(row.you)card.className='your-score';
         const name=document.createElement('strong');name.textContent=row.rank+'. '+row.username+(row.you?' (you)':'');
-        const detail=document.createElement('span');detail.textContent=row.accuracy.toFixed(2)+'% · '+row.streak+' streak · '+climbTime(row.elapsed);
+        const detail=document.createElement('span');detail.textContent=(globalBoard?row.leaps+' leaps · '+row.stage+' · '+row.pace+' · ':'')+row.accuracy.toFixed(2)+'% · '+row.streak+' streak · '+climbTime(row.elapsed);
         card.append(name,detail);boardElement('entries').append(card);continue;
       }
       const tr=document.createElement('tr');
       if(row.you)tr.className='your-score';
-      for(const value of [row.rank+'. '+row.username+(row.you?' (you)':''),row.accuracy.toFixed(2)+'%',row.streak,climbTime(row.elapsed)]) {
+      for(const value of [row.rank+'. '+row.username+(row.you?' (you)':''),globalBoard?row.leaps+' · '+row.stage:'150 · Stars reached',globalBoard?row.pace+' · '+row.practice+' · '+row.scope:boardElement('pace').value,row.accuracy.toFixed(2)+'%',row.streak,climbTime(row.elapsed)]) {
         const td=document.createElement('td');td.textContent=value;tr.append(td);
       }
       boardElement('entries').append(tr);
     }
+    if(prefix==='board')$('board-personal').textContent=globalBoard&&result.personal?'Your global rank: '+result.personal.rank+' of '+result.total+' · '+result.personal.leaps+' leaps':'';
     boardElement('table').hidden=!result.entries.length;
-    boardElement('status').textContent=result.entries.length?'':'No climbs yet for this mode. Reach the stars to claim the first spot!';
+    boardElement('status').textContent=result.entries.length?'':(globalBoard?'No saved progress yet. Start climbing to join the global board!':'No completed climbs yet for this mode.');
   } catch(error) { if(sequence===boardRequests[prefix])boardElement('status').textContent=errorMessage(error); }
 }
 function openBoard() {
@@ -86,9 +94,11 @@ function openBoard() {
 }
 $('leaderboard').onclick=$('finish-leaderboard').onclick=openBoard;
 $('close-leaderboard').onclick=()=>$('leaderboard-dialog').close();
-$('board-practice').onchange=$('board-pace').onchange=()=>loadBoard();
+$('board-scope').onchange=$('board-practice').onchange=$('board-pace').onchange=()=>loadBoard();
 $('refresh-board').onclick=()=>loadBoard();
 $('letter-set').addEventListener('change',()=>loadBoard('home-board'));
 $('pace').addEventListener('change',()=>loadBoard('home-board'));
 $('refresh-home-board').onclick=()=>loadBoard('home-board');
 loadBoard('home-board');
+
+setInterval(()=>{if(document.hidden)return;if($('leaderboard-dialog').open)loadBoard();if(state==='intro')loadBoard('home-board');},15000);

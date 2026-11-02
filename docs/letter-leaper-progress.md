@@ -319,3 +319,11 @@ TYPING_IT_BASE=… TYPING_CDP=http://localhost:9333 DATABASE_URL=…localhost…
   node --test tests/letter-leaper-browser.test.mjs
 npx tsc --noEmit && npm run build
 ```
+
+## Global leaderboard
+
+The in-game home board defaults to a global top five. The full board offers Global (top 50, plus the signed-in player's rank) or My class (the existing completed-climb board). Both refresh every 15 seconds while visible. Public guest play still does not load leaderboard APIs.
+
+`GET /api/letter-leaper/leaderboard?scope=global` requires a signed-in learner on a roster with Letter Leaper assigned. It ranks server-derived TypingSession summaries across all classes and includes valid legacy completed climbs. Unfinished sessions qualify once they have earned a leap; an untouched words-only starting position at leap 100 does not. Each learner appears once, even across classes. Ordering is furthest saved leap, accuracy, best streak, recorded time (active typing time for tracked sessions, elapsed time for legacy climbs), then a stable tie-break. All difficulties, letter sets and practice scopes are combined and shown alongside results; this is a progress board, not a difficulty-adjusted skill assessment. Historical best progress remains after a fall.
+
+Global responses contain generated stable explorer aliases and display statistics only—no learner IDs, class names, student names, or event details. The class board retains its existing nicknames. No migration is required; previously saved partial sessions appear automatically.
