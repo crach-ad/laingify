@@ -37,7 +37,7 @@ const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let calmChoice = false;
 const reducedMotion = () => motionQuery.matches || calmChoice;
 const jumpMs = () => (reducedMotion() ? 80 : 410);
-// Difficulty. Easy: no falls, and the next key is lit (the hint). Medium and
+// Difficulty. Easy: no deadline, two misses per target, and the next key is lit. Medium and
 // hard: each letter must be typed within `deadline` ms of typing time,
 // measured on the active clock (so pauses, hidden tabs, leaps, falls, and
 // recovery never count), and the `misses`-th wrong letter on a target is a
@@ -45,7 +45,7 @@ const jumpMs = () => (reducedMotion() ? 80 : 410);
 // bottom of the climb: leap 0, or the moon for a words-only practice) with a
 // fresh target; it never awards a leap. Hard is also words all the way (wordLength()).
 const PACE_RULES = {
-  easy: { deadline: Infinity, misses: Infinity },
+  easy: { deadline: Infinity, misses: 2 },
   medium: { deadline: 8000, misses: 3 },
   hard: { deadline: 4000, misses: 1 },
 };

@@ -108,11 +108,11 @@ Milo on his platform and show the message).
 
 | | Time per letter | Falls on | Hint (next key lit) |
 |---|---|---|---|
-| Easy | none | never | yes |
+| Easy | none | the 2nd wrong letter on a target | yes |
 | Medium | 8 s | the deadline, or the 3rd wrong letter on a target | no |
 | Hard | 4 s | the deadline, or the 1st wrong letter | no |
 
-- **A fall on medium or hard sends Milo 10 leaps back down** (`FALL_BACK`),
+- **A fall on any difficulty sends Milo 10 leaps back down** (`FALL_BACK`),
   never below the bottom of the climb: leap 0, or the moon (leap 100) for a
   words-only practice. Accuracy, attempts and time keep
   counting; the climb's leaps start again.
@@ -126,7 +126,7 @@ Milo on his platform and show the message).
   names read as relaxed → easy, steady → medium, speedy → hard.
 - **Recorded practice and leaderboards:** each difficulty is its own practice
   and leaderboard. Older sessions keep their labels in reports; relaxed
-  sessions and climbs count as easy (same rules). Steady and speedy climbs
+  sessions and climbs still count as easy for historical compatibility; new Easy runs fall after two misses per target. Steady and speedy climbs
   (timed, no falls) are no longer ranked.
 - **Header link:** classes of the teachers in `lib/class-features.ts` get a
   **🐒 Letter Leaper** button in the learner dashboard header. It goes to

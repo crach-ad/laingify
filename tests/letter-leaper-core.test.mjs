@@ -192,14 +192,14 @@ test('medium and hard time out per letter (8 s, 4 s): one timeout (not a keystro
   assert.equal(w.count('timeout'), 1);
 });
 
-test('easy never times out or falls, and old pace names map onto the difficulties', () => {
+test('easy never times out, and old pace names map onto the difficulties', () => {
   const g = game();
   g.start({ pace: 'easy' });
   g.advance(60000);
-  for (let i = 0; i < 5; i++) g.type(g.target === 'q' ? 'w' : 'q');
+  g.type(g.target === 'q' ? 'w' : 'q');
   assert.equal(g.count('timeout'), 0);
   assert.equal(g.jumping, false);
-  assert.equal(g.count('key'), 5);
+  assert.equal(g.count('key'), 1);
   for (const [old, now] of [['relaxed', 'easy'], ['steady', 'medium'], ['speedy', 'hard'], ['falls', 'medium'], ['nonsense', 'easy']]) {
     const o = game();
     o.start({ pace: old });

@@ -640,7 +640,7 @@ function init() {
     }
   }
 
-  // ---- falls (medium and hard) ---------------------------------------------------------------------------
+  // ---- falls (all difficulties) ---------------------------------------------------------------------------
   // Both play inside the rules' fall time: a near miss (jump short, drop out
   // of view) or the platform giving way. Milo then pops back onto a restored
   // platform — or, when the fall sends him further down (fallTo), stays out

@@ -4,7 +4,7 @@
 // falls (medium on the third miss, hard on the first), timeout collapses,
 // recovery to the same leap, deadline races, pauses, and exactly-once
 // tracking. A fall sends Milo 10 leaps down. Hard is words from the first
-// leap, 2 → 5 letters. Easy never falls.
+// leap, 2 → 5 letters. Easy falls after two wrong letters, without a deadline.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -51,16 +51,41 @@ function game({ reduced = false, pace = 'hard' } = {}) {
 }
 const FALL = 1500, MEDIUM = 8000, HARD = 4000;
 
-test('easy never falls: no deadline, wrong keys are ordinary misses', () => {
+test('easy: no deadline; second wrong letter falls ten leaps and resets the miss count', () => {
   const g = game({ pace: 'easy' });
   g.start();
+  for (let i = 0; i < 15; i++) { g.word(); g.advance(500); }
+  assert.equal(g.steps, 15);
+  g.advance(60000);
   assert.equal(g.left, Infinity);
-  g.advance(20000);
-  for (let i = 0; i < 4; i++) g.type(g.wrong());
-  assert.equal(g.views('fall').length, 0);
-  assert.equal(g.views('miss').length, 4);
   assert.equal(g.hooks('timeout').length, 0);
-  assert.equal(g.run('jumping'), false);
+  g.type(g.wrong());
+  assert.equal(g.views('fall').length, 0);
+  assert.equal(g.views('miss').at(-1)[1].left, 1);
+  g.type(g.wrong());
+  assert.equal(g.views('fall').length, 1);
+  assert.equal(g.views('fall')[0][1].to, 5);
+  const count = g.hooks('key').length;
+  g.type(g.wrong());
+  assert.equal(g.hooks('key').length, count, 'input during a fall is ignored');
+  g.advance(FALL + 32);
+  assert.equal(g.steps, 5);
+  assert.equal(g.run('missesHere'), 0);
+  g.type(g.wrong()); g.word(); g.advance(500);
+  g.type(g.wrong());
+  assert.equal(g.views('fall').length, 1, 'a successful target resets the miss allowance');
+  assert.equal(g.left, Infinity);
+});
+
+test('easy falls stop at the climb floor, including words-only practice', () => {
+  for (const scope of ['full', 'words']) {
+    const g = game({ pace: 'easy' }); g.start({ scope });
+    const floor = scope === 'words' ? 100 : 0;
+    g.word(); g.advance(500);
+    g.type(g.wrong()); g.type(g.wrong()); g.advance(FALL + 32);
+    assert.equal(g.steps, floor);
+    assert.equal(g.run('missesHere'), 0);
+  }
 });
 
 test('a correct letter before the deadline leaps exactly once', () => {

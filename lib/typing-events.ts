@@ -6,14 +6,14 @@
 
 export const MEASUREMENT_VERSION = 1;
 export const LETTER_SETS = ["all", "home", "top", "bottom"] as const;
-// Difficulty (stored as "pace"). Easy: no falls, hints on. Medium: the platform
+// Difficulty (stored as "pace"). Easy: two misses per target, no timer, hints on. Medium: the platform
 // falls at 8 s per letter or on the third wrong letter. Hard: words from the
-// first leap (2 → 5 letters), 4 s, or one wrong letter. On medium and hard a
+// first leap (2 → 5 letters), 4 s, or one wrong letter. On every difficulty a
 // fall sends Milo 10 leaps back down. Older sessions keep the paces they were played at (relaxed,
 // steady, speedy, falls); new sessions must use these.
 export const PACES = ["easy", "medium", "hard"] as const;
-// Older names, for settings saved before the difficulties (relaxed had the
-// same rules as easy; steady and speedy were timed without falls).
+// Older settings keep their mappings: relaxed is the untimed predecessor of
+// easy; steady and speedy were timed without falls.
 const PACE_ALIASES: Record<string, Pace> = { relaxed: "easy", steady: "medium", speedy: "hard", falls: "medium" };
 export const paceOf = (p: string): Pace => ((PACES as readonly string[]).includes(p) ? (p as Pace) : PACE_ALIASES[p] ?? "easy");
 export const SCOPES = ["letters", "words", "full"] as const;

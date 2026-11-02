@@ -26,7 +26,7 @@ test('ranks actual keystroke accuracy after word timeouts', () => {
   assert.equal(rankClimbs(rows,'windsor-a','all','easy')[0].learnerId,'higher');
 });
 
-test('relaxed climbs rank with easy (same rules); steady and speedy climbs are not ranked', () => {
+test('legacy relaxed climbs remain grouped with easy; steady and speedy climbs are not ranked', () => {
   const rows=[score({learnerId:'old',pace:'relaxed'}),score({learnerId:'steady',pace:'steady'}),score({learnerId:'speedy',pace:'speedy'})];
   assert.deepEqual(rankClimbs(rows,'windsor-a','all','easy').map(r=>r.learnerId),['old']);
   assert.deepEqual(rankClimbs(rows,'windsor-a','all','medium'),[]);

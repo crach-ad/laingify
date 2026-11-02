@@ -208,7 +208,7 @@ is reported separately on the session page.
 
 **Comparable sessions** share a phase, the keys in play (letter set; words
 always use the whole keyboard), difficulty (hints follow it; relaxed sessions
-compare with easy, the only older pace with the same rules), and input method
+remain grouped with easy for historical compatibility), and input method
 (physical keyboard, on-screen keys, or mixed).
 
 **Sample-size thresholds.**

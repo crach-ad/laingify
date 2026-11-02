@@ -7,7 +7,7 @@ const $ = id => document.getElementById(id);
 readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value });
 // What each difficulty means, shown under the settings and in the help.
 const PACE_TEXT = {
-  easy: 'Easy: no rush, and the next key lights up. Platforms never fall.',
+  easy: 'Easy: no rush, and the next key lights up. Two wrong letters on the same target send Milo 10 leaps back.',
   medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter — and a fall sends Milo 10 leaps back down.',
   hard: 'Hard: words from the very first leap, growing from 2 to 5 letters. 4 seconds for each letter, and one wrong letter or running out of time sends Milo 10 leaps back down.',
 };
