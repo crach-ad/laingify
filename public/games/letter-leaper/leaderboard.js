@@ -55,13 +55,15 @@ async function loadBoard(prefix='board') {
   boardElement('table').hidden=true;
   try {
     const globalBoard = prefix === 'home-board' || $('board-scope').value === 'global';
+    const difficulty = (prefix === 'home-board' ? $('pace') : $('board-pace')).value;
+    if(prefix === 'home-board')$('home-leaderboard-title').textContent='Global top 5 · '+difficulty.charAt(0).toUpperCase()+difficulty.slice(1);
     if(prefix === 'board') {
       $('board-practice').closest('label').hidden=globalBoard;
-      $('board-pace').closest('label').hidden=globalBoard;
+      $('board-pace').closest('label').hidden=false;
       $('board-description').textContent=globalBoard?'All classes · best saved progress per explorer, including unfinished climbs.':'Your class · best completed climb per player.';
-      $('board-ranking').textContent=globalBoard?'Furthest leap, then accuracy, streak and recorded time. All modes combined; mode shown beside each result.':'Accuracy first, then streak, then fastest time.';
+      $('board-ranking').textContent=globalBoard?'Furthest leap, then accuracy, streak and recorded time. Ranked within the selected difficulty across all classes and stages.':'Accuracy first, then streak, then fastest time.';
     }
-    const result=await api('/leaderboard?'+new URLSearchParams(globalBoard?{scope:'global'}:{scope:'class',practice:boardElement('practice').value,pace:boardElement('pace').value}));
+    const result=await api('/leaderboard?'+new URLSearchParams(globalBoard?{scope:'global',pace:difficulty}:{scope:'class',practice:boardElement('practice').value,pace:boardElement('pace').value}));
     if(sequence!==boardRequests[prefix])return;
     boardElement('entries').replaceChildren();
     const entries=prefix==='home-board'?result.entries.slice(0,5):result.entries;
@@ -69,18 +71,18 @@ async function loadBoard(prefix='board') {
       if(prefix==='home-board'){
         const card=document.createElement('li');
         if(row.you)card.className='your-score';
-        const name=document.createElement('strong');name.textContent=row.rank+'. '+row.username+(row.you?' (you)':'');
+        const name=document.createElement('strong');name.textContent=row.rank+'. '+row.username+(globalBoard?' · '+(row.yearGroup||'Year not set'):'')+(row.you?' (you)':'');
         const detail=document.createElement('span');detail.textContent=(globalBoard?row.leaps+' leaps · '+row.stage+' · '+row.pace+' · ':'')+row.accuracy.toFixed(2)+'% · '+row.streak+' streak · '+climbTime(row.elapsed);
         card.append(name,detail);boardElement('entries').append(card);continue;
       }
       const tr=document.createElement('tr');
       if(row.you)tr.className='your-score';
-      for(const value of [row.rank+'. '+row.username+(row.you?' (you)':''),globalBoard?row.leaps+' · '+row.stage:'150 · Stars reached',globalBoard?row.pace+' · '+row.practice+' · '+row.scope:boardElement('pace').value,row.accuracy.toFixed(2)+'%',row.streak,climbTime(row.elapsed)]) {
+      for(const value of [row.rank+'. '+row.username+(globalBoard?' · '+(row.yearGroup||'Year not set'):'')+(row.you?' (you)':''),globalBoard?row.leaps+' · '+row.stage:'150 · Stars reached',globalBoard?row.pace+' · '+row.practice+' · '+row.scope:boardElement('pace').value,row.accuracy.toFixed(2)+'%',row.streak,climbTime(row.elapsed)]) {
         const td=document.createElement('td');td.textContent=value;tr.append(td);
       }
       boardElement('entries').append(tr);
     }
-    if(prefix==='board')$('board-personal').textContent=globalBoard&&result.personal?'Your global rank: '+result.personal.rank+' of '+result.total+' · '+result.personal.leaps+' leaps':'';
+    if(prefix==='board')$('board-personal').textContent=globalBoard&&result.personal?'Your '+difficulty+' global rank: '+result.personal.rank+' of '+result.total+' · '+result.personal.leaps+' leaps':'';
     boardElement('table').hidden=!result.entries.length;
     boardElement('status').textContent=result.entries.length?'':(globalBoard?'No saved progress yet. Start climbing to join the global board!':'No completed climbs yet for this mode.');
   } catch(error) { if(sequence===boardRequests[prefix])boardElement('status').textContent=errorMessage(error); }
