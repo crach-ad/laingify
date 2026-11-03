@@ -27,7 +27,7 @@ export default async function Dashboard() {
   // Modules assigned to this class, in order, with this learner's progress and
   // criteria (for per-module completion bars). Project rows are the completion
   // signal — Project.moduleId is a plain string, so they're looked up separately.
-  const [classModules, projects, statuses] = await Promise.all([
+  const [classModules, projects, statuses, bebrasAssignment] = await Promise.all([
     prisma.classModule.findMany({
       where: { classId: klass.id, module: { NOT: { title: "Bebras Juniors 2025", topic: "Computational Thinking" } } },
       orderBy: { order: "asc" },
@@ -42,6 +42,10 @@ export default async function Dashboard() {
     }),
     prisma.project.findMany({ where: { learnerId: learner.id } }),
     prisma.criterionStatus.findMany({ where: { learnerId: learner.id } }),
+    prisma.classModule.findFirst({
+      where: { classId: klass.id, module: { orgId: klass.orgId, title: "Bebras Juniors 2025", topic: "Computational Thinking" } },
+      select: { id: true },
+    }),
   ]);
 
   const completedModuleIds = new Set(projects.map((p) => p.moduleId));
@@ -227,11 +231,18 @@ export default async function Dashboard() {
         </div>
       </section>
 
-      {!isIgniteHer && <Link href={mouseModule ? "/play/mouse/class" : "/play/mouse"} className="card card-interactive mt-8 flex items-center gap-4 p-6">
+      {!isIgniteHer && <section aria-label="Mouse Meadow activities" className="mt-8">
+      <Link href={mouseModule ? "/play/mouse/class" : "/play/mouse"} className="card card-interactive flex items-center gap-4 p-6">
         <span className="text-4xl">🌻</span>
         <div><h2 className="text-lg font-semibold">Mouse Meadow</h2><p className="muted mt-1 text-sm">75 mouse-skill challenges, class scores, and a Meadow Explorer badge.</p></div>
         <span className="ml-auto">→</span>
-      </Link>}
+      </Link>
+      {bebrasAssignment && <nav aria-label="Mouse Meadow challenge tabs" className="mt-3 flex flex-wrap gap-3 pl-4">
+        <Link href="/play/mouse/bebras" className="btn-secondary flex min-h-12 flex-wrap items-center gap-3 rounded-xl px-5 py-3 text-sm" style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
+          <span aria-hidden>🧩</span><span>Bebras challenges</span><span className="muted text-xs">15 puzzles · no time limit</span><span aria-hidden>→</span>
+        </Link>
+      </nav>}
+      </section>}
 
       {/* Resources — class-specific links (lib/class-resources.ts) */}
       {resources.length > 0 && (

@@ -19,7 +19,7 @@ try{
  const headers={'Content-Type':'application/json',origin:base,cookie};
  const post=async b=>{const r=await fetch(base+'/api/bebras',{method:'POST',headers,body:JSON.stringify(b)});return {status:r.status,data:await r.json()}};
  const player=await fetch(base+'/play/mouse/bebras',{headers});assert.equal(player.status,200);assert.match(await player.text(),/Mouse Meadow activities/);
- const dashboard=await fetch(base+'/learn',{headers});assert.equal(dashboard.status,200);assert.doesNotMatch(await dashboard.text(),/Bebras Juniors 2025/);
+ const dashboard=await fetch(base+'/learn',{headers});assert.equal(dashboard.status,200);const dashboardHtml=await dashboard.text();assert.doesNotMatch(dashboardHtml,/Bebras Juniors 2025/);assert.match(dashboardHtml,/Mouse Meadow challenge tabs/);assert.match(dashboardHtml,/Bebras challenges/);
  const bookmark=await fetch(base+'/play/bebras',{headers,redirect:'manual'});assert.equal(bookmark.status,307);assert.equal(bookmark.headers.get('location'),'/play/mouse/bebras');
  assert.equal((await fetch(base+'/api/bebras')).status,403);
  assert.equal((await fetch(base+'/api/bebras',{method:'POST',headers:{...headers,origin:'https://wrong.invalid'},body:'{}'})).status,403);
