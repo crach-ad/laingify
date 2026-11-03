@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
@@ -35,6 +35,7 @@ export default async function ModulePage({
 
   const module = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!module) notFound();
+  if (module.title === "Bebras Juniors 2025" && module.topic === "Computational Thinking") redirect("/play/bebras");
 
   // First visit starts the clock; never downgrade a completed module.
   const existingProgress = await prisma.moduleProgress.findUnique({

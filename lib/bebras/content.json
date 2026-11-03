@@ -1,0 +1,212 @@
+[
+  {
+    "id": "01-cube",
+    "title": "Cube",
+    "number": 1,
+    "text": "A Bebras cube has a different shape on each face. The six shapes are shown below.\u00a0\n\nPink circle\tPurple diamond\tRed ellipse\tBlue pentagon\tOrange star\tGreen triangle\n\t\t\t\t\t\n\n\nEight identical Bebras cubes are stacked together to form a larger cube.\u00a0\n\n\n\nQuestion\nIn a single Bebras cube, which shape is on the face opposite the pink circle?",
+    "image": "/games/bebras/01-cube.png",
+    "skills": [
+      "decomposition",
+      "Logical reasoning",
+      "debugging"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419904"
+  },
+  {
+    "id": "02-chung-cake",
+    "title": "Chung cake",
+    "number": 2,
+    "text": "In Vietnam, people celebrate the Lunar New Year by eating BanhChung. These rice cakes are too sticky to cut with a knife, so pieces of string are used to make the cuts:\n\nMultiple strings can be used to cut a cake but they may get tangled if not used in the correct order. For example, in the case below, the cake should be cut using the light coloured string first, followed by the dark coloured string. If done in reverse, the dark coloured string will get tangled with the light coloured string.\n\nQuestion\nIn what order should the four strings be used so no string gets tangled with another?\u00a0",
+    "image": "/games/bebras/02-chung-cake.png",
+    "skills": [
+      "logical reasoning",
+      "algorithmic thinking",
+      "Evaluation",
+      "abstraction"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419900"
+  },
+  {
+    "id": "03-treasure-hunt",
+    "title": "Treasure hunt",
+    "number": 3,
+    "text": "Beavers have hidden some treasure on their secret island.\u00a0They have left an encoded message revealing the location of the treasure.\n\nThey also left some clues to help decode the message:\n\nTask\nUsing the clues, decode the message to reveal where we should look for the treasure.",
+    "image": "/games/bebras/03-treasure-hunt.png",
+    "skills": [
+      "abstraction",
+      "Decomposition",
+      "Pattern recognition",
+      "Logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419901"
+  },
+  {
+    "id": "04-planes",
+    "title": "Planes",
+    "number": 4,
+    "text": "Seven planes are queuing up to take off using a single runway. Each plane has a scheduled departure time and they cannot jump the queue!\n\nThe planes' take-off schedule is shown below.\n\nTask\nFill in the empty boxes in the timetable by dragging and dropping these 4 planes.",
+    "image": "/games/bebras/04-planes.png",
+    "skills": [
+      "algorithmic thinking",
+      "logical reasoning",
+      "evaluate"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419903"
+  },
+  {
+    "id": "05-fair",
+    "title": "Fair",
+    "number": 5,
+    "text": "At the fair, beavers wearing funny hats enjoy themselves by walking about on stilts. Each beaver chooses stilts so that the tops of their hats are all at the same height.\n\nQuestion\u00a0\nMove the beavers to stilts by dragging them so that they are all the same height.\u00a0",
+    "image": "/games/bebras/05-fair.png",
+    "skills": [
+      "decomposition",
+      "Abstraction",
+      "ogical reasoning",
+      "evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419902"
+  },
+  {
+    "id": "06-parking-at-the-party",
+    "title": "Parking at the party",
+    "number": 6,
+    "text": "Ana invites friends to her house every week. They arrive by car. In Ana\u2019s driveway there is space for 9 cars, but they need to park in 3 lanes of 3 cars. Each friend is asked to park as far forward as possible in any lane to make room for other cars.\n\nLast week (picture above), car A arrived first, then car D, then car C, and then cars B, E, and F. The cars parked this way (not blocking car C) because car C needed to leave first.\n\nThis week, friends arrive in this order:\n\nAnn, Bob, Claire, David, Elen, Frank, George, Hailey, Ivan\n\nThey will leave the party in this order:\n\nGeorge, David, Frank, Ivan, Hailey, Claire, Bob, Ann, \u00a0Elen\n\nQuestion\nWhich way can the friends park as they arrive so that no car is blocked in when its owner tries to leave?",
+    "image": "/games/bebras/06-parking-at-the-party.png",
+    "skills": [
+      "algorithmic thinking",
+      "Logical reasoning",
+      "decomposition"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419909"
+  },
+  {
+    "id": "07-avoiding-the-clouds",
+    "title": "Avoiding the clouds",
+    "number": 7,
+    "text": "A pilot flying to a nearby airport encounters some stormy clouds. They want to avoid these clouds and fly through clear sky. \u00a0\n\nThe section of the cloudy sky is represented as a 3x3x3 grid. As the pilot moves one step forward, she can also turn the plane to move up, down, left, right, or diagonally. The plane cannot move out of the grid.\u00a0\n\nIn the diagram the white clouds are nearest (layer 1), the light grey clouds are further away (layer 2), and the darkest clouds are furthest (layer 3).\n\nThe plane is about to enter the cloudy area. Unless it turns, it will go into the white cloud in the middle of the top row.\n\nQuestion\nWhich instructions will move the plane through the cloudy area without flying into any clouds?",
+    "image": "/games/bebras/07-avoiding-the-clouds.png",
+    "skills": [
+      "evaluation",
+      "Decomposition",
+      "Abstraction",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419910"
+  },
+  {
+    "id": "08-painted-trees",
+    "title": "Painted trees",
+    "number": 8,
+    "text": "Beaver Bastian is lost in the forest and cannot find his way back to his house\n\nThe trees in the forest are painted with 4 different symbols: \u00a0   \n\nThe trees in the forest are painted with 4 different symbols:\n\n   \n\nFrom his house to the point he got lost Bastian walked past:\u00a0\n\n3 trees painted with\u00a0 \n3 trees with\u00a0 \n3 trees with \u00a0\n\nBastian cannot remember how many trees painted with\u00a0 he passed.\u00a0\n\nBastian must find the correct path back to his house.\u00a0\n\n\t\n\nQuestion\u00a0\nWhich is Beaver Bastian\u2019s house?\u00a0",
+    "image": "/games/bebras/08-painted-trees.png",
+    "skills": [
+      "abstraction",
+      "Pattern recognition",
+      "Algorithmic thinking",
+      "Logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419908"
+  },
+  {
+    "id": "09-rubber-rings",
+    "title": "Rubber rings",
+    "number": 9,
+    "text": "In a water park, rubber rings float downstream () along a short lazy river. At the end of the river, they line up as shown in the image below.\n\n\n\n\n\nChildren take a ring to use for their next ride from any position. When a ring is pulled out () of the water for someone's next ride, each ring behind it floats one position () downstream to fill the gap.\n\nIn our example above, where F and A are pulled out, the number of times a ring floats down by one position downstream is 8 (G and H move when F is removed; all of the remaining rings move when A is removed).\n\nQuestion\nEight rings line up as shown below. Then 5 rings are pulled out of the water in the order B, G, E, D, H. In total, how many times do the rings float one position downstream?\n\n",
+    "image": "/games/bebras/09-rubber-rings.png",
+    "skills": [
+      "decomposition",
+      "Algorithmic thinking",
+      "Pattern recognition",
+      "evaluation,"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419906"
+  },
+  {
+    "id": "10-island-research-expeditions",
+    "title": "Island research expeditions",
+    "number": 10,
+    "text": "A research team needs to investigate all the islands in a region.\u00a0\n\nThe research team cannot investigate all islands in a single research trip.\n\nDuring a single research trip, the team:\u00a0\n\nFlies by helicopter to 1 island\nCan take a ferry in the direction of the arrows to visit other islands,\nLeave from the same island where they originally landed, to rejoin the helicopter.\n\n\n\nWhat is the minimum number of different research trips the team must make to ensure that every island is visited at least once?",
+    "image": "/games/bebras/10-island-research-expeditions.png",
+    "skills": [
+      "Decomposition",
+      "Abstraction",
+      "Pattern recognition"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419905"
+  },
+  {
+    "id": "11-tree-records",
+    "title": "Tree records",
+    "number": 11,
+    "text": "Emil and his friends love to hike. During their hikes, Emil's friends collect information about different aspects of trees they discover, and they record the facts on record sheets.\n\n\tSeverin collects information on leaf shapes ( ). He records the shape and the corresponding tree species ().\n\n\tQuirina collects information about fruit (). She records the type of fruit and the corresponding tree species (). She also records whether the tree is a conifer ().\n\n\tLadina collects information about the bark. She records the colour () and whether it is a good timber to construct beaver lodges () as well as the corresponding tree species ().\n\u00a0\nEmil has found a leaf in the forest and can see its shape. He wants to know whether the bark of this tree is suitable for making a beaver lodge.\u00a0\n\u00a0\nQuestion\nWhich of his friends does he have to ask, and in which order, to find the right answer?",
+    "image": "/games/bebras/11-tree-records.png",
+    "skills": [
+      "Abstraction",
+      "Decomposition:",
+      "Pattern recognition",
+      "Logical reasoning:"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419911"
+  },
+  {
+    "id": "12-incorrect-sequence",
+    "title": "Incorrect sequence",
+    "number": 12,
+    "text": "Xavier is programming his first app and is writing code to transform a picture. At first, he programs only two operations:\u00a0\n\nM (Mirror) reverses the image along the vertical axis\nR (Rotate) turns the image 90\u00b0 clockwise\u00a0\nInput\tOperation\tOutput\n\tMirror\t\n\tRotate\t\n\nYou can transform this original picture into this final picture with several different command sequences.\u00a0\n\nQuestion\nWhich sequence of operations does not transform the original picture into the final picture?\u00a0",
+    "image": "/games/bebras/12-incorrect-sequence.png",
+    "skills": [
+      "Decomposition",
+      "Abstraction",
+      "algorithmic",
+      "Pattern recognition",
+      "Logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419912"
+  },
+  {
+    "id": "13-lefty",
+    "title": "Lefty",
+    "number": 13,
+    "text": "Lefty the robot navigates on a grid. It only moves in the following ways.\n\nGo forward, and\tturn left and go forward.\n\t\n\nLefty can go through the same square as often as needed.\nHowever, Lefty cannot go to the right or through a wall:\n\n\n\nGoing to the right is not possible.\tIf there is a wall, Lefty cannot go through it.\n\n\t\n\nBelow, there is a grid with a few walls.\n\nQuestion\u00a0\nShow Lefty how to reach the goal\u00a0 in as few squares as possible. Select all squares that Lefty will visit on its way to the goal.",
+    "image": "/games/bebras/13-lefty.png",
+    "skills": [
+      "algorithmic thinking",
+      "Abstraction",
+      "Logical reasoning",
+      "Debugging"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419913"
+  },
+  {
+    "id": "14-seoul-city-tour",
+    "title": "Seoul City Tour",
+    "number": 14,
+    "text": "Seoul provides tour buses for tourists. The tour buses connect Seoul's major tourist attractions. The figure shows the main attractions. The stars indicate how popular the attractions are. The lines indicate the bus connections. Each line indicates how long the connection is in kilometers.\n\nWhen visiting the locations, you can collect the number of traveller stars in your travel book.\n\nQuestion\u00a0\n\nAfter visiting the Royal Palace,\u00a0 Susie wants to take a tour bus, but she has a transport card that only allows her to travel up to 10 kilometres.\u00a0 Design a route to visit attractions so that she can collect as many traveller stars as possible. Each attraction can be visited only once.\n\nClick a connection to select it. The counter in the top right corner shows the total distance in kilometers of the selected connections. Click \"Cancel answer\" to delete your entries. When you're finished, click \"Save answer.\"\n\n\n\u00a0",
+    "image": "/games/bebras/14-seoul-city-tour.png",
+    "skills": [
+      "Decomposition",
+      "Abstraction",
+      "Pattern recognition",
+      "Algorithmic thinking",
+      "Evaluation",
+      "Logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=426402"
+  },
+  {
+    "id": "15-exciting-water-slide",
+    "title": "Exciting water slide",
+    "number": 15,
+    "text": "The Beaver Amusement Park has an exciting waterslide. The following diagrams show how it works: a mechanism controls the exit direction at each fork. Whenever a beaver passes through a fork, the mechanism flips, changing the exit direction.\n\nDan wants to try the waterslide. His mother wants to know where Dan will exit the slide so that she can position herself to take good pictures. She first sees a beaver exit from slide B, and then another from slide C. There is one more beaver waiting in line before Dan.\n\nQuestion\u00a0\nWhich slide will Dan exit from? Click on the letter of the slide, then save.\u00a0",
+    "image": "/games/bebras/15-exciting-water-slide.png",
+    "skills": [
+      "logical reasoning",
+      "Algorithms",
+      "Decomposition",
+      "Abstraction",
+      "debugging."
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419915"
+  }
+]

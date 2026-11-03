@@ -1,0 +1,3 @@
+import { getInstructor } from '@/lib/instructor';
+import { loadBebrasReport,reportCsv } from '@/lib/bebras/report';
+export async function GET(_req:Request,{params}:{params:Promise<{classId:string}>}){const ctx=await getInstructor();if(!ctx)return new Response('Sign in required.',{status:401});const {classId}=await params;const data=await loadBebrasReport(classId,ctx.orgIds);if(!data)return new Response('Not found',{status:404});return new Response('\uFEFF'+reportCsv(data),{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="bebras-outcomes.csv"','Cache-Control':'private, no-store'}});}

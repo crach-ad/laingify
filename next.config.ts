@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  outputFileTracingIncludes: {
+    "/api/bebras/explanation": ["./content/bebras/explanations/*.png"],
+  },
 };
 
 export default nextConfig;

@@ -109,6 +109,7 @@ export default async function ClassPage({
         <Link href={`/instruct/class/${klass.id}?view=insights`} className={tab(showInsights)}>
           📊 Insights
         </Link>
+        {klass.modules.some(m => m.title === "Bebras Juniors 2025") && <Link href={`/instruct/class/${klass.id}/bebras`} className={tab(false)}>Bebras outcomes</Link>}
         <Link href={`/instruct/class/${klass.id}/typing`} className={tab(false)}>
           ⌨️ Typing
         </Link>
