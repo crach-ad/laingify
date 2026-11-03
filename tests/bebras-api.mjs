@@ -18,6 +18,9 @@ try{
  const cookie='ll_session='+signToken('learner',{learnerId:learner.id,classId:klass.id,via:'pin'});
  const headers={'Content-Type':'application/json',origin:base,cookie};
  const post=async b=>{const r=await fetch(base+'/api/bebras',{method:'POST',headers,body:JSON.stringify(b)});return {status:r.status,data:await r.json()}};
+ const player=await fetch(base+'/play/mouse/bebras',{headers});assert.equal(player.status,200);assert.match(await player.text(),/Mouse Meadow activities/);
+ const dashboard=await fetch(base+'/learn',{headers});assert.equal(dashboard.status,200);assert.doesNotMatch(await dashboard.text(),/Bebras Juniors 2025/);
+ const bookmark=await fetch(base+'/play/bebras',{headers,redirect:'manual'});assert.equal(bookmark.status,307);assert.equal(bookmark.headers.get('location'),'/play/mouse/bebras');
  assert.equal((await fetch(base+'/api/bebras')).status,403);
  assert.equal((await fetch(base+'/api/bebras',{method:'POST',headers:{...headers,origin:'https://wrong.invalid'},body:'{}'})).status,403);
  const [a,b]=await Promise.all([post({action:'start'}),post({action:'start'})]);assert.equal(a.status,200);assert.equal(a.data.id,b.data.id);let current=a.data;assert.equal(current.results,null);
@@ -39,7 +42,7 @@ try{
  const retake=await post({action:'start',previousId:current.id});assert.equal(retake.status,200);assert.notEqual(retake.data.id,current.id);assert.equal(await p.learnerEvent.count({where:{learnerId:learner.id,type:'bebras_session'}}),2);
  console.log('PASS: auth, origin, concurrent start/finish, all 15 answers, resume, conflicts, grading, completion, protected explanations, teacher CSV isolation, retakes.');
 }finally{
- if(learner){await p.criterionStatus.deleteMany({where:{learnerId:learner.id}});await p.learnerEvent.deleteMany({where:{learnerId:learner.id}});await p.submission.deleteMany({where:{learnerId:learner.id}});await p.moduleProgress.deleteMany({where:{learnerId:learner.id}});await p.rosterEntry.deleteMany({where:{learnerId:learner.id}});await p.learner.delete({where:{id:learner.id}});}
+ if(learner){await p.sprite.deleteMany({where:{learnerId:learner.id}});await p.criterionStatus.deleteMany({where:{learnerId:learner.id}});await p.learnerEvent.deleteMany({where:{learnerId:learner.id}});await p.submission.deleteMany({where:{learnerId:learner.id}});await p.moduleProgress.deleteMany({where:{learnerId:learner.id}});await p.rosterEntry.deleteMany({where:{learnerId:learner.id}});await p.learner.delete({where:{id:learner.id}});}
  if(mod){await p.classModule.deleteMany({where:{moduleId:mod.id}});await p.criterion.deleteMany({where:{moduleId:mod.id}});await p.module.delete({where:{id:mod.id}});}
  if(teacher)await p.instructor.delete({where:{id:teacher.id}});
  if(klass)await p.class.delete({where:{id:klass.id}});if(org)await p.org.delete({where:{id:org.id}});await p.$disconnect();

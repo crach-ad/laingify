@@ -37,6 +37,7 @@ export default async function ClassPage({
   // Group modules by topic, keeping class order.
   const topics: { name: string; modules: typeof klass.modules }[] = [];
   for (const m of klass.modules) {
+    if (m.title === "Bebras Juniors 2025" && m.topic === "Computational Thinking") continue;
     const name = m.topic || m.title;
     const t = topics.find((x) => x.name === name);
     if (t) t.modules.push(m);

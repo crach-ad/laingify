@@ -29,7 +29,7 @@ export default async function Dashboard() {
   // signal — Project.moduleId is a plain string, so they're looked up separately.
   const [classModules, projects, statuses] = await Promise.all([
     prisma.classModule.findMany({
-      where: { classId: klass.id },
+      where: { classId: klass.id, module: { NOT: { title: "Bebras Juniors 2025", topic: "Computational Thinking" } } },
       orderBy: { order: "asc" },
       include: {
         module: {
@@ -227,7 +227,7 @@ export default async function Dashboard() {
         </div>
       </section>
 
-      {!isIgniteHer && <Link href={mouseModule ? `/learn/${mouseModule.m.id}` : "/play/mouse"} className="card card-interactive mt-8 flex items-center gap-4 p-6">
+      {!isIgniteHer && <Link href={mouseModule ? "/play/mouse/class" : "/play/mouse"} className="card card-interactive mt-8 flex items-center gap-4 p-6">
         <span className="text-4xl">🌻</span>
         <div><h2 className="text-lg font-semibold">Mouse Meadow</h2><p className="muted mt-1 text-sm">75 mouse-skill challenges, class scores, and a Meadow Explorer badge.</p></div>
         <span className="ml-auto">→</span>

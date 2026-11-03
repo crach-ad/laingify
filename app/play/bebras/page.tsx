@@ -1,4 +1,3 @@
 import { redirect } from 'next/navigation';
-import { bebrasAccess } from '@/lib/bebras/access';
-import BebrasGame from './BebrasGame';
-export default async function BebrasPage(){const ctx=await bebrasAccess();if(!ctx)redirect('/join');return <BebrasGame className={ctx.assignment.class.name}/>;}
+// Preserve previously shared links and existing assignments.
+export default function BebrasPage(){redirect('/play/mouse/bebras');}
