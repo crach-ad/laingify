@@ -3,9 +3,9 @@ import { prisma } from '@/lib/db';
 import { bebrasAccess } from '@/lib/bebras/access';
 import { challenges } from '@/lib/bebras/challenges';
 import { newRun, advance, type Run } from '@/lib/bebras/state';
-import { validAnswer, results } from '@/lib/bebras/scoring';
+import { validAnswer, results, answerFeedback } from '@/lib/bebras/scoring';
 const json=(v:unknown,status=200)=>NextResponse.json(v,{status,headers:{'Cache-Control':'private, no-store'}});
-function response(id:string,run:Run){return {id,run,serverNow:Date.now(),results:run.finishedAt?results(run.answers):null};}
+function response(id:string,run:Run){return {id,run,serverNow:Date.now(),results:run.finishedAt?results(run.answers):null,checks:Object.fromEntries(challenges.map((c,i)=>[c.id,answerFeedback(i,run.answers[c.id])]))};}
 export async function GET(){
  try{const ctx=await bebrasAccess();if(!ctx)return json({error:'Sign in to an assigned class.'},403);
  const row=await prisma.learnerEvent.findFirst({where:{learnerId:ctx.session.learnerId,moduleId:ctx.assignment.moduleId,type:'bebras_session',id:{startsWith:`bebras:${ctx.session.classId}:`}},orderBy:{createdAt:'desc'}});
@@ -18,7 +18,11 @@ export async function POST(req:Request){
   const ctx=await bebrasAccess();if(!ctx)return json({error:'Sign in to an assigned class.'},403);
   const text=await req.text();if(text.length>5000)return json({error:'Request too large.'},413);
   let b;try{b=JSON.parse(text);}catch{return json({error:'Invalid JSON.'},400);}
-  if(!b||!['start','save','finish'].includes(b.action))return json({error:'Invalid action.'},400);
+  if(!b||!['start','save','finish','check'].includes(b.action))return json({error:'Invalid action.'},400);
+  if(b.action==='check'){
+   if(!Number.isInteger(b.question)||b.question<0||b.question>=challenges.length||!validAnswer(b.question,b.answer))return json({error:'Invalid response.'},400);
+   return json({correct:answerFeedback(b.question,b.answer)});
+  }
   if(b.action!=='start' && (typeof b.id!=='string'||!Number.isInteger(b.version)||!Number.isInteger(b.current)||b.current<0||b.current>=challenges.length||typeof b.active!=='boolean'||(b.next!==undefined&&(!Number.isInteger(b.next)||b.next<0||b.next>=challenges.length))||(b.answer!==undefined&&!validAnswer(b.current,b.answer))))return json({error:'Invalid response.'},400);
   const {learnerId,classId}=ctx.session;const moduleId=ctx.assignment.moduleId;
   const output=await prisma.$transaction(async tx=>{

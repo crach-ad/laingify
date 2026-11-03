@@ -24,10 +24,15 @@ try{
  assert.equal((await fetch(base+'/api/bebras')).status,403);
  assert.equal((await fetch(base+'/api/bebras',{method:'POST',headers:{...headers,origin:'https://wrong.invalid'},body:'{}'})).status,403);
  const [a,b]=await Promise.all([post({action:'start'}),post({action:'start'})]);assert.equal(a.status,200);assert.equal(a.data.id,b.data.id);let current=a.data;assert.equal(current.results,null);
+ assert.equal((await post({action:'check',question:0,answer:'Orange Star'})).data.correct,false);
+ const check=await post({action:'check',question:0,answer:'Purple Diamond'});assert.equal(check.data.correct,true);assert.deepEqual(Object.keys(check.data),['correct']);
+ assert.equal((await post({action:'check',question:0,answer:''})).data.correct,null);
+ assert.equal((await post({action:'check',question:15,answer:'A'})).status,400);
+ const unchanged=await (await fetch(base+'/api/bebras',{headers})).json();assert.equal(unchanged.run.version,current.run.version);assert.deepEqual(unchanged.run.answers,current.run.answers);
  assert.equal((await fetch(`${base}/api/bebras/explanation?session=${current.id}&question=0`,{headers})).status,403);
  const keys=results({});
  for(let i=0;i<15;i++){
-  const saved=await post({action:'save',id:current.id,version:current.run.version,current:i,next:Math.min(i+1,14),answer:keys[i].expected,active:true});assert.equal(saved.status,200,JSON.stringify(saved.data));current=saved.data;
+  const saved=await post({action:'save',id:current.id,version:current.run.version,current:i,next:Math.min(i+1,14),answer:keys[i].expected,active:true});assert.equal(saved.status,200,JSON.stringify(saved.data));current=saved.data;assert.equal(current.checks[challenges[i].id],true);
  }
  const resumed=await (await fetch(base+'/api/bebras',{headers})).json();assert.deepEqual(resumed.run.answers,current.run.answers);assert.equal(resumed.results,null);
  const conflict=await post({action:'save',id:current.id,version:0,current:14,answer:'A',active:true});assert.equal(conflict.status,409);
