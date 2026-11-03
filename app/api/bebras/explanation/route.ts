@@ -2,9 +2,10 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { bebrasAccess } from '@/lib/bebras/access';
 import { prisma } from '@/lib/db';
-import { challenges } from '@/lib/bebras/challenges';
+import { challengesFor } from '@/lib/bebras/challenges';
 export async function GET(req:Request){
  const ctx=await bebrasAccess();if(!ctx)return new Response('Sign in to your assigned class.',{status:403});
+ const challenges=challengesFor(ctx.setId);
  const p=new URL(req.url).searchParams;const q=Number(p.get('question'));if(!p.has('question')||!Number.isInteger(q)||q<0||q>=challenges.length)return new Response('Not found',{status:404});
  const row=await prisma.learnerEvent.findFirst({where:{id:p.get('session')??'',type:'bebras_session',learnerId:ctx.session.learnerId,moduleId:ctx.assignment.moduleId}});
  if(!row)return new Response('Not found',{status:404});const run=JSON.parse(row.meta);

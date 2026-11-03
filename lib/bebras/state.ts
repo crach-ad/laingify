@@ -1,8 +1,9 @@
-import { challenges, type Answer } from './challenges.ts';
-export type Run = {classId:string;version:number;startedAt:number;finishedAt:number|null;lastSeen:number;active:boolean;current:number;answers:Record<string,Answer>;changes:Record<string,number>;activeMs:Record<string,number>;visits:Record<string,number>};
-export function newRun(classId:string,now:number):Run{return {classId,version:0,startedAt:now,finishedAt:null,lastSeen:now,active:true,current:0,answers:{},changes:{},activeMs:{},visits:{[challenges[0].id]:1}};}
+import { challengesFor, type ChallengeSet, type Answer } from './challenges.ts';
+export type Run = {setId?:ChallengeSet;classId:string;version:number;startedAt:number;finishedAt:number|null;lastSeen:number;active:boolean;current:number;answers:Record<string,Answer>;changes:Record<string,number>;activeMs:Record<string,number>;visits:Record<string,number>};
+export function newRun(classId:string,now:number,setId:ChallengeSet='juniors'):Run{const challenges=challengesFor(setId);return {setId,classId,version:0,startedAt:now,finishedAt:null,lastSeen:now,active:true,current:0,answers:{},changes:{},activeMs:{},visits:{[challenges[0].id]:1}};}
 export function advance(run:Run,input:{current:number;answer?:Answer;next?:number;active:boolean;finish?:boolean},now:number):Run{
  if(run.finishedAt)return run;
+ const challenges=challengesFor(run.setId);
  const r:Run=structuredClone(run);const old=challenges[r.current].id;
  // Heartbeats arrive every 15s while visible and recently used. Bound gaps so
  // closing a laptop or losing the network cannot accrue hours of active time.

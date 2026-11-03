@@ -1,0 +1,239 @@
+[
+  {
+    "id": "castors-01-alex-s-treasure",
+    "title": "Alex’s treasure",
+    "number": 1,
+    "text": "Alex the explorer has found an old treasure map! The map is a grid where each square contains a symbol: Starting Point Grass Mountain Water Treasure Alex is at the starting point and wants to reach the treasure, but she must follow three rules: She cannot step on water. She must cross at least one mountain. She can move up (↑), down (↓), left (←), or right (→), but not diagonally ( / , \\ ). Question Which path can she take to follow the rules?",
+    "image": "/games/bebras/castors-01-alex-s-treasure.png",
+    "skills": [
+      "algorithmic thinking",
+      "logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419890",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-01-alex-s-treasure-option-0.png",
+      "/games/bebras/castors-01-alex-s-treasure-option-1.png",
+      "/games/bebras/castors-01-alex-s-treasure-option-2.png",
+      "/games/bebras/castors-01-alex-s-treasure-option-3.png"
+    ]
+  },
+  {
+    "id": "castors-02-beautiful-drawings",
+    "title": "Beautiful drawings",
+    "number": 2,
+    "text": "Lars has drawn some plants. His baby sister, Carlotta, found these drawings and tried to make them more beautiful with finger paint. Match the original images with those that Carlotta has drawn over. Task Drag each original drawing to sit below its new version.",
+    "image": "/games/bebras/castors-02-beautiful-drawings.png",
+    "skills": [
+      "abstraction",
+      "decomposition",
+      "pattern recognition"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419887",
+    "kind": "drawings",
+    "options": [
+      "Branch",
+      "Single bell",
+      "Double bell",
+      "Flower"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-02-beautiful-drawings-option-0.png",
+      "/games/bebras/castors-02-beautiful-drawings-option-1.png",
+      "/games/bebras/castors-02-beautiful-drawings-option-2.png",
+      "/games/bebras/castors-02-beautiful-drawings-option-3.png"
+    ],
+    "targetImages": [
+      "/games/bebras/castors-02-beautiful-drawings-target-0.png",
+      "/games/bebras/castors-02-beautiful-drawings-target-1.png",
+      "/games/bebras/castors-02-beautiful-drawings-target-2.png",
+      "/games/bebras/castors-02-beautiful-drawings-target-3.png"
+    ]
+  },
+  {
+    "id": "castors-03-polite-beavers",
+    "title": "Polite Beavers",
+    "number": 3,
+    "text": "Cars take turns to enter Main Street. The first car enters from Heart Lane . Then a car enters from Sun Lane , then a car enters from Heart Lane, then one from Sun Lane, and so on. Question Which car enters Main Street after this car: ?",
+    "image": "/games/bebras/castors-03-polite-beavers.png",
+    "skills": [
+      "sequencing",
+      "logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419889",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-03-polite-beavers-option-0.png",
+      "/games/bebras/castors-03-polite-beavers-option-1.png",
+      "/games/bebras/castors-03-polite-beavers-option-2.png",
+      "/games/bebras/castors-03-polite-beavers-option-3.png",
+      "/games/bebras/castors-03-polite-beavers-option-4.png"
+    ]
+  },
+  {
+    "id": "castors-04-magic-house",
+    "title": "Magic house",
+    "number": 4,
+    "text": "Beaver Josie is trapped in a magic house. She wants to get out but can only open a door if it is completely different from the door she just came through. Two doors are completely different if their shape, pattern, window shape, and handle shape differ. Josie just came through this door: Task Click the door Josie can go through next. Click Save when you are done.",
+    "image": "/games/bebras/castors-04-magic-house.png",
+    "skills": [
+      "logical reasoning",
+      "evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419888",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-04-magic-house-option-0.png",
+      "/games/bebras/castors-04-magic-house-option-1.png",
+      "/games/bebras/castors-04-magic-house-option-2.png",
+      "/games/bebras/castors-04-magic-house-option-3.png"
+    ]
+  },
+  {
+    "id": "castors-05-cube",
+    "title": "Cube",
+    "number": 5,
+    "text": "A Bebras cube has a different shape on each face. The six shapes are shown below. \n\nPink circle\tPurple diamond\tRed ellipse\tBlue pentagon\tOrange star\tGreen triangle\n\t\t\t\t\t\n\n\nEight identical Bebras cubes are stacked together to form a larger cube. \n\n\n\nQuestion\nIn a single Bebras cube, which shape is on the face opposite the pink circle?",
+    "image": "/games/bebras/01-cube.png",
+    "skills": [
+      "decomposition",
+      "Logical reasoning",
+      "debugging"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419894",
+    "juniorIndex": 0
+  },
+  {
+    "id": "castors-06-chung-cake",
+    "title": "Chung cake",
+    "number": 6,
+    "text": "In Vietnam, people celebrate the Lunar New Year by eating BanhChung. These rice cakes are too sticky to cut with a knife, so pieces of string are used to make the cuts:\n\nMultiple strings can be used to cut a cake but they may get tangled if not used in the correct order. For example, in the case below, the cake should be cut using the light coloured string first, followed by the dark coloured string. If done in reverse, the dark coloured string will get tangled with the light coloured string.\n\nQuestion\nIn what order should the four strings be used so no string gets tangled with another? ",
+    "image": "/games/bebras/02-chung-cake.png",
+    "skills": [
+      "logical reasoning",
+      "algorithmic thinking",
+      "Evaluation",
+      "abstraction"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419891",
+    "juniorIndex": 1
+  },
+  {
+    "id": "castors-07-robot-rug",
+    "title": "Robot rug",
+    "number": 7,
+    "text": "Sarah has a knitting robot that makes rugs using four different patterns. Each pattern has a two digit code: 00 11 01 10 Sarah writes a set of instructions for the robot. Each code tells the robot which pattern to knit. The robot knits row by row, from left to right, top to bottom. 00-10-10-10-01-10-10-10-00 10-01-10-01-01-01-10-01-10 01-11-01-01-11-01-01-11-01 10-01-10-01-01-01-10-01-10 00-10-10-10-01-10-10-10-00 Question Which rug will the robot make using Sarah's program?",
+    "image": "/games/bebras/castors-07-robot-rug.png",
+    "skills": [
+      "decomposition",
+      "pattern recognition",
+      "evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419893",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-07-robot-rug-option-0.png",
+      "/games/bebras/castors-07-robot-rug-option-1.png",
+      "/games/bebras/castors-07-robot-rug-option-2.png",
+      "/games/bebras/castors-07-robot-rug-option-3.png"
+    ]
+  },
+  {
+    "id": "castors-08-planes",
+    "title": "Planes",
+    "number": 8,
+    "text": "Seven planes are queuing up to take off using a single runway. Each plane has a scheduled departure time and they cannot jump the queue!\n\nThe planes' take-off schedule is shown below.\n\nTask\nFill in the empty boxes in the timetable by dragging and dropping these 4 planes.",
+    "image": "/games/bebras/04-planes.png",
+    "skills": [
+      "algorithmic thinking",
+      "logical reasoning",
+      "evaluate"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419892",
+    "juniorIndex": 3
+  },
+  {
+    "id": "castors-09-rubber-rings",
+    "title": "Rubber rings",
+    "number": 9,
+    "text": "In a water park, rubber rings float downstream () along a short lazy river. At the end of the river, they line up as shown in the image below.\n\n\n\n\n\nChildren take a ring to use for their next ride from any position. When a ring is pulled out () of the water for someone's next ride, each ring behind it floats one position () downstream to fill the gap.\n\nIn our example above, where F and A are pulled out, the number of times a ring floats down by one position downstream is 8 (G and H move when F is removed; all of the remaining rings move when A is removed).\n\nQuestion\nEight rings line up as shown below. Then 5 rings are pulled out of the water in the order B, G, E, D, H. In total, how many times do the rings float one position downstream?\n\n",
+    "image": "/games/bebras/09-rubber-rings.png",
+    "skills": [
+      "decomposition",
+      "Algorithmic thinking",
+      "Pattern recognition",
+      "evaluation,"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419895",
+    "juniorIndex": 8
+  },
+  {
+    "id": "castors-10-parking-at-the-party",
+    "title": "Parking at the party",
+    "number": 10,
+    "text": "Ana invites friends to her house every week. They arrive by car. In Ana’s driveway there is space for 9 cars, but they need to park in 3 lanes of 3 cars. Each friend is asked to park as far forward as possible in any lane to make room for other cars.\n\nLast week (picture above), car A arrived first, then car D, then car C, and then cars B, E, and F. The cars parked this way (not blocking car C) because car C needed to leave first.\n\nThis week, friends arrive in this order:\n\nAnn, Bob, Claire, David, Elen, Frank, George, Hailey, Ivan\n\nThey will leave the party in this order:\n\nGeorge, David, Frank, Ivan, Hailey, Claire, Bob, Ann,  Elen\n\nQuestion\nWhich way can the friends park as they arrive so that no car is blocked in when its owner tries to leave?",
+    "image": "/games/bebras/06-parking-at-the-party.png",
+    "skills": [
+      "algorithmic thinking",
+      "Logical reasoning",
+      "decomposition"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419898",
+    "juniorIndex": 5
+  },
+  {
+    "id": "castors-11-avoiding-the-clouds",
+    "title": "Avoiding the clouds",
+    "number": 11,
+    "text": "A pilot flying to a nearby airport encounters some stormy clouds. They want to avoid these clouds and fly through clear sky.  \n\nThe section of the cloudy sky is represented as a 3x3x3 grid. As the pilot moves one step forward, she can also turn the plane to move up, down, left, right, or diagonally. The plane cannot move out of the grid. \n\nIn the diagram the white clouds are nearest (layer 1), the light grey clouds are further away (layer 2), and the darkest clouds are furthest (layer 3).\n\nThe plane is about to enter the cloudy area. Unless it turns, it will go into the white cloud in the middle of the top row.\n\nQuestion\nWhich instructions will move the plane through the cloudy area without flying into any clouds?",
+    "image": "/games/bebras/07-avoiding-the-clouds.png",
+    "skills": [
+      "evaluation",
+      "Decomposition",
+      "Abstraction",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419899",
+    "juniorIndex": 6
+  },
+  {
+    "id": "castors-12-painted-trees",
+    "title": "Painted trees",
+    "number": 12,
+    "text": "Beaver Bastian is lost in the forest and cannot find his way back to his house\n\nThe trees in the forest are painted with 4 different symbols:     \n\nThe trees in the forest are painted with 4 different symbols:\n\n   \n\nFrom his house to the point he got lost Bastian walked past: \n\n3 trees painted with  \n3 trees with  \n3 trees with  \n\nBastian cannot remember how many trees painted with  he passed. \n\nBastian must find the correct path back to his house. \n\n\t\n\nQuestion \nWhich is Beaver Bastian’s house? ",
+    "image": "/games/bebras/08-painted-trees.png",
+    "skills": [
+      "abstraction",
+      "Pattern recognition",
+      "Algorithmic thinking",
+      "Logical reasoning"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=419897",
+    "juniorIndex": 7
+  }
+]

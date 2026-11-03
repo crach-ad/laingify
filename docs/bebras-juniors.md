@@ -27,3 +27,28 @@ Fair's published explanation says C → 5, but the illustration and height rule 
 - `npx tsc --noEmit`, scoped ESLint, production build, and browser teacher preview.
 
 The protected explanation route traces `content/bebras/explanations/*.png` into its deployment bundle. Student question graphics are public; explanation screenshots are served only after authorized completion.
+
+## Castors 2025 — KCSB-3
+
+The same Mouse Meadow tab also supports the 12 Castors challenges captured from
+UK Bebras review mode on 3 November 2026. The assigned module selects the question
+set; learners cannot choose a different set through request parameters. KCSB-3
+(Year 3) receives **Bebras Castors 2025**; existing Year 6 assignments and sessions
+remain Juniors. Legacy sessions without `setId` continue to use Juniors.
+
+Castors includes Alex’s treasure, Beautiful drawings, Polite Beavers, Magic
+house, Cube, Chung cake, Robot rug, Planes, Rubber rings, Parking at the party,
+Avoiding the clouds, and Painted trees, in that order. Beautiful drawings supports
+dragging and a select-then-place alternative for touch and keyboard users. Original
+question and choice images are local; explanations remain protected until finish.
+
+Preview the additive assignment with:
+`node --env-file=/path/to/.env prisma/enable-bebras-kcsb.mjs --castors`
+Add `--apply` to assign only the class with code KCSB-3 in KCSB Computing. This does
+not reset work or remove other assignments. Deploy the multi-set app before
+students use the new assignment.
+
+The existing instructor outcomes, per-question active time, elapsed completion
+time without cutoff, answer revisions, session history, and CSV export adapt to
+12 questions. To exercise the isolated integration test for this set, pass
+`BEBRAS_TEST_SET=castors` along with `BEBRAS_TEST_BASE_URL`.

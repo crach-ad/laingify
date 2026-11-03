@@ -35,7 +35,7 @@ export default async function ModulePage({
 
   const module = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!module) notFound();
-  if (module.title === "Bebras Juniors 2025" && module.topic === "Computational Thinking") redirect("/play/mouse/bebras");
+  if (["Bebras Juniors 2025", "Bebras Castors 2025"].includes(module.title) && module.topic === "Computational Thinking") redirect("/play/mouse/bebras");
 
   // First visit starts the clock; never downgrade a completed module.
   const existingProgress = await prisma.moduleProgress.findUnique({

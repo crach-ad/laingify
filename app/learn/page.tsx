@@ -29,7 +29,7 @@ export default async function Dashboard() {
   // signal — Project.moduleId is a plain string, so they're looked up separately.
   const [classModules, projects, statuses, bebrasAssignment] = await Promise.all([
     prisma.classModule.findMany({
-      where: { classId: klass.id, module: { NOT: { title: "Bebras Juniors 2025", topic: "Computational Thinking" } } },
+      where: { classId: klass.id, module: { NOT: { title: { in: ["Bebras Juniors 2025", "Bebras Castors 2025"] }, topic: "Computational Thinking" } } },
       orderBy: { order: "asc" },
       include: {
         module: {
@@ -43,8 +43,8 @@ export default async function Dashboard() {
     prisma.project.findMany({ where: { learnerId: learner.id } }),
     prisma.criterionStatus.findMany({ where: { learnerId: learner.id } }),
     prisma.classModule.findFirst({
-      where: { classId: klass.id, module: { orgId: klass.orgId, title: "Bebras Juniors 2025", topic: "Computational Thinking" } },
-      select: { id: true },
+      where: { classId: klass.id, module: { orgId: klass.orgId, title: { in: ["Bebras Juniors 2025", "Bebras Castors 2025"] }, topic: "Computational Thinking" } },
+      select: { id: true, module: { select: { title: true } } },
     }),
   ]);
 
@@ -239,7 +239,7 @@ export default async function Dashboard() {
       </Link>
       {bebrasAssignment && <nav aria-label="Mouse Meadow challenge tabs" className="mt-3 flex flex-wrap gap-3 pl-4">
         <Link href="/play/mouse/bebras" className="btn-secondary flex min-h-12 flex-wrap items-center gap-3 rounded-xl px-5 py-3 text-sm" style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-          <span aria-hidden>🧩</span><span>Bebras challenges</span><span className="muted text-xs">15 puzzles · no time limit</span><span aria-hidden>→</span>
+          <span aria-hidden>🧩</span><span>Bebras challenges</span><span className="muted text-xs">{bebrasAssignment.module.title === "Bebras Castors 2025" ? 12 : 15} puzzles · no time limit</span><span aria-hidden>→</span>
         </Link>
       </nav>}
       </section>}

@@ -40,7 +40,7 @@ export default async function TopicPage({
 
   const [classModules, projects, statuses] = await Promise.all([
     prisma.classModule.findMany({
-      where: { classId: klass.id, module: { NOT: { title: "Bebras Juniors 2025", topic: "Computational Thinking" } } },
+      where: { classId: klass.id, module: { NOT: { title: { in: ["Bebras Juniors 2025", "Bebras Castors 2025"] }, topic: "Computational Thinking" } } },
       orderBy: { order: "asc" },
       include: {
         module: {

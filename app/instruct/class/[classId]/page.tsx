@@ -37,7 +37,7 @@ export default async function ClassPage({
   // Group modules by topic, keeping class order.
   const topics: { name: string; modules: typeof klass.modules }[] = [];
   for (const m of klass.modules) {
-    if (m.title === "Bebras Juniors 2025" && m.topic === "Computational Thinking") continue;
+    if (["Bebras Juniors 2025", "Bebras Castors 2025"].includes(m.title) && m.topic === "Computational Thinking") continue;
     const name = m.topic || m.title;
     const t = topics.find((x) => x.name === name);
     if (t) t.modules.push(m);
@@ -110,7 +110,7 @@ export default async function ClassPage({
         <Link href={`/instruct/class/${klass.id}?view=insights`} className={tab(showInsights)}>
           📊 Insights
         </Link>
-        {klass.modules.some(m => m.title === "Bebras Juniors 2025") && <Link href={`/instruct/class/${klass.id}/bebras`} className={tab(false)}>Bebras outcomes</Link>}
+        {klass.modules.some(m => ["Bebras Juniors 2025", "Bebras Castors 2025"].includes(m.title)) && <Link href={`/instruct/class/${klass.id}/bebras`} className={tab(false)}>Bebras outcomes</Link>}
         <Link href={`/instruct/class/${klass.id}/typing`} className={tab(false)}>
           ⌨️ Typing
         </Link>
