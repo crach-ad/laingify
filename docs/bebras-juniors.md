@@ -27,3 +27,7 @@ Fair's published explanation says C → 5, but the illustration and height rule 
 - `npx tsc --noEmit`, scoped ESLint, production build, and browser teacher preview.
 
 The protected explanation route traces `content/bebras/explanations/*.png` into its deployment bundle. Student question graphics are public; explanation screenshots are served only after authorized completion.
+
+## Fair interactive board
+
+Fair uses extracted original Bebras vector artwork on a shared height grid, with five beavers and six stilt pairs. Mouse/touch dragging snaps feet to footplates; select-then-place and native placement menus support keyboard and touch. Moving onto occupied stilts returns the previous occupant to the starting area. Reset clears placements. The six-slot answer format, local drafts, autosave, navigation and scoring remain compatible with existing attempts. No target height or correctness hint is displayed on the board.

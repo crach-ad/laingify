@@ -1,0 +1,16 @@
+.fair { color: #263c31; }
+.fair > p { line-height: 1.6; }
+.scroll { overflow-x: auto; border: 1px solid #d8e3d8; border-radius: 16px; background: #fbfdf9; }
+.board { display: block; width: 100%; min-width: 720px; height: auto; user-select: none; }
+.beaver { cursor: grab; touch-action: none; }
+.beaver:active { cursor: grabbing; }
+.target { cursor: pointer; }
+.beaver:focus-visible, .target:focus-visible { outline: 3px solid #7154ad; outline-offset: 2px; }
+.target:hover > rect { fill: #e8f3e655; }
+.beaver[aria-disabled="true"], .target[aria-disabled="true"] { cursor: default; }
+.status { min-height: 3em; font-size: .9rem; }
+.menus { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.menus label { display: grid; gap: 6px; font-weight: 600; font-size: .9rem; }
+.menus select { min-height: 44px; border: 1px solid #b9c8be; border-radius: 8px; padding: 8px; background: white; color: #263c31; width: 100%; }
+.clear { margin-top: 16px; padding: 10px 18px; border: 1px solid #b9c8be; border-radius: 10px; background: white; cursor: pointer; }
+.clear:disabled { opacity: .5; cursor: default; }
