@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { PACES, PRACTICES, rankClimbs, validClimb, validUsername, type ClassClimb } from "@/lib/letter-leaper-rules";
 
-import { rankGlobalClimbs, yearGroupFromClass, type GlobalClimb } from '@/lib/leaper-global';
 
 const TITLE = "Letter Leaper: Moonbound";
 const json = (data: unknown, status = 200) => NextResponse.json(data, { status, headers: { "Cache-Control": "private, no-store" } });
@@ -60,25 +59,7 @@ async function handle(req: Request, action: string) {
   if (req.method !== "GET") return json({ error: "Use GET to view the leaderboard." }, 405);
   const query = new URL(req.url).searchParams;
   const boardScope = query.get("scope") ?? "class";
-  if (!["class", "global"].includes(boardScope)) return json({ error: "Choose class or global." }, 400);
-  if (boardScope === "global") {
-    const difficulty = query.get("pace") ?? "easy";
-    if (!PACES.includes(difficulty)) return json({ error: "Choose Easy, Medium or Hard." }, 400);
-    const [sessions, legacy] = await Promise.all([
-      prisma.typingSession.findMany({ where: { correct: { gt: 0 }, pace: { in: difficulty === "easy" ? ["easy", "relaxed"] : [difficulty] } }, select: { class: { select: { name: true } }, id: true, learnerId: true, startLeap: true, furthestLeap: true, correct: true, attempts: true, activeMs: true, letterSet: true, pace: true, scope: true, summaryJson: true } }),
-      prisma.learnerEvent.findMany({ where: { type: "leaper_score" }, select: { learnerId: true, meta: true } }),
-    ]);
-    const classIds = [...new Set(legacy.map(r => parseMeta(r.meta).classId).filter((id): id is string => typeof id === "string"))];
-    const classes = classIds.length ? await prisma.class.findMany({ where: { id: { in: classIds } }, select: { id: true, name: true } }) : [];
-    const classYears = new Map(classes.map(c => [c.id, yearGroupFromClass(c.name)]));
-    const rows: GlobalClimb[] = sessions.map(s => ({ yearGroup: yearGroupFromClass(s.class.name), id: s.id, learnerId: s.learnerId, startLeap: s.startLeap, leaps: s.furthestLeap, correct: s.correct, attempts: s.attempts, elapsed: s.activeMs, streak: Number(parseMeta(s.summaryJson).bestStreak ?? 0), practice: s.letterSet, pace: s.pace, scope: s.scope }));
-    for (const saved of legacy) {
-      const raw = parseMeta(saved.meta);
-      const climb = raw.pace === "relaxed" ? { ...raw, pace: "easy" } : raw;
-      if (validClimb(climb)) rows.push({ ...climb, yearGroup: classYears.get(String(raw.classId)) ?? null, learnerId: saved.learnerId, startLeap: 0, scope: "full" });
-    }
-    return json({ ...rankGlobalClimbs(rows, ctx.learnerId, difficulty), scope: "global", pace: difficulty });
-  }
+  if (boardScope !== "class") return json({ error: "Only the class leaderboard is available." }, 400);
   const practice = query.get("practice") ?? "all", pace = query.get("pace") ?? "easy";
   if (!PRACTICES.includes(practice) || !PACES.includes(pace)) return json({ error: "Choose a valid practice mode." }, 400);
   const rows = await prisma.learnerEvent.findMany({
