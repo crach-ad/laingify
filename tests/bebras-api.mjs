@@ -19,12 +19,14 @@ try{
  const cookie='ll_session='+signToken('learner',{learnerId:learner.id,classId:klass.id,via:'pin'});
  const headers={'Content-Type':'application/json',origin:base,cookie};
  const post=async b=>{const r=await fetch(base+'/api/bebras',{method:'POST',headers,body:JSON.stringify(b)});return {status:r.status,data:await r.json()}};
- const player=await fetch(base+'/play/mouse/bebras',{headers});assert.equal(player.status,200);assert.match(await player.text(),/Mouse Meadow activities/);
- const dashboard=await fetch(base+'/learn',{headers});assert.equal(dashboard.status,200);const dashboardHtml=await dashboard.text();assert.doesNotMatch(dashboardHtml,/Bebras Juniors 2025/);assert.match(dashboardHtml,/Mouse Meadow challenge tabs/);assert.match(dashboardHtml,/Bebras challenges/);
- const bookmark=await fetch(base+'/play/bebras',{headers,redirect:'manual'});assert.equal(bookmark.status,307);assert.equal(bookmark.headers.get('location'),'/play/mouse/bebras');
+ const player=await fetch(base+'/play/bebras',{headers});assert.equal(player.status,200);assert.match(await player.text(),/My modules/);
+ const dashboard=await fetch(base+'/learn',{headers});assert.equal(dashboard.status,200);const dashboardHtml=await dashboard.text();assert.doesNotMatch(dashboardHtml,/Mouse Meadow challenge tabs/);assert.match(dashboardHtml,/learn\/topic\/bebras-challenges/);assert.match(dashboardHtml,/Bebras challenges/);
+ const topic=await fetch(base+'/learn/topic/bebras-challenges',{headers});assert.equal(topic.status,200);assert.ok((await topic.text()).includes(titleFor(setId)));
+ const modulePage=await fetch(base+'/learn/'+mod.id,{headers,redirect:'manual'});assert.equal(modulePage.status,307);assert.equal(modulePage.headers.get('location'),'/play/bebras');
+ const bookmark=await fetch(base+'/play/mouse/bebras',{headers,redirect:'manual'});assert.equal(bookmark.status,307);assert.equal(bookmark.headers.get('location'),'/play/bebras');
  assert.equal((await fetch(base+'/api/bebras')).status,403);
  assert.equal((await fetch(base+'/api/bebras',{method:'POST',headers:{...headers,origin:'https://wrong.invalid'},body:'{}'})).status,403);
- const [a,b]=await Promise.all([post({action:'start'}),post({action:'start'})]);assert.equal(a.status,200);assert.equal(a.data.id,b.data.id);let current=a.data;assert.equal(current.results,null);
+ const [a,b]=await Promise.all([post({action:'start'}),post({action:'start'})]);assert.equal(a.status,200,JSON.stringify(a.data));assert.equal(a.data.id,b.data.id);let current=a.data;assert.equal(current.results,null);
  assert.equal((await fetch(`${base}/api/bebras/explanation?session=${current.id}&question=0`,{headers})).status,403);
  const keys=results({},setId);
  for(let i=0;i<count;i++){

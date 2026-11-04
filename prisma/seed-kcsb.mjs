@@ -83,7 +83,8 @@ async function main() {
       throw new Error(`${year.name}: toolbelt module(s) with unknown leadsTo: ${unplaced.map((t) => t.title).join(", ")}`);
 
     console.log(`\n${year.name} (${year.code}, ${year.band})`);
-    const modules = [letterLeaper];
+    // Year 4 uses Bebras instead of Keyboard Skills. Preserve historical work.
+    const modules = year.code === "KCSB-4" ? [] : [letterLeaper];
     for (const def of orderedDefs) modules.push(await createModule(def));
     if (ARDUINO_YEARS.includes(year.key)) modules.push(...(await arduinoModules()));
     await checkCheckpoints(prisma, modules);

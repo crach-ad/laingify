@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
-import { slugifyTopic } from "@/lib/topics";
+import { slugifyTopic, moduleTopic } from "@/lib/topics";
 
 // One topic's project list: every module in this content area, in order, with
 // the learner's progress. Projects open the normal tutorial player.
@@ -40,7 +40,7 @@ export default async function TopicPage({
 
   const [classModules, projects, statuses] = await Promise.all([
     prisma.classModule.findMany({
-      where: { classId: klass.id, module: { NOT: { title: { in: ["Bebras Juniors 2025", "Bebras Castors 2025"] }, topic: "Computational Thinking" } } },
+      where: { classId: klass.id },
       orderBy: { order: "asc" },
       include: {
         module: {
@@ -56,10 +56,10 @@ export default async function TopicPage({
   ]);
 
   const inTopic = classModules.filter(
-    (cm) => slugifyTopic(cm.module.topic || cm.module.title) === slug,
+    (cm) => slugifyTopic(moduleTopic(cm.module)) === slug,
   );
   if (inTopic.length === 0) notFound();
-  const topicName = inTopic[0].module.topic || inTopic[0].module.title;
+  const topicName = moduleTopic(inTopic[0].module);
 
   const completedModuleIds = new Set(projects.map((p) => p.moduleId));
   const metCriterionIds = new Set(statuses.filter((s) => s.status === "MET").map((s) => s.criterionId));

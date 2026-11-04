@@ -9,3 +9,9 @@ export function slugifyTopic(topic: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+// Bebras sets share one standalone dashboard area across year groups.
+export function moduleTopic(module: { title: string; topic: string }): string {
+  return /^Bebras (?:Juniors|Castors) 2025$/.test(module.title) && module.topic === "Computational Thinking"
+    ? "Bebras challenges" : module.topic || module.title;
+}

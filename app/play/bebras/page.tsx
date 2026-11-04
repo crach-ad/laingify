@@ -1,3 +1,9 @@
 import { redirect } from 'next/navigation';
-// Preserve previously shared links and existing assignments.
-export default function BebrasPage(){redirect('/play/mouse/bebras');}
+import { bebrasAccess } from '@/lib/bebras/access';
+import BebrasGame from './BebrasGame';
+export const metadata={title:'Bebras challenges | Laingify'};
+export default async function BebrasPage(){
+  const ctx=await bebrasAccess();
+  if(!ctx)redirect('/join');
+  return <BebrasGame className={ctx.assignment.class.name} setId={ctx.setId}/>;
+}
