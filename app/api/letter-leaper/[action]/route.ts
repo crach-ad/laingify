@@ -66,10 +66,14 @@ async function handle(req: Request, action: string) {
     where: { moduleId: ctx.moduleId, type: "leaper_score", meta: { contains: `"classId":${JSON.stringify(ctx.classId)}` }, learner: { roster: { some: { classId: ctx.classId } } } },
     select: { learnerId: true, meta: true },
   });
-  const ranked = rankClimbs(rows.map(r => ({ ...parseMeta(r.meta), learnerId: r.learnerId })) as ClassClimb[], ctx.classId, practice, pace);
-  const profiles = await prisma.learnerEvent.findMany({ where: { id: { in: ranked.map(r => `leaper-profile:${ctx.classId}:${r.learnerId}`) } }, select: { learnerId: true, meta: true } });
+  // Resolve current nicknames before ranking, including profiles outside the
+  // first 20 scores, so renamed and shared nicknames are grouped consistently.
+  const learnerIds = [...new Set([...rows.map(r => r.learnerId), ctx.learnerId])];
+  const profiles = await prisma.learnerEvent.findMany({ where: { id: { in: learnerIds.map(id => `leaper-profile:${ctx.classId}:${id}`) } }, select: { learnerId: true, meta: true } });
   const names = new Map(profiles.map(p => [p.learnerId, parseMeta(p.meta).username]));
-  return json({ entries: ranked.map((r, i) => ({ rank: i + 1, leaps: r.leaps, username: names.get(r.learnerId) ?? r.username, accuracy: r.correct / r.attempts * 100, streak: r.streak, elapsed: r.elapsed, you: r.learnerId === ctx.learnerId })) });
+  const ranked = rankClimbs(rows.map(r => ({ ...parseMeta(r.meta), learnerId: r.learnerId, ...(validUsername(names.get(r.learnerId)) ? { username: names.get(r.learnerId) } : {}) })) as ClassClimb[], ctx.classId, practice, pace);
+  const viewerName = names.get(ctx.learnerId);
+  return json({ entries: ranked.map((r, i) => ({ rank: i + 1, leaps: r.leaps, username: r.username, accuracy: r.correct / r.attempts * 100, streak: r.streak, elapsed: r.elapsed, you: r.learnerId === ctx.learnerId || (typeof viewerName === "string" && viewerName.toLowerCase() === r.username.toLowerCase()) })) });
 }
 async function payload(req: Request): Promise<Record<string, unknown> | null> {
   const raw = await req.text();

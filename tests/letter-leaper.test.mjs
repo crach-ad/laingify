@@ -10,7 +10,7 @@ test('validates finished climbs and nicknames', () => {
   assert.ok(validUsername('Moon_Kid-2')); assert.equal(validUsername('<script>'), false);
 });
 test('leaderboard isolates classes and modes and keeps the best run per learner', () => {
-  const rows = [score({attempts:240}),score(),score({learnerId:'two',elapsed:60000}),score({classId:'other',learnerId:'outsider'}),score({pace:'hard',learnerId:'speed'}),score({practice:'home',learnerId:'home'})];
+  const rows = [score({attempts:240}),score(),score({learnerId:'two',username:'OtherKid',elapsed:60000}),score({classId:'other',learnerId:'outsider'}),score({pace:'hard',learnerId:'speed'}),score({practice:'home',learnerId:'home'})];
   const result=rankClimbs(rows,'windsor-a','all','easy');
   assert.deepEqual(result.map(r=>r.learnerId),['two','one']); assert.equal(result[1].attempts,230);
 });
@@ -52,3 +52,18 @@ test('public play never loads the class API client', async () => {
 });
 
 test('Expert saves 100-leap finishes and keeps older 150-leap results readable',()=>{assert(validClimb(score({pace:'expert',leaps:100})));assert(validClimb(score({pace:'expert',leaps:150})));assert.equal(validClimb(score({pace:'hard',leaps:100})),false);});
+
+
+test('leaderboard keeps the strongest score per nickname across profiles and capitalization',()=>{
+ const rows=[score({learnerId:'one',username:'MoonKid',attempts:250}),score({learnerId:'two',username:'moonkid',attempts:230}),score({learnerId:'three',username:'MOONKID',attempts:240}),score({learnerId:'four',username:'StarKid',attempts:235})];
+ const result=rankClimbs(rows,'windsor-a','all','easy');
+ assert.deepEqual(result.map(r=>r.learnerId),['two','four']);
+ assert.equal(rankClimbs([...rows].reverse(),'windsor-a','all','easy')[0].learnerId,'two');
+});
+test('nickname grouping happens before the top-20 cutoff and preserves mode boundaries',()=>{
+ const duplicates=Array.from({length:25},(_,i)=>score({learnerId:'same-'+i,username:'SharedName',elapsed:12000+i}));
+ const others=Array.from({length:20},(_,i)=>score({learnerId:'other-'+i,username:'Player-'+i,elapsed:15000+i}));
+ const result=rankClimbs([...duplicates,...others,score({learnerId:'hard',username:'SharedName',pace:'hard'})],'windsor-a','all','easy');
+ assert.equal(result.length,20);assert.equal(result.filter(r=>r.username.toLowerCase()==='sharedname').length,1);
+ assert.equal(new Set(result.map(r=>r.username.toLowerCase())).size,20);
+});

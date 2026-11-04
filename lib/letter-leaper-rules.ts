@@ -25,5 +25,13 @@ export function rankClimbs(rows: ClassClimb[], classId: string, practice: string
     const prev = best.get(row.learnerId);
     if (!prev || compare(row, prev) < 0) best.set(row.learnerId, row);
   }
-  return [...best.values()].sort(compare).slice(0, 20);
+  // A nickname can be used by more than one roster profile. Rank first so
+  // only that nickname's strongest result occupies a place on the board.
+  const nicknames = new Set<string>();
+  return [...best.values()].sort(compare).filter(row => {
+    const nickname = row.username.trim().toLowerCase();
+    if (nicknames.has(nickname)) return false;
+    nicknames.add(nickname);
+    return true;
+  }).slice(0, 20);
 }

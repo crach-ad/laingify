@@ -58,7 +58,7 @@ async function loadBoard(prefix='board') {
     const difficulty = (prefix === 'home-board' ? $('pace') : $('board-pace')).value;
     if(prefix === 'home-board')$('home-leaderboard-title').textContent='Class top 5 · '+difficulty.charAt(0).toUpperCase()+difficulty.slice(1);
     if(prefix === 'board') {
-      $('board-description').textContent='Your class · best completed climb per player.';
+      $('board-description').textContent='Your class · one best completed climb per nickname.';
       $('board-ranking').textContent='Accuracy first, then streak, then fastest time.';
     }
     const result=await api('/leaderboard?'+new URLSearchParams({scope:'class',practice,pace:difficulty}));
