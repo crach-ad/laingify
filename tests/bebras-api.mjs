@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import { signToken } from '../lib/signed-token.ts';
 import { challengesFor,titleFor } from '../lib/bebras/challenges.ts';
 import { results } from '../lib/bebras/scoring.ts';
-const setId=process.env.BEBRAS_TEST_SET==='juniors-2024'?'juniors-2024':process.env.BEBRAS_TEST_SET==='castors'?'castors':'juniors';const challenges=challengesFor(setId);const count=challenges.length;
+const setId=process.env.BEBRAS_TEST_SET==='castors-2024'?'castors-2024':process.env.BEBRAS_TEST_SET==='juniors-2024'?'juniors-2024':process.env.BEBRAS_TEST_SET==='castors'?'castors':'juniors';const challenges=challengesFor(setId);const count=challenges.length;
 const base=process.env.BEBRAS_TEST_BASE_URL;if(!base||!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(base))throw Error('Explicit localhost BEBRAS_TEST_BASE_URL required.');
 const p=new PrismaClient();let org,klass,learner,mod,teacher,otherMod;
 try{

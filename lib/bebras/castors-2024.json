@@ -1,0 +1,559 @@
+[
+  {
+    "id": "castors-2024-01-bbq-party",
+    "number": 1,
+    "title": "BBQ party",
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410292",
+    "text": "Four beavers are at a BBQ. They are looking at the food and picking which type of skewer they want.\n\n\t\n\t\n\t\n\nI need \tI can't eat\tAs much  as possible\tAs much  as possible\n\n\nTask \n\nThere are four skewers. Give one to each beaver so that they are all happy with the skewer they get.\n\nDrag a line between the beavers and the skewers to connect them. Press save when done.",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "kind": "matching",
+    "image": "/games/bebras/castors-2024/2024_kr_02_bbq_party_beaver_a.svg",
+    "slotLabels": [
+      "Beaver A",
+      "Beaver B",
+      "Beaver C",
+      "Beaver D"
+    ],
+    "options": [
+      "Skewer 1",
+      "Skewer 2",
+      "Skewer 3",
+      "Skewer 4"
+    ],
+    "targetImages": [
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_beaver_a.svg",
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_beaver_b.svg",
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_beaver_c.svg",
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_beaver_d.svg"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_b.svg",
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_a.svg",
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_c.svg",
+      "/games/bebras/castors-2024/2024_kr_02_bbq_party_d.svg"
+    ]
+  },
+  {
+    "id": "castors-2024-02-ricca-cards",
+    "number": 2,
+    "title": "Ricca cards",
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410289",
+    "text": "Beaver Barbara collects monster cards called \"Riccas\". Each monster is different and the card shows their name, the number of eyes they have, and whether or not they have ears. These properties are shown under the picture of each monster. \n\nEach value of an attribute is noted in a specific way:\n\nAttribute\tType of value\n\n\tValues are given as text\n\n\tValues are given as  or \n\n\tValues are given as numbers\n\nTask\n\nFour more monster cards are shown below. Select the card that uses the correct type of data for each property.",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "kind": "choice",
+    "image": "/games/bebras/castors-2024/2024_ch_03b_ricca_cards_example_1.svg",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-2024/2024_ch_03b_ricca_cards_answer_1.svg",
+      "/games/bebras/castors-2024/2024_ch_03b_ricca_cards_answer_2.svg",
+      "/games/bebras/castors-2024/2024_ch_03b_ricca_cards_answer_3.svg",
+      "/games/bebras/castors-2024/2024_ch_03b_ricca_cards_answer_4.svg"
+    ]
+  },
+  {
+    "id": "castors-2024-03-organising-bracelets",
+    "number": 3,
+    "title": "Organising bracelets",
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410288",
+    "text": "Beaver Viktoria keeps her bracelets in a box with seven patterned trays. She stores each bracelet in a tray with a matching colour pattern.\n\nHere is an example of a bracelet with a colour pattern that matches one of the trays.\n\nTask\n\nChoose the bracelet that does not match any of the trays?",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "kind": "choice",
+    "image": "/games/bebras/castors-2024/2024_br_04_organizing_bracelets_1.svg",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-2024/2024_br_04_organizing_bracelets_answer_a.svg",
+      "/games/bebras/castors-2024/2024_br_04_organizing_bracelets_answer_b.svg",
+      "/games/bebras/castors-2024/2024_br_04_organizing_bracelets_answer_c.svg",
+      "/games/bebras/castors-2024/2024_br_04_organizing_bracelets_answer_d.svg"
+    ]
+  },
+  {
+    "id": "castors-2024-04-spinning-shamrocks",
+    "number": 4,
+    "title": "Spinning shamrocks",
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410291",
+    "text": "Beaver Séamus picked a shamrock but dropped it on the ground. Now it is mixed up with all the other shamrocks! This is a picture of Séamus’ shamrock.\n\nTask\n\nChoose Séamus’s shamrock from the four options below.\nYou can spin the shamrock by dragging the slider. \nClick on the correct shamrock to select it, then press save.",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "kind": "rotation",
+    "image": "/games/bebras/castors-2024/2024_ie_01a_spinning_shamrock_1.svg",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/castors-2024/2024_ie_01a_spinning_shamrock_answer_a.svg",
+      "/games/bebras/castors-2024/2024_ie_01a_spinning_shamrock_answer_b.svg",
+      "/games/bebras/castors-2024/2024_ie_01a_spinning_shamrock_answer_c.svg",
+      "/games/bebras/castors-2024/2024_ie_01a_spinning_shamrock_answer_d.svg"
+    ]
+  },
+  {
+    "id": "castors-2024-05-lost",
+    "number": 5,
+    "title": "Lost",
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410290",
+    "text": "Beaver Alia is walking in the forest. On her walk, she sees these things:\n\nFirst, she sees a group of red and yellow flowers.\t\n\nThen, she sees an apple tree.\t\n\nLast, she sees a bird's nest in a tree.\t\n\nTask\n\nAlia is now lost in the middle of the forest. Click on the path that Alia must use to get back to where she started from.\nClick save when you are done.",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "kind": "hotspots",
+    "image": "/games/bebras/castors-2024/2024_id_04_lost_4.svg",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "boardImage": "/games/bebras/castors-2024/2024_id_04_lost_1_tool_2.svg",
+    "spots": [
+      {
+        "x": 45,
+        "y": 41
+      },
+      {
+        "x": 56.5,
+        "y": 49
+      },
+      {
+        "x": 42.5,
+        "y": 60
+      },
+      {
+        "x": 56.5,
+        "y": 64
+      }
+    ],
+    "interactionHint": "Select the path Alia should take home.",
+    "hotspotLabels": [
+      "Path A",
+      "Path B",
+      "Path C",
+      "Path D"
+    ]
+  },
+  {
+    "id": "castors-2024-06-birthday-present",
+    "title": "Birthday present",
+    "number": 6,
+    "text": "Fiona wants a ball for her birthday.\n\nShe wants the ball to have a star on it. \n\nShe does not want the ball to have a moon or stripes on it.\n\nTask\n\n Click on the ball we should buy for Fiona.",
+    "image": "/games/bebras/juniors-2024/02-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410295",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/02-option-0.png",
+      "/games/bebras/juniors-2024/02-option-1.png",
+      "/games/bebras/juniors-2024/02-option-2.png",
+      "/games/bebras/juniors-2024/02-option-3.png",
+      "/games/bebras/juniors-2024/02-option-4.png",
+      "/games/bebras/juniors-2024/02-option-5.png"
+    ]
+  },
+  {
+    "id": "castors-2024-07-oliver-s-rattle",
+    "title": "Oliver's rattle",
+    "number": 7,
+    "text": "Oliver has a see-through rattle with colourful balls inside it. When he shakes it, some balls may move around the rattle to the other side. \n\nIn the picture below, you can see that the red ball and the yellow ball moved when the rattle was shaken.\n\n \n\nOliver shakes the rattle again and two more balls move.\nWhat does the rattle look like now?\n\nTask\n\nDrag the balls to the correct position in the rattle.\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/06-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410297",
+    "kind": "placement",
+    "options": [
+      "Blue",
+      "Yellow",
+      "Red"
+    ],
+    "slotLabels": [
+      "Lower left gap",
+      "Bottom gap",
+      "Right gap"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/06-board.png",
+    "spots": [
+      {
+        "x": 29.767441860465116,
+        "y": 84.40366972477064
+      },
+      {
+        "x": 49.76744186046512,
+        "y": 89.44954128440367
+      },
+      {
+        "x": 85.5813953488372,
+        "y": 68.34862385321101
+      }
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/06-ball-0.png",
+      "/games/bebras/juniors-2024/06-ball-1.png",
+      "/games/bebras/juniors-2024/06-ball-2.png"
+    ]
+  },
+  {
+    "id": "castors-2024-08-drawing-a-sailboat",
+    "title": "Drawing a sailboat",
+    "number": 8,
+    "text": "Beaver Sophie wants to trace a drawing of a sailboat.\n\nSophie must follow these rules:\n\nTracing can start at any dot in the drawing.\n\nThe drawing must be traced in one go. Sophie must never lift the pencil.\n\nA line may only be traced over once. Tracing over the same line again is not permitted.\n\n \n\nTask\n\nClick on the dot where Sophie should start.\n\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/03-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410296",
+    "kind": "hotspots",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/03-board.png",
+    "spots": [
+      {
+        "x": 50.0,
+        "y": 9.454545454545455
+      },
+      {
+        "x": 9.818181818181818,
+        "y": 62.18181818181818
+      },
+      {
+        "x": 50.0,
+        "y": 62.18181818181818
+      },
+      {
+        "x": 90.36363636363636,
+        "y": 62.18181818181818
+      },
+      {
+        "x": 9.818181818181818,
+        "y": 71.27272727272727
+      },
+      {
+        "x": 50.0,
+        "y": 71.27272727272727
+      },
+      {
+        "x": 90.36363636363636,
+        "y": 71.27272727272727
+      },
+      {
+        "x": 23.09090909090909,
+        "y": 89.0909090909091
+      },
+      {
+        "x": 76.72727272727273,
+        "y": 89.0909090909091
+      }
+    ]
+  },
+  {
+    "id": "castors-2024-09-colouring-page",
+    "title": "Colouring page",
+    "number": 9,
+    "text": "Beaver Bea has painted a picture using five different paint colours. She started with five full bottles of paint. When Bea finished, the bottles contained this much paint:\n\n\t\t\t\t\nBeaver\tSun\tFlower\tGrass\tSky\n\nTask\n\nBea used more paint for the large areas of colour in the picture than for small areas. Click on the picture that Bea painted.",
+    "image": "/games/bebras/juniors-2024/04-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410293",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/04-option-0.png",
+      "/games/bebras/juniors-2024/04-option-1.png",
+      "/games/bebras/juniors-2024/04-option-2.png",
+      "/games/bebras/juniors-2024/04-option-3.png"
+    ]
+  },
+  {
+    "id": "castors-2024-10-tube",
+    "title": "Tube",
+    "number": 10,
+    "text": "You have a clear tube that is open at both ends. The tube can fit three balls in it.\n\nIf another ball is pushed into the tube when it is full, a ball falls out the other side. In the pictures below you can see what happens when another ball is pushed into the tube:\n\nWhite ball from the left\tBlack ball from the right\n\t\n\n \n\nYour tube is filled as follows:\n\nFour balls are then pushed into the tube, one after the other, in the directions shown by the arrows:\n\n, , , \n\nTask\n\nChoose the correct order of balls by dragging and dropping the correct colour ball into the correct position.\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/01-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410294",
+    "kind": "placement",
+    "options": [
+      "Black",
+      "White"
+    ],
+    "limits": [
+      3,
+      3
+    ],
+    "slotLabels": [
+      "Left",
+      "Middle",
+      "Right"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/01-black.png",
+      "/games/bebras/juniors-2024/01-white.png"
+    ]
+  },
+  {
+    "id": "castors-2024-11-pizza-party",
+    "title": "Pizza party",
+    "number": 11,
+    "text": "Beaver John is having a pizza party with his four friends: Alice, Bob, Charlie and Dana. He knows what toppings each of his friends like to have on their pizza.\n\nTheir preferences are shown in the table below.\n\nAlice\t\t\t\n\n\nBob\n\n\t\n\n\t\n\n\t\n\n\n\n\nCharlie\n\n\t\n\n\t\n\n\t\n\n\n\n\nDana\n\n\t\n\n\t\n\n\t\n\n \n\nJohn wants to make a pizza with only three toppings. He wants to choose the three toppings that meet as many of his friends' preferences as possible.\n\nTask\n\nClick on the three toppings that John should choose.\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/08-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410298",
+    "kind": "multi",
+    "options": [
+      "Mushrooms",
+      "Pepper",
+      "Pineapple",
+      "Onions",
+      "Greens",
+      "Cheese"
+    ],
+    "selectionLimit": 3,
+    "optionImages": [
+      "/games/bebras/juniors-2024/08-topping-0.png",
+      "/games/bebras/juniors-2024/08-topping-1.png",
+      "/games/bebras/juniors-2024/08-topping-2.png",
+      "/games/bebras/juniors-2024/08-topping-3.png",
+      "/games/bebras/juniors-2024/08-topping-4.png",
+      "/games/bebras/juniors-2024/08-topping-5.png"
+    ]
+  },
+  {
+    "id": "castors-2024-12-miracle-flower",
+    "title": "Miracle flower",
+    "number": 12,
+    "text": "The miracle flower is a special kind of flower which grows very quickly.\n\nAt the start of day 1, it has a single bud.\nBy the end of day 1, a stalk with two new buds has grown from the initial bud.\nOn day 2, the process repeats: by the end of the day, a stalk with two new buds grows from each bud that developed the previous day.\nThis process continues day after day, with each bud from the previous day growing into a new stalk with two new buds by the end of the day.\n\nAs a result, the miracle flower becomes taller and more magnificent with each passing day.\n\nStart of Day 1\tEnd of Day 1\tEnd of Day 2\n\n\t\n\t\n\n \n\nAfter a number of days, the miracle flower looks like this:\n\nTask\n\nCalculate how many days this miracle flower took to grow.\n\nType a whole number and click save.",
+    "image": "/games/bebras/juniors-2024/10-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410299",
+    "kind": "number"
+  },
+  {
+    "id": "castors-2024-13-robot-path",
+    "title": "Robot path",
+    "number": 13,
+    "text": "Beaver Tom’s robot moves by following a set of rules:\n\nThe robot starts on the orange tile.\n\nThe robot moves in the direction of the arrow on the tile it is standing on.\n\nIf the robot moves off the tiles, it stops.\n\nThe tiles are arranged as shown below. \n\nTask\n\nTom is given three new tiles. Help Tom place the new tiles so the robot can reach the green tile. \n\nDrag each new tile into an empty space within the grid.\n\nClick save when you have finished.",
+    "image": "/games/bebras/juniors-2024/07-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410300",
+    "kind": "placement",
+    "options": [
+      "Up",
+      "Right"
+    ],
+    "limits": [
+      1,
+      2
+    ],
+    "slotLabels": [
+      "Row 1, gap 1",
+      "Row 1, gap 2",
+      "Row 2, gap 1",
+      "Row 2, gap 2",
+      "Row 3, gap 1",
+      "Row 3, gap 2",
+      "Row 4, gap 1",
+      "Row 4, gap 2",
+      "Row 5, gap 1",
+      "Row 5, gap 2"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/07-board.png",
+    "spots": [
+      {
+        "x": 35.96774193548387,
+        "y": 10.27190332326284,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 10.27190332326284,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 30.211480362537763,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 30.211480362537763,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 50.151057401812686,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 50.151057401812686,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 70.09063444108762,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 70.09063444108762,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 90.03021148036254,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 90.03021148036254,
+        "w": 12,
+        "h": 18
+      }
+    ]
+  },
+  {
+    "id": "castors-2024-14-online-class",
+    "title": "Online class",
+    "number": 14,
+    "text": "Ava starts at a new school but keeps in touch with friends from her old school in an online call. \n\nThe friends at the old school are sitting next to each other in a row, but at different computers.\n\nThis is how Ava sees her friends on her screen:\n\nTask\n\nOrder Ava's friends to show how they are seated in the row by dragging each into the correct position.\n\nPress save when you have finished",
+    "image": "/games/bebras/juniors-2024/12-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410301",
+    "kind": "placement",
+    "options": [
+      "Emma",
+      "Hannah",
+      "Diana",
+      "James",
+      "Maya",
+      "Raul",
+      "Alice",
+      "Lee",
+      "Bella"
+    ],
+    "slotLabels": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/12-friend-0.png",
+      "/games/bebras/juniors-2024/12-friend-1.png",
+      "/games/bebras/juniors-2024/12-friend-2.png",
+      "/games/bebras/juniors-2024/12-friend-3.png",
+      "/games/bebras/juniors-2024/12-friend-4.png",
+      "/games/bebras/juniors-2024/12-friend-5.png",
+      "/games/bebras/juniors-2024/12-friend-6.png",
+      "/games/bebras/juniors-2024/12-friend-7.png",
+      "/games/bebras/juniors-2024/12-friend-8.png"
+    ]
+  },
+  {
+    "id": "castors-2024-15-free-parking-spaces",
+    "title": "Free parking spaces",
+    "number": 15,
+    "text": "Beaver Tom helps park boats in a water park. He needs to find empty spaces for a boat that wants to stay for two days in a row over the weekend (Friday, Saturday, or Sunday).\n\nBelow is a picture showing where boats are already booked on those days.\n\nFriday\tSaturday\tSunday\n\t\t\n\nTask\n\nSelect the spaces from those that are not already booked which will be empty for at least two days in a row.\n\n\nClick on the numbers of the spaces to select them. Once you are done, click save.",
+    "image": "/games/bebras/juniors-2024/09-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410302",
+    "kind": "multi",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ]
+  }
+]

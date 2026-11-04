@@ -1,5 +1,6 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
+import MatchAndRotate from './MatchAndRotate';
 import InteractiveAnswer from './InteractiveAnswer';
 import { useState } from 'react';
 import { type Challenge,type Answer,planeNames,fairNames,places,gridWalls } from '@/lib/bebras/challenges';
@@ -8,6 +9,7 @@ const roads=[ [0,6,2],[6,4,6],[4,3,1],[0,5,3],[5,3,6],[0,1,4],[1,2,2],[5,2,4],[2
 const points=[[65,210],[180,340],[420,340],[550,210],[420,65],[300,210],[180,65]];
 export default function AnswerControl({challenge:c,value,onChange,disabled=false}:{challenge:Challenge;value:Answer|undefined;onChange:(v:Answer)=>void;disabled?:boolean}){
  const [picked,setPicked]=useState('');const arr=Array.isArray(value)?value:[];
+ if(c.kind==='matching'||c.kind==='rotation')return <MatchAndRotate challenge={c} value={value} onChange={onChange} disabled={disabled}/>;
  if(['placement','multi','hotspots'].includes(c.kind))return <InteractiveAnswer challenge={c} value={value} onChange={onChange} disabled={disabled}/>;
  if(c.kind==='choice')return <div className={s.choices}>{c.options!.map((o,i)=><button type="button" key={o} disabled={disabled} aria-pressed={value===o} onClick={()=>onChange(o)} className={value===o?s.selected:''}>{c.optionImages&&<img src={c.optionImages[i]} alt={`Option ${o}`} />}<span>{o}</span></button>)}</div>;
  if(c.kind==='text'||c.kind==='number')return <label className={s.inputLabel}>Your answer<input disabled={disabled} aria-label="Your answer" type={c.kind==='number'?'number':'text'} min={c.kind==='number'?0:undefined} maxLength={200} value={typeof value==='string'?value:''} onChange={e=>onChange(e.target.value)} autoComplete="off"/></label>;

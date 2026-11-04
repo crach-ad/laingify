@@ -62,3 +62,16 @@ test('2024 timing and answers stay in their own sequence and support the final q
  assert.equal(next.current,17);assert.equal(next.activeMs['2024-01-tube'],10000);assert.deepEqual(next.answers['2024-01-tube'],['White','Black','Black']);
  assert.equal(next.answers['01-cube'],undefined);assert.equal(results(next.answers,'juniors-2024').filter(r=>r.correct).length,1);
 });
+
+test('Castors 2024 has 15 independently tracked puzzles with the correct interaction types',async()=>{
+ const {challengesFor,setForTitle,titleFor}=await import('../lib/bebras/challenges.ts');const {moduleTopic}=await import('../lib/topics.ts');
+ const set='castors-2024',all=challengesFor(set);assert.equal(all.length,15);assert.equal(setForTitle(titleFor(set)),set);assert.equal(moduleTopic({title:titleFor(set),topic:'Computational Thinking'}),'Bebras challenges');
+ assert.equal(all[0].kind,'matching');assert.equal(all[3].kind,'rotation');assert.equal(all[4].kind,'hotspots');
+ for(const [i,r] of results({},set).entries()){assert.ok(validAnswer(i,r.expected,set),r.title);assert.ok(scoreAnswer(i,r.expected,set),r.title);assert.equal(scoreAnswer(i,undefined,set),false)}
+ assert.ok(scoreAnswer(0,['Skewer 3','Skewer 2','Skewer 4','Skewer 1'],set));assert.equal(validAnswer(0,['Skewer 1','Skewer 1'],set),false);assert.equal(scoreAnswer(0,['Skewer 2','Skewer 3','Skewer 4','Skewer 1'],set),false);
+ assert.ok(scoreAnswer(7,'6',set));assert.equal(scoreAnswer(7,'3',set),false);assert.ok(scoreAnswer(14,['7','2','1','5'],set));assert.equal(scoreAnswer(3,'A',set),false);
+ const run=advance(newRun('castors-test',0,set),{current:0,answer:['Skewer 3','Skewer 2','Skewer 4','Skewer 1'],next:14,active:true},12000);
+ assert.equal(run.activeMs[all[0].id],12000);assert.equal(run.current,14);assert.equal(results(run.answers,set).filter(r=>r.correct).length,1);assert.equal(results(run.answers,'castors').filter(r=>r.correct).length,0);
+ const {access,readFile}=await import('node:fs/promises');const markup=JSON.parse(await readFile('lib/bebras/clean-questions.json','utf8'));
+ for(const c of all){await access('public'+c.image);await access(`content/bebras/explanations/${c.id}-review.png`);for(const asset of [...(c.optionImages??[]),...(c.targetImages??[]),...(c.boardImage?[c.boardImage]:[])])await access('public'+asset);if(markup[c.id]){assert.doesNotMatch(markup[c.id],/<script|\son\w+=|https?:/i);for(const m of markup[c.id].matchAll(/src="([^"]+)"/g))await access('public'+m[1]);}}
+});

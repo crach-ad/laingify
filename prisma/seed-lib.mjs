@@ -100,7 +100,7 @@ export function moduleWriter(prisma, org, update) {
 export async function syncClassModules(prisma, classId, modules) {
   await prisma.classModule.deleteMany({
     // Preserve resources assigned through additive rollouts.
-    where: { classId, moduleId: { notIn: modules.map((m) => m.id) }, module: { NOT: { OR: [{ title: "Mouse Meadow", topic: "Mouse Skills" }, { title: { in: ["Bebras Juniors 2025", "Bebras Castors 2025", "Bebras Juniors 2024"] }, topic: "Computational Thinking" }] } } },
+    where: { classId, moduleId: { notIn: modules.map((m) => m.id) }, module: { NOT: { OR: [{ title: "Mouse Meadow", topic: "Mouse Skills" }, { title: { in: ["Bebras Juniors 2025", "Bebras Castors 2025", "Bebras Juniors 2024", "Bebras Castors 2024"] }, topic: "Computational Thinking" }] } } },
   });
   for (let i = 0; i < modules.length; i++) {
     const existing = await prisma.classModule.findFirst({
