@@ -33,7 +33,7 @@ function islandPos(n, v = new THREE.Vector3()) {
 }
 const standPos = (n, v) => islandPos(n, v).add(new THREE.Vector3(0, 0.02, 0));
 // The environment a platform belongs to: the one Milo leaps *from* (as in the 2D scenes).
-const kindFor = (n) => (n === MOON ? 'moon-surface' : n === TOTAL ? 'final-star' : terrainFor(Math.max(0, n - 1)).id);
+const kindFor = (n) => (n === TOTAL ? 'final-star' : n === MOON ? 'moon-surface' : terrainFor(Math.max(0, n - 1)).id);
 // Environment blend at a (continuous) leap level: the outgoing look fades over the last two leaps.
 function blendAt(a) {
   let k = 0;

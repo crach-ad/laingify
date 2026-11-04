@@ -5,7 +5,7 @@ export function validClimb(value: unknown): value is Climb {
   if (!value || typeof value !== "object") return false;
   const s = value as Climb;
   return typeof s.id === "string" && /^[0-9a-f-]{36}$/i.test(s.id) &&
-    PRACTICES.includes(s.practice) && PACES.includes(s.pace) && s.leaps === 150 &&
+    PRACTICES.includes(s.practice) && PACES.includes(s.pace) && (s.leaps === 150 || (s.pace === "expert" && s.leaps === 100)) &&
     Number.isSafeInteger(s.correct) && s.correct >= 230 && s.correct <= s.attempts &&
     Number.isSafeInteger(s.attempts) && s.attempts >= 230 && s.attempts <= 50000 &&
     Number.isSafeInteger(s.streak) && s.streak >= 1 && s.streak <= 150 &&

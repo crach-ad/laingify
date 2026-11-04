@@ -75,7 +75,7 @@ async function loadBoard(prefix='board') {
       }
       const tr=document.createElement('tr');
       if(row.you)tr.className='your-score';
-      for(const value of [row.rank+'. '+row.username+(row.you?' (you)':''),'150 · Stars reached',difficulty,row.accuracy.toFixed(2)+'%',row.streak,climbTime(row.elapsed)]) {
+      for(const value of [row.rank+'. '+row.username+(row.you?' (you)':''),(row.leaps ?? (difficulty === 'expert' ? 100 : 150))+' · Stars reached',difficulty,row.accuracy.toFixed(2)+'%',row.streak,climbTime(row.elapsed)]) {
         const td=document.createElement('td');td.textContent=value;tr.append(td);
       }
       boardElement('entries').append(tr);

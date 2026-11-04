@@ -38,7 +38,7 @@ export type SessionRow = {
 export const PHASE_LABEL: Record<Phase, string> = { letter: "Letter practice", word: "Word practice" };
 export const SET_LABEL: Record<string, string> = { all: "All letters", home: "Home row", top: "Top row", bottom: "Bottom row" };
 export const PACE_LABEL: Record<string, string> = {
-  expert: "Expert · words to sentences, 3 s per character",
+  expert: "Expert · 100 leaps, 5-leap setbacks, 3 s per character",
   easy: "Easy (hints on, falls at 2 misses)", medium: "Medium · falls at 8 s or 3 misses", hard: "Hard · words, falls at 4 s or 1 miss",
   // Paces played before the difficulties.
   relaxed: "Relaxed (hints on)", steady: "Steady · 8 s (older)", speedy: "Speedy · 4 s (older)", falls: "Falling platforms · 7 s (older)",
@@ -68,7 +68,7 @@ export function resumableSession(rows: SessionRow[], settings: { letterSet: stri
         now - r.lastActivityAt.getTime() < RESUME_MS &&
         (PACES as readonly string[]).includes(r.pace) &&
         (!settings || (r.letterSet === settings.letterSet && r.pace === settings.pace && r.scope === settings.scope)) &&
-        r.summary.furthestLeap < (r.scope === "letters" ? 100 : 150),
+        r.summary.furthestLeap < (r.pace === "expert" || r.scope === "letters" ? 100 : 150),
     ) ?? null;
 }
 

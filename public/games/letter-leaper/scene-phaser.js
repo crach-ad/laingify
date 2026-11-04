@@ -119,7 +119,7 @@
 
     // ---- platforms -------------------------------------------------------------------
     platformKey(n) {
-      if (n === MOON) return 'moon-surface';
+      if (n === MOON && n !== TOTAL) return 'moon-surface';
       if (n === TOTAL) return 'final-star';
       return Art.envs[envFor(Math.max(0, n - 1))].platform;
     }

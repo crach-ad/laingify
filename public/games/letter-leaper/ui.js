@@ -7,7 +7,7 @@ const $ = id => document.getElementById(id);
 readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value });
 // What each difficulty means, shown under the settings and in the help.
 const PACE_TEXT = {
-  expert: 'Expert: 3-letter words, then 4- and 5-letter words, phrases and short sentences. Type spaces and full stops too. 3 seconds per character; one wrong character or timeout sends Milo 10 leaps back.',
+  expert: 'Expert: 100 leaps, with a 5-leap setback. 3-letter words, then 4- and 5-letter words, phrases and short sentences. Type spaces and full stops too. 3 seconds per character; one wrong character or timeout sends Milo 5 leaps back.',
   easy: 'Easy: no rush, and the next key lights up. Two wrong letters on the same target send Milo 10 leaps back.',
   medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter — and a fall sends Milo 10 leaps back down.',
   hard: 'Hard: words from the very first leap, growing from 2 to 5 letters. 4 seconds for each letter, and one wrong letter or running out of time sends Milo 10 leaps back down.',
@@ -85,6 +85,7 @@ function stats() {
   $('accuracy').textContent = attempts ? accuracy() + '%' : '—';
   $('streak').innerHTML = streak + ' <span class="gold">✦</span>';
   $('altitude').textContent = steps;
+  $('altitude').parentElement.querySelector('small').textContent = '/ ' + lastLeap();
   $('journey-fill').style.height = steps / TOTAL * 100 + '%';
   $('journey-marker').style.bottom = steps / TOTAL * 100 + '%';
   const terrain = terrainFor(steps);
@@ -103,7 +104,7 @@ function stats() {
     ? (target.includes(' ') ? 'Type every character, including spaces and full stops. One sentence, one leap.' : target.length > 1 ? 'Type each letter in order. One word, one leap.' : pace === 'easy' ? 'No rush. Every leap is progress.' : 'Stay focused. You’ve got this.')
     : 'Find your rhythm. Reach new heights.';
   if (state !== 'intro')
-    $('stage-label').textContent = steps < MOON ? `${MOON - steps} LEAPS TO THE MOON · ${steps} / ${TOTAL} TOTAL` : `${TOTAL - steps} WORD LEAPS TO THE STARS · ${steps} / ${TOTAL} TOTAL`;
+    $('stage-label').textContent = pace === 'expert' ? `${TOTAL - steps} LEAPS TO THE STARS · ${steps} / ${TOTAL} TOTAL` : steps < MOON ? `${MOON - steps} LEAPS TO THE MOON · ${steps} / ${TOTAL} TOTAL` : `${TOTAL - steps} WORD LEAPS TO THE STARS · ${steps} / ${TOTAL} TOTAL`;
   document.body.dataset.state = state;
   document.body.dataset.pace = pace;
 }
@@ -170,9 +171,16 @@ views.push((type, d) => {
   stats();
 });
 function showFinish(d) {
-  if (d.scope !== 'full') {
+  if (pace === 'expert') {
+    $('finish').querySelector('h2').textContent = 'You reached the stars!';
+    $('finish').querySelector('h2+p').textContent = '100 Expert leaps. From words to sentences.';
+  } else if (d.scope !== 'full') {
     $('finish').querySelector('h2').textContent = d.scope === 'letters' ? 'You made it to the moon!' : 'You reached the stars!';
     $('finish').querySelector('h2+p').textContent = d.scope === 'letters' ? '100 letter leaps. One giant step.' : '50 word leaps from the moon to the stars.';
+  }
+  if (pace !== 'expert' && d.scope === 'full') {
+    $('finish').querySelector('h2').textContent = 'You reached the stars!';
+    $('finish').querySelector('h2+p').textContent = '150 leaps. One extraordinary adventure.';
   }
   $('finish').hidden = false;
   $('pause').disabled = true;
@@ -296,6 +304,7 @@ startRenderer(renderer);
 function paintPace() {
   const p = paceOf($('pace').value);
   $('pace-rule').textContent = PACE_TEXT[p];
+  document.querySelector('.start-note').textContent = p === 'expert' ? '100 leaps from words to sentences · Keyboard or tap to play' : '100 leaps to the moon · 50 more to the stars · Keyboard or tap to play';
   document.body.dataset.pace = p;
   // Words-only practice and hard climbs don't use the letter rows.
   $('letter-set').closest('label').hidden = scope === 'words' || p === 'hard' || p === 'expert';

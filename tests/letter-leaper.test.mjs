@@ -50,3 +50,5 @@ test('public play never loads the class API client', async () => {
   for (const f of ['core.js', 'ui.js', 'scene-classic.js', 'scene-phaser.js', 'milo.js', 'art.js'])
     assert.equal(/fetch\(|XMLHttpRequest|sendBeacon|\/api\//.test(await read(f)), false, f);
 });
+
+test('Expert saves 100-leap finishes and keeps older 150-leap results readable',()=>{assert(validClimb(score({pace:'expert',leaps:100})));assert(validClimb(score({pace:'expert',leaps:150})));assert.equal(validClimb(score({pace:'hard',leaps:100})),false);});

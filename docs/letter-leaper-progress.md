@@ -332,7 +332,8 @@ Global responses contain generated stable explorer aliases, year groups extracte
 ## Expert difficulty
 
 Expert (`expert`) uses 3 seconds per character and one mistake per fall. A fall
-moves back ten leaps, respecting the practice start. Its six equal progress
+moves back five leaps, respecting the practice start. Expert finishes at 100
+leaps in every practice scope. Its six equal progress
 bands select 3-, 4-, and 5-letter words, two-word phrases, short sentences, then
 longer short sentences. Spaces and final full stops are typed and measured;
 targets are bounded to 48 characters. Expert is available in game and teacher

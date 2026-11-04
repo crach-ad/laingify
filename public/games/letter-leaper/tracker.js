@@ -265,7 +265,7 @@
     // has begun, don't offer (or later resume) a stale copy of any session.
     if (cur) return;
     const snap = pick && pick.snap;
-    if (!snap || snap.leap >= (pick.meta.scope === 'letters' ? 100 : 150)) return;
+    if (!snap || snap.leap >= (pick.meta.pace === 'expert' || pick.meta.scope === 'letters' ? 100 : 150)) return;
     candidate = pick;
     // Free choice: lock the game to the climb being resumed until it ends.
     if (!fixed) leaper.configure({ letterSet: pick.meta.letterSet, pace: pick.meta.pace, scope: pick.meta.scope });

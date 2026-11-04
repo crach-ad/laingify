@@ -43,7 +43,7 @@ async function handle(req: Request, action: string) {
   if (action === "scores") {
     if (req.method !== "POST") return json({ error: "Use POST to save a climb." }, 405);
     const body = await payload(req);
-    if (!validClimb(body)) return json({ error: "Only a completed 150-leap climb with valid results can be saved." }, 400);
+    if (!validClimb(body)) return json({ error: "Only a completed climb with valid results can be saved." }, 400);
     const profile = await prisma.learnerEvent.findUnique({ where: { id: profileId }, select: { meta: true } });
     const username = profile ? parseMeta(profile.meta).username : null;
     if (!validUsername(username)) return json({ error: "Choose your explorer nickname first." }, 400);
@@ -69,7 +69,7 @@ async function handle(req: Request, action: string) {
   const ranked = rankClimbs(rows.map(r => ({ ...parseMeta(r.meta), learnerId: r.learnerId })) as ClassClimb[], ctx.classId, practice, pace);
   const profiles = await prisma.learnerEvent.findMany({ where: { id: { in: ranked.map(r => `leaper-profile:${ctx.classId}:${r.learnerId}`) } }, select: { learnerId: true, meta: true } });
   const names = new Map(profiles.map(p => [p.learnerId, parseMeta(p.meta).username]));
-  return json({ entries: ranked.map((r, i) => ({ rank: i + 1, username: names.get(r.learnerId) ?? r.username, accuracy: r.correct / r.attempts * 100, streak: r.streak, elapsed: r.elapsed, you: r.learnerId === ctx.learnerId })) });
+  return json({ entries: ranked.map((r, i) => ({ rank: i + 1, leaps: r.leaps, username: names.get(r.learnerId) ?? r.username, accuracy: r.correct / r.attempts * 100, streak: r.streak, elapsed: r.elapsed, you: r.learnerId === ctx.learnerId })) });
 }
 async function payload(req: Request): Promise<Record<string, unknown> | null> {
   const raw = await req.text();

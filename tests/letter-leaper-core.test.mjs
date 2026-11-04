@@ -230,9 +230,9 @@ test('leaving early ends the session once; returning home resets for a new climb
 test('Expert progresses from three-letter words to sentences, including spaces and full stops', () => {
  const g=game({reduced:true});g.start({pace:'expert'});
  const samples=[];
- for(let leap=0;leap<150;leap++){
+ for(let leap=0;leap<100;leap++){
   if(g.state==='moon')g.run('continueStars()');
-  if([0,25,50,75,100,125].includes(leap))samples.push(g.target);
+  if([0,17,34,50,67,84].includes(leap))samples.push(g.target);
   assert(g.target.length<=48);
   g.leap(10);
  }
@@ -240,14 +240,16 @@ test('Expert progresses from three-letter words to sentences, including spaces a
  assert.equal(samples[3].split(' ').length,2);
  assert(samples[4].endsWith('.'));assert(samples[4].split(' ').length>=3);
  assert(samples[5].endsWith('.'));assert(samples[5].split(' ').length>=5);
- assert.equal(g.state,'finished');assert.equal(g.steps,150);
+ assert.equal(g.state,'finished');assert.equal(g.steps,100);
  const keys=g.hooks.filter(([type])=>type==='key').map(([,data])=>data);
  assert(keys.some(k=>k.exp===' '&&k.ok));assert(keys.some(k=>k.exp==='.'&&k.ok));
- assert.equal(g.count('complete'),150);
+ assert.equal(g.count('complete'),100);
 });
 test('Expert timeout and wrong characters fall once, and progression works in scoped practice',()=>{
  const g=game({reduced:true});g.start({pace:'expert'});g.advance(3001);assert(g.run('fallKind')==='timeout');
  const wrong=game({reduced:true});wrong.start({pace:'expert'});wrong.type('!');assert.equal(wrong.run('attempts'),0);wrong.type(' ');assert.equal(wrong.run('fallKind'),'miss');
- const w=game({reduced:true});w.start({pace:'expert',scope:'words'});assert.equal(w.target.length,3);assert.equal(w.steps,100);
- w.run('steps=145;pick()');assert(w.target.includes(' '));assert(w.target.endsWith('.'));
+ const w=game({reduced:true});w.start({pace:'expert',scope:'words'});assert.equal(w.target.length,3);assert.equal(w.steps,0);
+ w.run('steps=90;pick()');assert(w.target.includes(' '));assert(w.target.endsWith('.'));
 });
+
+test('Expert falls five leaps while Hard still falls ten',()=>{for(const [pace,drop] of [['expert',5],['hard',10]]){const g=game({reduced:true});g.start({pace});g.run('steps=40;pick()');g.type('z'===g.target[0]?'x':'z');assert.equal(g.run('fallTo'),40-drop);g.advance(800);assert.equal(g.steps,40-drop);}});

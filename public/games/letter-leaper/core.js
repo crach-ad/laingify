@@ -10,7 +10,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- these names are used by ui.js, the scenes, and tracker.js (shared script scope) */
 
 const sets = { all: 'abcdefghijklmnopqrstuvwxyz', home: 'asdfghjkl', top: 'qwertyuiop', bottom: 'zxcvbnm' };
-const MOON = 100, TOTAL = 150, WORDS3_FROM = 120;
+const MOON = 100, WORDS3_FROM = 120;
+let TOTAL = 150;
 const GAME_VERSION = '2026.11.4';
 const words2 = ['an','at','as','am','be','by','do','go','he','hi','if','in','is','it','me','my','no','of','on','or','so','to','up','us','we'];
 const words3 = ['ant','bat','bed','bee','big','box','bug','bus','car','cat','cow','cup','dog','dot','dry','egg','fan','far','fig','fin','fit','fly','fox','fun','hat','hen','hop','hot','ice','jam','jar','jet','joy','key','leg','lip','log','map','mat','mix','mud','net','new','nut','old','owl','pan','pen','pet','pig','pot','red','row','run','sad','sea','sky','sit','six','sun','tap','tea','ten','tin','top','toy','two','van','vet','wet','win','yes','zip','zoo'];
@@ -35,7 +36,7 @@ const terrains = [
   { at: 80, id: 'moon', name: 'NEAR SPACE', message: 'Into space! The moon is close.' },
   { at: 100, id: 'stars', name: 'MOON TO THE STARS', message: 'One hundred leaps. Moon landing!' },
 ];
-const terrainFor = n => terrains.findLast(t => n >= t.at);
+const terrainFor = n => terrains.findLast(t => n >= Math.ceil(t.at * TOTAL / 150));
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 // Calm mode = the OS setting or the in-game toggle (ui.js sets calmChoice).
 let calmChoice = false;
@@ -86,8 +87,8 @@ function emit(type, detail = {}) { for (const v of views) try { v(type, detail);
 let readSettings = () => ({ set: 'all', pace: 'easy' });
 
 // The bottom of this climb and its finish line.
-const firstLeap = () => (scope === 'words' ? MOON : 0);
-const lastLeap = () => (scope === 'letters' ? MOON : TOTAL);
+const firstLeap = () => (pace !== 'expert' && scope === 'words' ? MOON : 0);
+const lastLeap = () => (pace !== 'expert' && scope === 'letters' ? MOON : TOTAL);
 // Word length for the target after `at` leaps (0 = single letters). Usual
 // climbs: letters to the moon, then 2- and 3-letter words. Hard: words from
 // the first leap, 2 → 5 letters in four equal parts of the climb.
@@ -113,6 +114,7 @@ function pick() {
 function start() {
   ({ set, pace } = readSettings());
   pace = paceOf(pace);
+  TOTAL = pace === 'expert' ? 100 : 150;
   fallDeadline = PACE_RULES[pace].deadline;
   falls = Number.isFinite(fallDeadline);
   fallKind = null; deadlineAt = Infinity;
@@ -161,7 +163,7 @@ function input(key, src = 'kbd') {
 // as animation, never typing; recover() brings Milo back to the same leap.
 function startFall(kind, detail = {}) {
   fallKind = kind;
-  fallTo = Math.max(firstLeap(), steps - FALL_BACK);
+  fallTo = Math.max(firstLeap(), steps - (pace === 'expert' ? 5 : FALL_BACK));
   typed = 0;
   jumping = true;
   jumpStart = performance.now();
@@ -196,7 +198,7 @@ function land() {
   }
   emit('land', { leap: steps });
   if (steps === MOON) emit('moon');
-  const terrain = terrains.find(t => t.at === steps);
+  const terrain = terrains.find(t => Math.ceil(t.at * TOTAL / 150) === steps);
   if (terrain) {
     hook('stage', { stage: terrain.id, leap: steps });
     emit('stage', { terrain, leap: steps });
@@ -215,7 +217,7 @@ function finish() {
   state = 'finished';
   hook('end', { reason: 'completed', leap: steps });
   emit('finish', { scope, accuracy: accuracy(), bestStreak, elapsed });
-  if (scope === 'full')
+  if (scope === 'full' || pace === 'expert')
     window.dispatchEvent(new CustomEvent('climb-complete', { detail: { id: crypto.randomUUID(), practice: set, pace, leaps: steps, correct, attempts, streak: bestStreak, elapsed: Math.round(elapsed) } }));
 }
 function pause(reason = 'user') {
