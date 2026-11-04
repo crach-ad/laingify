@@ -332,3 +332,15 @@ test('falls move Milo down: the summary knows where Milo is now (for resume), an
   const tooLong = script().start().target('apples', 1).ev;
   assert.equal(parseBatch(batch(tooLong), now).ok, false);
 });
+
+
+test('Expert sentence uploads retain spaces, punctuation and long character positions',()=>{
+ const target='the little cat likes to nap.';
+ const sc=script().start().target(target,1);
+ [...target].forEach((ch,i)=>sc.key(ch,ch,i,100));sc.complete(target,1);
+ const raw=batch(sc.ev);raw.session={...raw.session,pace:'expert',hints:false};
+ assert.equal(parseBatch(raw,now).ok,true);
+ const summary=summarizeSession(sc.ev);assert.equal(summary.inconsistent,0);assert.equal(summary.phases.word.correct,target.length);assert.equal(summary.phases.word.targetsCompleted,1);
+ raw.session.pace='hard';assert.equal(parseBatch(raw,now).ok,false);
+ assert.equal(paceOf('expert'),'expert');assert(PACE_LABEL.expert.includes('Expert'));
+});

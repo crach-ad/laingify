@@ -177,27 +177,29 @@
       const c = this.card;
       if (state === 'intro' || state === 'finished' || state === 'moon' || steps >= TOTAL) { c.setAlpha(0); return; }
       const word = letterCase(target);
+      const sentence = target.includes(' '), columns = sentence ? Math.min(16, word.length) : word.length, rows = Math.ceil(word.length / columns);
       if (c.word !== word) {
         for (const l of c.letters) l.destroy();
-        c.letters = [...word].map(() => this.add.text(0, -6, '', { fontFamily: letterFont(), fontSize: '40px', fontStyle: '700', color: '#1d2b26' }).setOrigin(0.5).setResolution(this.R));
+        c.letters = [...word].map(() => this.add.text(0, -6, '', { fontFamily: letterFont(), fontSize: sentence ? '24px' : '40px', fontStyle: '700', color: '#1d2b26' }).setOrigin(0.5).setResolution(this.R));
         c.add(c.letters);
-        c.bg.setTexture(this.cardTex(word.length)).setScale(1 / this.R);
+        c.bg.setTexture(this.cardTex(columns)).setScale((sentence ? 0.65 : 1) / this.R, (1 + (rows - 1) * 0.5) / this.R);
         c.word = word;
       }
-      const spacing = 40, start = -((word.length - 1) * spacing) / 2;
+      const spacing = sentence ? 26 : 40, start = -((columns - 1) * spacing) / 2;
       c.letters.forEach((l, i) => {
-        l.setText(word[i]).setX(start + i * spacing);
+        l.setText(word[i] === ' ' ? '␣' : word[i]).setPosition(start + (i % columns) * spacing, -6 + Math.floor(i / columns) * 30 - (rows - 1) * 15);
         // Completed letters turn green, the current letter is ink-dark and
         // underlined, remaining letters are muted (all ≥ 4.5:1 on the cream sign).
         l.setColor(i < typed ? '#1f6b43' : i === typed ? '#1d2b26' : '#56655f');
         l.setScale(i === typed ? 1.08 : 1);
       });
-      c.underline.setPosition(start + typed * spacing, 20).setVisible(typed < word.length).setSize(26, 4);
+      c.underline.setPosition(start + (typed % columns) * spacing, 20 + Math.floor(typed / columns) * 30 - (rows - 1) * 15).setVisible(typed < word.length).setSize(26, 4);
       const timed = falls;
+      c.caption.setY(44 + (rows - 1) * 15); c.timerBack.setY(58 + (rows - 1) * 15); c.timer.setY(58 + (rows - 1) * 15);
       c.caption.setText(timed ? `${Math.ceil(deadlineLeft() / 1000)} SECONDS` : word.length > 1 ? 'TYPE THE WORD' : 'TYPE TO LEAP');
       c.timerBack.setVisible(timed); c.timer.setVisible(timed);
-      const n = steps + 1, s = this.sizeScale;
-      c.setPosition(this.xFor(n), this.yFor(n) - 96 * s).setScale(s);
+      const n = steps + 1, s = sentence ? Math.min(this.sizeScale, (this.W - 24) / (34 + columns * 26)) : this.sizeScale;
+      c.setPosition(sentence ? this.W / 2 : this.xFor(n), this.yFor(n) - 96 * s).setScale(s);
       if (pop && !calm()) { c.setScale(s * 0.7).setAlpha(0); this.tweens.add({ targets: c, scale: s, alpha: 1, duration: 260, ease: 'Back.easeOut' }); }
       else if (!jumping) c.setAlpha(1);
     }

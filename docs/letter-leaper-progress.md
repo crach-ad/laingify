@@ -327,3 +327,15 @@ The in-game home board defaults to a global top five for the selected game diffi
 `GET /api/letter-leaper/leaderboard?scope=global&pace=easy` requires a signed-in learner on a roster with Letter Leaper assigned. It ranks server-derived TypingSession summaries across all classes and includes valid legacy completed climbs. Unfinished sessions qualify once they have earned a leap; an untouched words-only starting position at leap 100 does not. Each learner appears once, even across classes. Ordering is furthest saved leap, accuracy, best streak, recorded time (active typing time for tracked sessions, elapsed time for legacy climbs), then a stable tie-break. Easy, Medium and Hard have separate rankings; filtering happens before choosing each learner’s best run. Letter sets and practice scopes are combined within each difficulty and shown alongside results; this is a progress board, not a difficulty-adjusted skill assessment. Historical best progress remains after a fall.
 
 Global responses contain generated stable explorer aliases, year groups extracted from the session’s class name, and display statistics only—no learner IDs, full class names, student names, or event details. Combined classes show their combined year group; missing year groups display “Year not set.” The class board retains its existing nicknames. No migration is required; previously saved partial sessions appear automatically.
+
+
+## Expert difficulty
+
+Expert (`expert`) uses 3 seconds per character and one mistake per fall. A fall
+moves back ten leaps, respecting the practice start. Its six equal progress
+bands select 3-, 4-, and 5-letter words, two-word phrases, short sentences, then
+longer short sentences. Spaces and final full stops are typed and measured;
+targets are bounded to 48 characters. Expert is available in game and teacher
+settings, filters, saved sessions, and class leaderboard difficulty selection.
+Each complete word, phrase, or sentence earns one leap. Earlier difficulties
+retain their original event constraints and target sequences.

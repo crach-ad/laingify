@@ -225,3 +225,29 @@ test('leaving early ends the session once; returning home resets for a new climb
   assert.deepEqual(g.hooks.filter(([t]) => t === 'end').map(([, d]) => [d.reason, d.leap]), [['exited', 2]]);
   assert.deepEqual([g.state, g.steps], ['intro', 0]);
 });
+
+
+test('Expert progresses from three-letter words to sentences, including spaces and full stops', () => {
+ const g=game({reduced:true});g.start({pace:'expert'});
+ const samples=[];
+ for(let leap=0;leap<150;leap++){
+  if(g.state==='moon')g.run('continueStars()');
+  if([0,25,50,75,100,125].includes(leap))samples.push(g.target);
+  assert(g.target.length<=48);
+  g.leap(10);
+ }
+ assert.equal(samples[0].length,3);assert.equal(samples[1].length,4);assert.equal(samples[2].length,5);
+ assert.equal(samples[3].split(' ').length,2);
+ assert(samples[4].endsWith('.'));assert(samples[4].split(' ').length>=3);
+ assert(samples[5].endsWith('.'));assert(samples[5].split(' ').length>=5);
+ assert.equal(g.state,'finished');assert.equal(g.steps,150);
+ const keys=g.hooks.filter(([type])=>type==='key').map(([,data])=>data);
+ assert(keys.some(k=>k.exp===' '&&k.ok));assert(keys.some(k=>k.exp==='.'&&k.ok));
+ assert.equal(g.count('complete'),150);
+});
+test('Expert timeout and wrong characters fall once, and progression works in scoped practice',()=>{
+ const g=game({reduced:true});g.start({pace:'expert'});g.advance(3001);assert(g.run('fallKind')==='timeout');
+ const wrong=game({reduced:true});wrong.start({pace:'expert'});wrong.type('!');assert.equal(wrong.run('attempts'),0);wrong.type(' ');assert.equal(wrong.run('fallKind'),'miss');
+ const w=game({reduced:true});w.start({pace:'expert',scope:'words'});assert.equal(w.target.length,3);assert.equal(w.steps,100);
+ w.run('steps=145;pick()');assert(w.target.includes(' '));assert(w.target.endsWith('.'));
+});

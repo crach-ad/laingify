@@ -460,13 +460,19 @@ function init() {
     card.classList.toggle('shown', show && !jumping);
     if (!show) return;
     cardLetters.innerHTML = '';
-    [...target].forEach((ch, i) => {
-      const s = document.createElement('span');
-      s.textContent = letterCase(ch);
-      if (i < typed) s.className = 'typed'; else if (i === typed && target.length > 1) s.className = 'next';
-      cardLetters.append(s);
-    });
+    let i = 0;
+    for (const part of target.includes(' ') ? target.match(/[^ ]+ ?/g) : [target]) {
+      const group = document.createElement('span'); group.className = 'target-word';
+      for (const ch of part) {
+        const letter = document.createElement('span');
+        letter.textContent = ch === ' ' ? '␣' : letterCase(ch);
+        if (i < typed) letter.className = 'typed'; else if (i === typed && target.length > 1) letter.className = 'next';
+        group.append(letter); i++;
+      }
+      cardLetters.append(group);
+    }
     card.classList.toggle('word', target.length > 1);
+    card.classList.toggle('sentence', target.includes(' '));
     cardTimer.hidden = !falls;
     if (pop && !calm()) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
   }
@@ -476,7 +482,7 @@ function init() {
     if (!card.classList.contains('shown')) return;
     islandPos(steps + 1, cardAnchor).y += 1.1;
     cardAnchor.project(camera);
-    const x = clamp((cardAnchor.x + 1) / 2 * W, 70, W - 70), y = clamp((1 - cardAnchor.y) / 2 * H, 110, H - 20);
+    const x = target.includes(' ') ? W / 2 : clamp((cardAnchor.x + 1) / 2 * W, 70, W - 70), y = clamp((1 - cardAnchor.y) / 2 * H, 110, H - 20);
     card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
     if (falls) {
       // The falling-platform countdown reads the rules' own deadline clock.

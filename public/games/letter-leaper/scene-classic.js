@@ -23,7 +23,7 @@
     } catch {}
   }
   function targetMarkup() {
-    return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${letterCase(c)}</span>`).join('');
+    return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${c === ' ' ? '␣' : letterCase(c)}</span>`).join('');
   }
   function draw() {
     // Only a leap moves Milo; a fall (medium and hard) isn't drawn here.
@@ -41,6 +41,7 @@
       if (n === steps + 1 && steps < TOTAL) {
         const l = document.createElement('div');
         l.className = 'letter';
+        l.classList.toggle('sentence', target.includes(' '));
         l.classList.toggle('word', target.length > 1 && state !== 'intro');
         l.innerHTML = state === 'intro' ? 'a' : targetMarkup();
         if (state === 'playing' && !jumping) {

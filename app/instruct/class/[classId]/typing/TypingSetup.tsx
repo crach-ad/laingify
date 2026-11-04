@@ -32,7 +32,7 @@ export function SettingsFields({ value, onChange }: { value: Settings; onChange:
     <div className="grid gap-3 sm:grid-cols-3">
       {field("scope", "Practice", [["full", "Full · 150 leaps"], ["letters", "Letters · 100"], ["words", "Words · 50"]])}
       {field("letterSet", "Letters", [["all", "All letters"], ["home", "Home row"], ["top", "Top row"], ["bottom", "Bottom row"]])}
-      {field("pace", "Difficulty", [["easy", "Easy · hints, 2 misses"], ["medium", "Medium · 8 s or 3 misses"], ["hard", "Hard · words, 4 s or 1 miss"]])}
+      {field("pace", "Difficulty", [["easy", "Easy · hints, 2 misses"], ["medium", "Medium · 8 s or 3 misses"], ["hard", "Hard · words, 4 s or 1 miss"], ["expert", "Expert · words to sentences, 3 s"]])}
     </div>
   );
 }

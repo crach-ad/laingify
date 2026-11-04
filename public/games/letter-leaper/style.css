@@ -120,3 +120,7 @@ body:not([data-pace=easy]) .leaper3d-count{display:flex}
 
 /* Lowercase letters use Atkinson Hyperlegible, whose l has a tail (in Space Grotesk it's a bare stroke that reads as I). */
 body[data-case=lower] :is(.leaper3d-letters,.letter,#prompt b,.key,.word-examples){font-family:'Atkinson Hyperlegible',sans-serif!important;font-weight:700}
+
+.expert-key{display:none}body[data-pace=expert] .expert-key{display:inline-block}.space-key{min-width:160px}#prompt b{white-space:pre-wrap;overflow-wrap:anywhere}.leaper3d-card.sentence{width:min(88vw,480px);max-width:88vw}.leaper3d-card.sentence .leaper3d-letters{display:flex;flex-wrap:wrap;justify-content:center;font-size:clamp(18px,3.5vw,25px);line-height:1.45;gap:1px;letter-spacing:0}.letter.sentence{width:min(78vw,350px);font-size:18px;flex-wrap:wrap;letter-spacing:0;line-height:1.4}
+
+.leaper3d-letters .target-word{display:inline-flex;gap:2px;white-space:nowrap}.leaper3d-card.sentence .target-word{gap:1px}

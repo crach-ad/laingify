@@ -7,6 +7,7 @@ const $ = id => document.getElementById(id);
 readSettings = () => ({ set: $('letter-set').value, pace: $('pace').value });
 // What each difficulty means, shown under the settings and in the help.
 const PACE_TEXT = {
+  expert: 'Expert: 3-letter words, then 4- and 5-letter words, phrases and short sentences. Type spaces and full stops too. 3 seconds per character; one wrong character or timeout sends Milo 10 leaps back.',
   easy: 'Easy: no rush, and the next key lights up. Two wrong letters on the same target send Milo 10 leaps back.',
   medium: 'Medium: 8 seconds for each letter. The platform wobbles near the end and falls at 8 seconds, or on your third wrong letter — and a fall sends Milo 10 leaps back down.',
   hard: 'Hard: words from the very first leap, growing from 2 to 5 letters. 4 seconds for each letter, and one wrong letter or running out of time sends Milo 10 leaps back down.',
@@ -34,7 +35,7 @@ function letterFont() { return prefs.letterCase === 'lower' ? '"Atkinson Hyperle
 function paintCase() {
   $('letter-case').value = prefs.letterCase;
   document.body.dataset.case = prefs.letterCase;
-  for (const k of document.querySelectorAll('.key')) { k.textContent = letterCase(k.dataset.key); k.setAttribute('aria-label', 'Type ' + letterCase(k.dataset.key)); }
+  for (const k of document.querySelectorAll('.key')) { k.textContent = k.dataset.key === ' ' ? 'Space' : letterCase(k.dataset.key); k.setAttribute('aria-label', 'Type ' + (k.dataset.key === ' ' ? 'space' : k.dataset.key === '.' ? 'full stop' : letterCase(k.dataset.key))); }
   const rows = { all: 'All letters', home: 'Home row · ' + letterCase('asdfghjkl'), top: 'Top row · ' + letterCase('qwerty'), bottom: 'Bottom row · ' + letterCase('zxcvbnm') };
   for (const o of $('letter-set').options) o.textContent = rows[o.value];
   document.querySelector('.word-examples').textContent = ['go', 'up', 'cat', 'sun'].map(letterCase).join(' · ');
@@ -78,7 +79,7 @@ function message(text) {
 }
 const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
 function targetMarkup() {
-  return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${esc(letterCase(c))}</span>`).join('');
+  return [...target].map((c, i) => `<span class="${i < typed ? 'typed' : i === typed ? 'next-letter' : ''}">${c === ' ' ? '␣' : esc(letterCase(c))}</span>`).join('');
 }
 function stats() {
   $('accuracy').textContent = attempts ? accuracy() + '%' : '—';
@@ -99,11 +100,12 @@ function stats() {
     : state === 'finished' ? (scope === 'letters' ? 'You reached the moon!' : 'You reached the stars!')
     : 'Ready when you are.';
   $('tip').textContent = state === 'playing'
-    ? (target.length > 1 ? 'Type each letter in order. One word, one leap.' : pace === 'easy' ? 'No rush. Every leap is progress.' : 'Stay focused. You’ve got this.')
+    ? (target.includes(' ') ? 'Type every character, including spaces and full stops. One sentence, one leap.' : target.length > 1 ? 'Type each letter in order. One word, one leap.' : pace === 'easy' ? 'No rush. Every leap is progress.' : 'Stay focused. You’ve got this.')
     : 'Find your rhythm. Reach new heights.';
   if (state !== 'intro')
     $('stage-label').textContent = steps < MOON ? `${MOON - steps} LEAPS TO THE MOON · ${steps} / ${TOTAL} TOTAL` : `${TOTAL - steps} WORD LEAPS TO THE STARS · ${steps} / ${TOTAL} TOTAL`;
   document.body.dataset.state = state;
+  document.body.dataset.pace = pace;
 }
 function showOnly(id) {
   for (const o of ['intro', 'moon-overlay', 'finish', 'pause-overlay']) $(o).hidden = o !== id;
@@ -185,12 +187,12 @@ function showFinish(d) {
 }
 
 // ---- input ------------------------------------------------------------------------
-for (const row of ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']) {
+for (const row of ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', ' .']) {
   const el = document.createElement('div');
   el.className = 'key-row';
   for (const key of row) {
     const btn = document.createElement('button');
-    btn.className = 'key'; btn.dataset.key = key;
+    btn.className = 'key'; btn.dataset.key = key; if (key === ' ' || key === '.') btn.classList.add('expert-key'); if (key === ' ') btn.classList.add('space-key');
     btn.addEventListener('click', () => { input(key, 'screen'); btn.blur(); });
     el.append(btn);
   }
@@ -214,7 +216,7 @@ window.addEventListener('keydown', e => {
   if (e.repeat) { if (live && char) ignore('repeat'); return; }
   if (e.key === 'Escape') { e.preventDefault(); requestPause(); return; }
   if (!live || !char) return;
-  if (/^[a-z]$/i.test(e.key)) {
+  if ((pace === 'expert' ? /^[a-z .]$/i : /^[a-z]$/i).test(e.key)) {
     e.preventDefault();
     if (jumping) ignore('busy'); else input(e.key.toLowerCase(), 'kbd');
   } else ignore('nonletter');
@@ -296,7 +298,7 @@ function paintPace() {
   $('pace-rule').textContent = PACE_TEXT[p];
   document.body.dataset.pace = p;
   // Words-only practice and hard climbs don't use the letter rows.
-  $('letter-set').closest('label').hidden = scope === 'words' || p === 'hard';
+  $('letter-set').closest('label').hidden = scope === 'words' || p === 'hard' || p === 'expert';
 }
 $('pace').addEventListener('change', paintPace);
 paintPace();

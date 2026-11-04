@@ -11,12 +11,16 @@
 
 const sets = { all: 'abcdefghijklmnopqrstuvwxyz', home: 'asdfghjkl', top: 'qwertyuiop', bottom: 'zxcvbnm' };
 const MOON = 100, TOTAL = 150, WORDS3_FROM = 120;
-const GAME_VERSION = '2026.10.5';
+const GAME_VERSION = '2026.11.4';
 const words2 = ['an','at','as','am','be','by','do','go','he','hi','if','in','is','it','me','my','no','of','on','or','so','to','up','us','we'];
 const words3 = ['ant','bat','bed','bee','big','box','bug','bus','car','cat','cow','cup','dog','dot','dry','egg','fan','far','fig','fin','fit','fly','fox','fun','hat','hen','hop','hot','ice','jam','jar','jet','joy','key','leg','lip','log','map','mat','mix','mud','net','new','nut','old','owl','pan','pen','pet','pig','pot','red','row','run','sad','sea','sky','sit','six','sun','tap','tea','ten','tin','top','toy','two','van','vet','wet','win','yes','zip','zoo'];
 // Hard climbs: words from the first leap, 2 → 3 → 4 → 5 letters (wordLength()).
 const words4 = ['ball','bird','blue','boat','book','cake','camp','coat','cold','corn','desk','duck','farm','fish','flag','frog','gift','glow','goat','hand','help','hill','home','jump','king','kite','lamp','leaf','lion','milk','moon','nest','park','pink','play','quiz','rain','ring','rock','sand','ship','shoe','sing','snow','soup','star','swim','tree','vest','wind','wolf','word','yard','zoom'];
 const words5 = ['apple','beach','bread','brick','chair','cloud','dream','earth','extra','field','flame','frost','fruit','grape','grass','happy','horse','house','jelly','juice','lemon','light','magic','mango','music','night','ocean','paint','party','pizza','plant','queen','quick','river','robot','salad','sheep','shell','smile','snack','space','spoon','storm','sunny','table','tiger','toast','train','water','waves','whale','yummy','zebra'];
+const expertPhrases = ['red fox','big dog','hot sun','blue sky','tiny bird','green frog','fast train','soft snow','happy cat','bright star','cool wind','warm sand'];
+const expertSentences = ['the cat can hop.','the dog can run.','we can see stars.','the sun is hot.','the red fox runs.','a bird can fly.','we like to play.','the sky is blue.','my cat likes naps.','the frog can jump.'];
+const expertLongSentences = ['the little cat likes to nap.','we can see the bright moon.','the happy dog runs to me.','a green frog sits on a log.','the little bird can fly high.','we like to play in the sun.','the red fox runs past us.','my toy robot can wave hello.','the stars shine in the sky.','a cool wind moves the leaves.'];
+function expertBand(at = steps) { return Math.min(5, Math.max(0, Math.floor((at - firstLeap()) / (lastLeap() - firstLeap()) * 6))); }
 const WORDS = { 2: words2, 3: words3, 4: words4, 5: words5 };
 // Six environments of the climb. `at` = leaps landed when the environment
 // begins (so leaps 1–20 are the jungle). Ids are the stage ids the classroom
@@ -48,6 +52,7 @@ const PACE_RULES = {
   easy: { deadline: Infinity, misses: 2 },
   medium: { deadline: 8000, misses: 3 },
   hard: { deadline: 4000, misses: 1 },
+  expert: { deadline: 3000, misses: 1 },
 };
 // Earlier pace names (saved settings, old links) map onto the new ones.
 const PACE_ALIASES = { relaxed: 'easy', steady: 'medium', speedy: 'hard', falls: 'medium' };
@@ -87,12 +92,13 @@ const lastLeap = () => (scope === 'letters' ? MOON : TOTAL);
 // climbs: letters to the moon, then 2- and 3-letter words. Hard: words from
 // the first leap, 2 → 5 letters in four equal parts of the climb.
 function wordLength(at = steps) {
+  if (pace === 'expert') return 3 + Math.min(2, expertBand(at));
   if (pace === 'hard') return 2 + Math.min(3, Math.floor((at - firstLeap()) / (lastLeap() - firstLeap()) * 4));
   return at < MOON ? 0 : at < WORDS3_FROM ? 2 : 3;
 }
 function pick() {
   const n = wordLength();
-  const pool = n ? WORDS[n] : sets[set].split('');
+  const pool = pace === 'expert' && expertBand() >= 3 ? [expertPhrases, expertSentences, expertLongSentences][expertBand() - 3] : n ? WORDS[n] : sets[set].split('');
   const choices = pool.filter(w => w !== lastLetter);
   target = choices[Math.floor(Math.random() * choices.length)];
   lastLetter = target;
@@ -131,7 +137,7 @@ function miss(key) {
   else emit('miss', { ...detail, left: PACE_RULES[pace].misses - missesHere });
 }
 function input(key, src = 'kbd') {
-  if (state !== 'playing' || jumping || !/^[a-z]$/.test(key)) return;
+  if (state !== 'playing' || jumping || !(pace === 'expert' ? /^[a-z .]$/ : /^[a-z]$/).test(key)) return;
   // An answer at or after the deadline is a timeout, not a keystroke.
   if (falls && activeNow() >= deadlineAt) { collapse(); return; }
   const ok = key === target[typed];

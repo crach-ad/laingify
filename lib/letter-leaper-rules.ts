@@ -1,5 +1,5 @@
 export const PRACTICES = ["all", "home", "top", "bottom"];
-export const PACES = ["easy", "medium", "hard"];
+export const PACES = ["easy", "medium", "hard", "expert"];
 export type Climb = { id: string; practice: string; pace: string; leaps: number; correct: number; attempts: number; streak: number; elapsed: number };
 export function validClimb(value: unknown): value is Climb {
   if (!value || typeof value !== "object") return false;
