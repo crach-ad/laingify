@@ -2,12 +2,15 @@ import { prisma } from '@/lib/db';
 import { BEBRAS_TITLES, setForTitle, challengesFor,hasAnswer } from './challenges';
 import { results } from './scoring';
 import type { Run } from './state';
-export async function loadBebrasReport(classId:string,orgIds:string[]){
+export async function loadBebrasReport(classId:string,orgIds:string[],requestedSet?:string|null){
  const klass=await prisma.class.findFirst({where:{id:classId,orgId:{in:orgIds}},include:{roster:{include:{learner:{select:{id:true,displayName:true}}}},modules:{where:{module:{title:{in:BEBRAS_TITLES}}},include:{module:true}}}});
  if(!klass)return null;
- const events=await prisma.learnerEvent.findMany({where:{type:'bebras_session',moduleId:{in:klass.modules.map(a=>a.moduleId)},id:{startsWith:`bebras:${classId}:`},learnerId:{in:klass.roster.map(r=>r.learnerId)}},orderBy:{createdAt:'desc'}});
+ const assignments=[...klass.modules].sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id));
+ const selected=requestedSet?assignments.find(a=>setForTitle(a.module.title)===requestedSet):assignments[0];
+ if(!selected)return null;
+ const events=await prisma.learnerEvent.findMany({where:{type:'bebras_session',moduleId:selected.moduleId,id:{startsWith:`bebras:${classId}:`},learnerId:{in:klass.roster.map(r=>r.learnerId)}},orderBy:{createdAt:'desc'}});
  const sessions=events.flatMap(e=>{try{const run:Run=JSON.parse(e.meta);if(run.classId!==classId)return [];return [{id:e.id,learnerId:e.learnerId,run,results:results(run.answers,run.setId)}]}catch{return []}});
- return {klass,sessions,setId:setForTitle(klass.modules[0]?.module.title??'')};
+ return {klass,sessions,setId:setForTitle(selected.module.title),sets:assignments.map(a=>setForTitle(a.module.title))};
 }
 export function csvCell(v:unknown){let text=String(v??'');if(/^[=+@\-\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';}
 export function reportCsv(data:NonNullable<Awaited<ReturnType<typeof loadBebrasReport>>>){

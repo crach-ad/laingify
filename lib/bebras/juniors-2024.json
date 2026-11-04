@@ -1,0 +1,649 @@
+[
+  {
+    "id": "2024-01-tube",
+    "title": "Tube",
+    "number": 1,
+    "text": "You have a clear tube that is open at both ends. The tube can fit three balls in it.\n\nIf another ball is pushed into the tube when it is full, a ball falls out the other side. In the pictures below you can see what happens when another ball is pushed into the tube:\n\nWhite ball from the left\tBlack ball from the right\n\t\n\n \n\nYour tube is filled as follows:\n\nFour balls are then pushed into the tube, one after the other, in the directions shown by the arrows:\n\n, , , \n\nTask\n\nChoose the correct order of balls by dragging and dropping the correct colour ball into the correct position.\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/01-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410305",
+    "kind": "placement",
+    "options": [
+      "Black",
+      "White"
+    ],
+    "limits": [
+      3,
+      3
+    ],
+    "slotLabels": [
+      "Left",
+      "Middle",
+      "Right"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/01-black.png",
+      "/games/bebras/juniors-2024/01-white.png"
+    ]
+  },
+  {
+    "id": "2024-02-birthday-present",
+    "title": "Birthday present",
+    "number": 2,
+    "text": "Fiona wants a ball for her birthday.\n\nShe wants the ball to have a star on it. \n\nShe does not want the ball to have a moon or stripes on it.\n\nTask\n\n Click on the ball we should buy for Fiona.",
+    "image": "/games/bebras/juniors-2024/02-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410306",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/02-option-0.png",
+      "/games/bebras/juniors-2024/02-option-1.png",
+      "/games/bebras/juniors-2024/02-option-2.png",
+      "/games/bebras/juniors-2024/02-option-3.png",
+      "/games/bebras/juniors-2024/02-option-4.png",
+      "/games/bebras/juniors-2024/02-option-5.png"
+    ]
+  },
+  {
+    "id": "2024-03-drawing-a-sailboat",
+    "title": "Drawing a sailboat",
+    "number": 3,
+    "text": "Beaver Sophie wants to trace a drawing of a sailboat.\n\nSophie must follow these rules:\n\nTracing can start at any dot in the drawing.\n\nThe drawing must be traced in one go. Sophie must never lift the pencil.\n\nA line may only be traced over once. Tracing over the same line again is not permitted.\n\n \n\nTask\n\nClick on the dot where Sophie should start.\n\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/03-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410307",
+    "kind": "hotspots",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/03-board.png",
+    "spots": [
+      {
+        "x": 50.0,
+        "y": 9.454545454545455
+      },
+      {
+        "x": 9.818181818181818,
+        "y": 62.18181818181818
+      },
+      {
+        "x": 50.0,
+        "y": 62.18181818181818
+      },
+      {
+        "x": 90.36363636363636,
+        "y": 62.18181818181818
+      },
+      {
+        "x": 9.818181818181818,
+        "y": 71.27272727272727
+      },
+      {
+        "x": 50.0,
+        "y": 71.27272727272727
+      },
+      {
+        "x": 90.36363636363636,
+        "y": 71.27272727272727
+      },
+      {
+        "x": 23.09090909090909,
+        "y": 89.0909090909091
+      },
+      {
+        "x": 76.72727272727273,
+        "y": 89.0909090909091
+      }
+    ]
+  },
+  {
+    "id": "2024-04-colouring-page",
+    "title": "Colouring page",
+    "number": 4,
+    "text": "Beaver Bea has painted a picture using five different paint colours. She started with five full bottles of paint. When Bea finished, the bottles contained this much paint:\n\n\t\t\t\t\nBeaver\tSun\tFlower\tGrass\tSky\n\nTask\n\nBea used more paint for the large areas of colour in the picture than for small areas. Click on the picture that Bea painted.",
+    "image": "/games/bebras/juniors-2024/04-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410304",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/04-option-0.png",
+      "/games/bebras/juniors-2024/04-option-1.png",
+      "/games/bebras/juniors-2024/04-option-2.png",
+      "/games/bebras/juniors-2024/04-option-3.png"
+    ]
+  },
+  {
+    "id": "2024-05-lighthouses",
+    "title": "Lighthouses",
+    "number": 5,
+    "text": "Captain Ben Beaver is on his ship and is approaching land. However, he doesn’t know exactly where he is. \n\nHe has a map that shows three lighthouses with a circle drawn around each lighthouse. \n\nWhen Ben’s ship is within a lighthouse’s circle, he can see that lighthouse.\n\nTask \n\nCaptain Ben can see the two lighthouses B and C. However, he cannot see lighthouse A.\n\nDrag the ship to a dot on the map to show where Captain Ben is.\n\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/05-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410303",
+    "kind": "placement",
+    "options": [
+      "Ship"
+    ],
+    "slotLabels": [
+      "Dot 1",
+      "Dot 2",
+      "Dot 3",
+      "Dot 4",
+      "Dot 5",
+      "Dot 6",
+      "Dot 7",
+      "Dot 8"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/05-board.png",
+    "spots": [
+      {
+        "x": 43.217665615141954,
+        "y": 32.25
+      },
+      {
+        "x": 65.29968454258675,
+        "y": 35.5
+      },
+      {
+        "x": 33.2807570977918,
+        "y": 49.75
+      },
+      {
+        "x": 48.89589905362776,
+        "y": 49.75
+      },
+      {
+        "x": 59.305993690851736,
+        "y": 49.75
+      },
+      {
+        "x": 76.34069400630915,
+        "y": 49.75
+      },
+      {
+        "x": 43.217665615141954,
+        "y": 65.75
+      },
+      {
+        "x": 65.29968454258675,
+        "y": 65.75
+      }
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/05-ship.png"
+    ]
+  },
+  {
+    "id": "2024-06-oliver-s-rattle",
+    "title": "Oliver's rattle",
+    "number": 6,
+    "text": "Oliver has a see-through rattle with colourful balls inside it. When he shakes it, some balls may move around the rattle to the other side. \n\nIn the picture below, you can see that the red ball and the yellow ball moved when the rattle was shaken.\n\n \n\nOliver shakes the rattle again and two more balls move.\nWhat does the rattle look like now?\n\nTask\n\nDrag the balls to the correct position in the rattle.\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/06-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410308",
+    "kind": "placement",
+    "options": [
+      "Blue",
+      "Yellow",
+      "Red"
+    ],
+    "slotLabels": [
+      "Lower left gap",
+      "Bottom gap",
+      "Right gap"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/06-board.png",
+    "spots": [
+      {
+        "x": 29.767441860465116,
+        "y": 84.40366972477064
+      },
+      {
+        "x": 49.76744186046512,
+        "y": 89.44954128440367
+      },
+      {
+        "x": 85.5813953488372,
+        "y": 68.34862385321101
+      }
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/06-ball-0.png",
+      "/games/bebras/juniors-2024/06-ball-1.png",
+      "/games/bebras/juniors-2024/06-ball-2.png"
+    ]
+  },
+  {
+    "id": "2024-07-robot-path",
+    "title": "Robot path",
+    "number": 7,
+    "text": "Beaver Tom’s robot moves by following a set of rules:\n\nThe robot starts on the orange tile.\n\nThe robot moves in the direction of the arrow on the tile it is standing on.\n\nIf the robot moves off the tiles, it stops.\n\nThe tiles are arranged as shown below. \n\nTask\n\nTom is given three new tiles. Help Tom place the new tiles so the robot can reach the green tile. \n\nDrag each new tile into an empty space within the grid.\n\nClick save when you have finished.",
+    "image": "/games/bebras/juniors-2024/07-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410314",
+    "kind": "placement",
+    "options": [
+      "Up",
+      "Right"
+    ],
+    "limits": [
+      1,
+      2
+    ],
+    "slotLabels": [
+      "Row 1, gap 1",
+      "Row 1, gap 2",
+      "Row 2, gap 1",
+      "Row 2, gap 2",
+      "Row 3, gap 1",
+      "Row 3, gap 2",
+      "Row 4, gap 1",
+      "Row 4, gap 2",
+      "Row 5, gap 1",
+      "Row 5, gap 2"
+    ],
+    "boardImage": "/games/bebras/juniors-2024/07-board.png",
+    "spots": [
+      {
+        "x": 35.96774193548387,
+        "y": 10.27190332326284,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 10.27190332326284,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 30.211480362537763,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 30.211480362537763,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 50.151057401812686,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 50.151057401812686,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 70.09063444108762,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 70.09063444108762,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 35.96774193548387,
+        "y": 90.03021148036254,
+        "w": 12,
+        "h": 18
+      },
+      {
+        "x": 63.70967741935484,
+        "y": 90.03021148036254,
+        "w": 12,
+        "h": 18
+      }
+    ]
+  },
+  {
+    "id": "2024-08-pizza-party",
+    "title": "Pizza party",
+    "number": 8,
+    "text": "Beaver John is having a pizza party with his four friends: Alice, Bob, Charlie and Dana. He knows what toppings each of his friends like to have on their pizza.\n\nTheir preferences are shown in the table below.\n\nAlice\t\t\t\n\n\nBob\n\n\t\n\n\t\n\n\t\n\n\n\n\nCharlie\n\n\t\n\n\t\n\n\t\n\n\n\n\nDana\n\n\t\n\n\t\n\n\t\n\n \n\nJohn wants to make a pizza with only three toppings. He wants to choose the three toppings that meet as many of his friends' preferences as possible.\n\nTask\n\nClick on the three toppings that John should choose.\nClick save when you are done.",
+    "image": "/games/bebras/juniors-2024/08-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410310",
+    "kind": "multi",
+    "options": [
+      "Mushrooms",
+      "Pepper",
+      "Pineapple",
+      "Onions",
+      "Greens",
+      "Cheese"
+    ],
+    "selectionLimit": 3,
+    "optionImages": [
+      "/games/bebras/juniors-2024/08-topping-0.png",
+      "/games/bebras/juniors-2024/08-topping-1.png",
+      "/games/bebras/juniors-2024/08-topping-2.png",
+      "/games/bebras/juniors-2024/08-topping-3.png",
+      "/games/bebras/juniors-2024/08-topping-4.png",
+      "/games/bebras/juniors-2024/08-topping-5.png"
+    ]
+  },
+  {
+    "id": "2024-09-free-parking-spaces",
+    "title": "Free parking spaces",
+    "number": 9,
+    "text": "Beaver Tom helps park boats in a water park. He needs to find empty spaces for a boat that wants to stay for two days in a row over the weekend (Friday, Saturday, or Sunday).\n\nBelow is a picture showing where boats are already booked on those days.\n\nFriday\tSaturday\tSunday\n\t\t\n\nTask\n\nSelect the spaces from those that are not already booked which will be empty for at least two days in a row.\n\n\nClick on the numbers of the spaces to select them. Once you are done, click save.",
+    "image": "/games/bebras/juniors-2024/09-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410312",
+    "kind": "multi",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ]
+  },
+  {
+    "id": "2024-10-miracle-flower",
+    "title": "Miracle flower",
+    "number": 10,
+    "text": "The miracle flower is a special kind of flower which grows very quickly.\n\nAt the start of day 1, it has a single bud.\nBy the end of day 1, a stalk with two new buds has grown from the initial bud.\nOn day 2, the process repeats: by the end of the day, a stalk with two new buds grows from each bud that developed the previous day.\nThis process continues day after day, with each bud from the previous day growing into a new stalk with two new buds by the end of the day.\n\nAs a result, the miracle flower becomes taller and more magnificent with each passing day.\n\nStart of Day 1\tEnd of Day 1\tEnd of Day 2\n\n\t\n\t\n\n \n\nAfter a number of days, the miracle flower looks like this:\n\nTask\n\nCalculate how many days this miracle flower took to grow.\n\nType a whole number and click save.",
+    "image": "/games/bebras/juniors-2024/10-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410311",
+    "kind": "number"
+  },
+  {
+    "id": "2024-11-ricca-cards",
+    "title": "Ricca cards",
+    "number": 11,
+    "text": "Barbara collects cards with monsters, the \"Riccas\". Here are her Ricca cards:\n\nA card shows the properties of a Ricca, for example the name () or whether the Ricca has teeth (). Properties have values. On card 2, for example,  has the value MONI, and  has the value . The Ricca on the card is therefore called MONI and has teeth.\n\nBarbara realises that there are only three different types of values on the cards. She calls them \"data types\":\n\n\t Text, several letters in a row. \n\t Numbers, i.e. 1, 2, 3. \n\t The characters  and , which mean \"yes\" and \"no\".\n\nTask\n\nAssign the properties to the correct data types. \nDrag the value types to the boxes underneath the properties. Click save when you are done.",
+    "image": "/games/bebras/juniors-2024/11-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410309",
+    "kind": "placement",
+    "options": [
+      "ABC",
+      "123",
+      "Yes / No"
+    ],
+    "limits": [
+      1,
+      2,
+      2
+    ],
+    "slotLabels": [
+      "Name",
+      "Eyes",
+      "Legs",
+      "Wings",
+      "Teeth"
+    ],
+    "targetImages": [
+      "/games/bebras/juniors-2024/11-property-0.png",
+      "/games/bebras/juniors-2024/11-property-1.png",
+      "/games/bebras/juniors-2024/11-property-2.png",
+      "/games/bebras/juniors-2024/11-property-3.png",
+      "/games/bebras/juniors-2024/11-property-4.png"
+    ]
+  },
+  {
+    "id": "2024-12-online-class",
+    "title": "Online class",
+    "number": 12,
+    "text": "Ava starts at a new school but keeps in touch with friends from her old school in an online call. \n\nThe friends at the old school are sitting next to each other in a row, but at different computers.\n\nThis is how Ava sees her friends on her screen:\n\nTask\n\nOrder Ava's friends to show how they are seated in the row by dragging each into the correct position.\n\nPress save when you have finished",
+    "image": "/games/bebras/juniors-2024/12-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410313",
+    "kind": "placement",
+    "options": [
+      "Emma",
+      "Hannah",
+      "Diana",
+      "James",
+      "Maya",
+      "Raul",
+      "Alice",
+      "Lee",
+      "Bella"
+    ],
+    "slotLabels": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/12-friend-0.png",
+      "/games/bebras/juniors-2024/12-friend-1.png",
+      "/games/bebras/juniors-2024/12-friend-2.png",
+      "/games/bebras/juniors-2024/12-friend-3.png",
+      "/games/bebras/juniors-2024/12-friend-4.png",
+      "/games/bebras/juniors-2024/12-friend-5.png",
+      "/games/bebras/juniors-2024/12-friend-6.png",
+      "/games/bebras/juniors-2024/12-friend-7.png",
+      "/games/bebras/juniors-2024/12-friend-8.png"
+    ]
+  },
+  {
+    "id": "2024-13-superbebras",
+    "title": "Superbebras",
+    "number": 13,
+    "text": "In a computer game, the background consists of a sequence of tiles. Each tile is one of 4 different options.\n\nThe system continuously adds a new tile to the right of the current background sequence, and simultaneously removes a tile from the left. In this way, the computer creates the illusion of movement.\n\n\t\n\n\nThe system selects a new tile to add to the background using the rules illustrated in the diagram on the right. \n\nThe ‘current tile’ is the one that is currently at the extreme right of the background sequence. It can be any of the 4 possible tiles, as shown opposite. The arrows indicate which is a valid selection for the ‘next tile’. A valid ‘next tile’  is one that is directly connected by a single straight or curved arrow to the ‘current tile’.\n\n\t\n\nFor example, if this tile is currently the final tile in the background sequence: \n\nthe system could:\n\neither select another identical tile (by following the curved arrow)  \n\nOr select this tile: (by following the left arrow) \n\nTask\n\nUsing these rules, one of the following images is not a valid background sequence in the game. Select the invalid sequence.",
+    "image": "/games/bebras/juniors-2024/13-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410317",
+    "kind": "choice",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/13-option-0.png",
+      "/games/bebras/juniors-2024/13-option-1.png",
+      "/games/bebras/juniors-2024/13-option-2.png",
+      "/games/bebras/juniors-2024/13-option-3.png"
+    ]
+  },
+  {
+    "id": "2024-14-tree-tour",
+    "title": "Tree tour",
+    "number": 14,
+    "text": "Beaver Bea offers guided tours through the forest and gives talks about the trees. From previous tours, she knows which trees are particularly popular with guests.\n\nTour 1\t\nTour 2\t\nTour 3\t\n\n \n\nHere, tree 1 < tree 2 means that tree 1 is less popular than tree 2.\n\nOn the next tour, Bea wants to show the least popular trees first and delay visiting the more popular trees until later in the tour. With this in mind, she would like to find the order in which to visit the trees, guided by the findings from her previous tours. \n\nExample: If Bea plans to show trees  and  in the right order, then she must show  before .\n\nShowing  before  would conflict with Tour 1, where  was more popular than .\n\nIn the new tour, Bea would like to visit the following trees , , ,  and .\n\nTask \n\nHelp Bea to arrange the new tour to visit these trees in order of their popularity, from least popular to most popular.\nDrag the trees to the correct positions. Click on save when you are done.",
+    "image": "/games/bebras/juniors-2024/14-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410318",
+    "kind": "placement",
+    "options": [
+      "Green broad tree",
+      "Pink tree",
+      "Dark green tree",
+      "Square tree",
+      "Mint tree"
+    ],
+    "slotLabels": [
+      "1 · Least popular",
+      "2",
+      "3",
+      "4",
+      "5 · Most popular"
+    ],
+    "optionImages": [
+      "/games/bebras/juniors-2024/14-tree-0.png",
+      "/games/bebras/juniors-2024/14-tree-1.png",
+      "/games/bebras/juniors-2024/14-tree-2.png",
+      "/games/bebras/juniors-2024/14-tree-3.png",
+      "/games/bebras/juniors-2024/14-tree-4.png"
+    ]
+  },
+  {
+    "id": "2024-15-returning-books",
+    "title": "Returning books",
+    "number": 15,
+    "text": "Next please!\n\nThe beavers in Holzdorf are avid readers, which is why there are usually lots of beavers queuing at the library's return desk. The following rule applies:\n\nThe beaver with the fewest books to return goes next.\n\nThe librarian always needs exactly one\n\nminute to process the return of each book. Once they have processed all the books returned by a beaver, the next beaver from the waiting area takes their turn and has all their books processed. It is always the beaver in the waiting area with the fewest books to return who goes next.\n\n\t\n\nOne morning, 5 beavers come to return their books. The table shows the arrival time and the number of books each beaver wants to return.\n\nName\tTime of arrival\tNumber of books\nAna\t9:00\t4\nBeti\t9:02\t6\nCene\t9:03\t2\nDarja\t9:05\t4\nEmil\t9:11\t1\n\n \n\nAna arrives first and can immediately return her 4 books.\n\nTask\n\nWork out what order the beavers get to return their books.\n\nDrag the names into the correct position. Click save when you are done.",
+    "image": "/games/bebras/juniors-2024/15-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Algorithmic thinking"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410315",
+    "kind": "placement",
+    "options": [
+      "Ana",
+      "Beti",
+      "Cene",
+      "Darja",
+      "Emil"
+    ],
+    "slotLabels": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ]
+  },
+  {
+    "id": "2024-16-card-art",
+    "title": "Card art",
+    "number": 16,
+    "text": "Beaver Manas creates drawings on cards by following one simple secret rule. \n\nHere are four of his cards that follow the rule:\n\n\t\t\t\nA\tB\tC\tD\n\n \n\nBeaver Anil studies the cards and creates a new card (below) but Manas says it does not follow the rule.\n\n\nCard E\n\n \n\nTask \n\nSelect the option which could be Manas’s secret rule.",
+    "image": "/games/bebras/juniors-2024/16-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410320",
+    "kind": "choice",
+    "options": [
+      "When it is cloudy, there are no flowers.",
+      "When it is cloudy, the sun doesn’t smile.",
+      "There must either be a red star or a slice of pizza.",
+      "If there is a slice of pizza, there is no crown."
+    ]
+  },
+  {
+    "id": "2024-17-sunny-days",
+    "title": "Sunny days",
+    "number": 17,
+    "text": "In the beaver kingdom there are many ponds.\n\nBeaver Tom says: “On sunny days there is at least one beaver swimming in every pond.”\n\nBeaver Kim replies: “That’s not true. For example, last Sunday it wasn’t like that.”\n\nTask\n\nAssume that Kim is right and Tom is wrong. Complete the statement below.\n\nDrag the text that proves Tom wrong into the gap and click save when you are done.",
+    "image": "/games/bebras/juniors-2024/17-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410316",
+    "kind": "placement",
+    "options": [
+      "all ponds were full of swimming beavers.",
+      "no beaver swam in the pond with the waterfall.",
+      "beaver Michael swam through every pond.",
+      "beaver Michael didn’t swim at all."
+    ],
+    "slotLabels": [
+      "Last Sunday, it was sunny and …"
+    ]
+  },
+  {
+    "id": "2024-18-alfred-the-famous-beaver",
+    "title": "Alfred the famous beaver",
+    "number": 18,
+    "text": "When Alfred the famous beaver came to the party, his photo was taken.\n\nTask\n\nClick the only statement below that is true.",
+    "image": "/games/bebras/juniors-2024/18-question.png",
+    "skills": [
+      "Logical reasoning",
+      "Evaluation"
+    ],
+    "source": "https://bebras.uk/index.php?action=user_question&grq_id=410319",
+    "kind": "choice",
+    "options": [
+      "Alfred had a hat and did not use a walking stick.",
+      "Alfred wore a tie or he used a walking stick.",
+      "Alfred had a hat and wore a bow tie.",
+      "Alfred wore a bow tie or did not use a walking stick."
+    ]
+  }
+]

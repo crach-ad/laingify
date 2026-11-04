@@ -6,9 +6,9 @@ import { PrismaClient } from '@prisma/client';
 import { signToken } from '../lib/signed-token.ts';
 import { challengesFor,titleFor } from '../lib/bebras/challenges.ts';
 import { results } from '../lib/bebras/scoring.ts';
-const setId=process.env.BEBRAS_TEST_SET==='castors'?'castors':'juniors';const challenges=challengesFor(setId);const count=challenges.length;
+const setId=process.env.BEBRAS_TEST_SET==='juniors-2024'?'juniors-2024':process.env.BEBRAS_TEST_SET==='castors'?'castors':'juniors';const challenges=challengesFor(setId);const count=challenges.length;
 const base=process.env.BEBRAS_TEST_BASE_URL;if(!base||!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(base))throw Error('Explicit localhost BEBRAS_TEST_BASE_URL required.');
-const p=new PrismaClient();let org,klass,learner,mod,teacher;
+const p=new PrismaClient();let org,klass,learner,mod,teacher,otherMod;
 try{
  org=await p.org.create({data:{name:`Bebras integration ${crypto.randomUUID()}`}});
  klass=await p.class.create({data:{orgId:org.id,name:'Test class',classCode:`TEST-${crypto.randomUUID()}`}});
@@ -22,7 +22,7 @@ try{
  const player=await fetch(base+'/play/bebras',{headers});assert.equal(player.status,200);assert.match(await player.text(),/My modules/);
  const dashboard=await fetch(base+'/learn',{headers});assert.equal(dashboard.status,200);const dashboardHtml=await dashboard.text();assert.doesNotMatch(dashboardHtml,/Mouse Meadow challenge tabs/);assert.match(dashboardHtml,/learn\/topic\/bebras-challenges/);assert.match(dashboardHtml,/Bebras challenges/);
  const topic=await fetch(base+'/learn/topic/bebras-challenges',{headers});assert.equal(topic.status,200);assert.ok((await topic.text()).includes(titleFor(setId)));
- const modulePage=await fetch(base+'/learn/'+mod.id,{headers,redirect:'manual'});assert.equal(modulePage.status,307);assert.equal(modulePage.headers.get('location'),'/play/bebras');
+ const modulePage=await fetch(base+'/learn/'+mod.id,{headers,redirect:'manual'});assert.equal(modulePage.status,307);assert.equal(modulePage.headers.get('location'),`/play/bebras?set=${setId}`);
  const bookmark=await fetch(base+'/play/mouse/bebras',{headers,redirect:'manual'});assert.equal(bookmark.status,307);assert.equal(bookmark.headers.get('location'),'/play/bebras');
  assert.equal((await fetch(base+'/api/bebras')).status,403);
  assert.equal((await fetch(base+'/api/bebras',{method:'POST',headers:{...headers,origin:'https://wrong.invalid'},body:'{}'})).status,403);
@@ -43,10 +43,23 @@ try{
  const csv=await fetch(`${base}/instruct/class/${klass.id}/bebras/export`,{headers:{cookie:teacherCookie}});assert.equal(csv.status,200);assert.match(await csv.text(),/Bebras integration test/);
  assert.equal((await fetch(`${base}/instruct/class/cmt06zgcb0015gje41z4tehez/bebras/export`,{headers:{cookie:teacherCookie}})).status,404);
  const retake=await post({action:'start',previousId:current.id});assert.equal(retake.status,200);assert.notEqual(retake.data.id,current.id);assert.equal(await p.learnerEvent.count({where:{learnerId:learner.id,type:'bebras_session'}}),2);
+ // A second assigned sequence must never reuse the first sequence's run or scores.
+ const otherSet=setId==='juniors'?'castors':'juniors';
+ assert.equal((await fetch(`${base}/api/bebras?set=${otherSet}`,{headers})).status,403);
+ otherMod=await p.module.create({data:{orgId:org.id,title:titleFor(otherSet),topic:'Computational Thinking',summary:'Second sequence test',badgeName:'Test'}});
+ await p.classModule.create({data:{classId:klass.id,moduleId:otherMod.id,order:1}});
+ const hub=await (await fetch(base+'/play/bebras',{headers})).text();assert.match(hub,/Choose your Bebras challenge/);assert.ok(hub.includes(`set=${otherSet}`));
+ const otherStart=await fetch(`${base}/api/bebras?set=${otherSet}`,{method:'POST',headers,body:JSON.stringify({action:'start'})});assert.equal(otherStart.status,200);const other=await otherStart.json();assert.equal(other.run.setId,otherSet);assert.notEqual(other.id,retake.data.id);
+ const wrongSave=await fetch(`${base}/api/bebras?set=${otherSet}`,{method:'POST',headers,body:JSON.stringify({action:'save',id:retake.data.id,version:0,current:0,active:true})});assert.equal(wrongSave.status,404);
+ assert.equal((await fetch(`${base}/api/bebras/explanation?set=${otherSet}&session=${current.id}&question=0`,{headers})).status,404);
+ const selected=await (await fetch(`${base}/api/bebras?set=${setId}`,{headers})).json();assert.equal(selected.id,retake.data.id);
+ const otherCsv=await (await fetch(`${base}/instruct/class/${klass.id}/bebras/export?set=${otherSet}`,{headers:{cookie:teacherCookie}})).text();assert.ok(otherCsv.includes(other.id));assert.ok(!otherCsv.includes(current.id));
+ assert.equal((await fetch(`${base}/api/bebras?set=unassigned`,{headers})).status,403);
+ console.log('PASS: multiple assigned sequences keep saves, explanations, and teacher reports isolated.');
  console.log('PASS: auth, origin, concurrent start/finish, all assigned answers, resume, conflicts, grading, completion, protected explanations, teacher CSV isolation, retakes.');
 }finally{
  if(learner){await p.sprite.deleteMany({where:{learnerId:learner.id}});await p.criterionStatus.deleteMany({where:{learnerId:learner.id}});await p.learnerEvent.deleteMany({where:{learnerId:learner.id}});await p.submission.deleteMany({where:{learnerId:learner.id}});await p.moduleProgress.deleteMany({where:{learnerId:learner.id}});await p.rosterEntry.deleteMany({where:{learnerId:learner.id}});await p.learner.delete({where:{id:learner.id}});}
- if(mod){await p.classModule.deleteMany({where:{moduleId:mod.id}});await p.criterion.deleteMany({where:{moduleId:mod.id}});await p.module.delete({where:{id:mod.id}});}
+ for(const testModule of [otherMod,mod].filter(Boolean)){await p.classModule.deleteMany({where:{moduleId:testModule.id}});await p.criterion.deleteMany({where:{moduleId:testModule.id}});await p.module.delete({where:{id:testModule.id}});}
  if(teacher)await p.instructor.delete({where:{id:teacher.id}});
  if(klass)await p.class.delete({where:{id:klass.id}});if(org)await p.org.delete({where:{id:org.id}});await p.$disconnect();
 }

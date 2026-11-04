@@ -29,3 +29,36 @@ test('Castors uses its own 12 questions, answer keys, and session timing', async
  const legacy=newRun('old-class',1000);delete legacy.setId;
  assert.equal(advance(legacy,{current:0,answer:'Purple Diamond',active:true},2000).answers['01-cube'],'Purple Diamond');
 });
+
+test('Juniors 2024 captures all 18 tasks with valid answer keys and private explanations',async()=>{
+ const {challengesFor}=await import('../lib/bebras/challenges.ts');
+ const {access}=await import('node:fs/promises');
+ const all=challengesFor('juniors-2024');assert.equal(all.length,18);
+ assert.equal(all.filter(c=>c.kind==='placement').length,9);
+ for(const [i,r] of results({},'juniors-2024').entries()){
+  assert.ok(validAnswer(i,r.expected,'juniors-2024'),r.title);
+  assert.ok(scoreAnswer(i,r.expected,'juniors-2024'),r.title);
+  assert.equal(scoreAnswer(i,undefined,'juniors-2024'),false);
+  await access('public'+all[i].image);await access(`content/bebras/explanations/${r.id}-review.png`);
+  for(const asset of [...(all[i].optionImages??[]),...(all[i].targetImages??[]),...(all[i].boardImage?[all[i].boardImage]:[])])await access('public'+asset);
+ }
+});
+test('2024 accepts both valid sailboat starts and unordered selections, but preserves arrangements',()=>{
+ const set='juniors-2024';assert.ok(scoreAnswer(2,'1',set));assert.ok(scoreAnswer(2,'6',set));assert.equal(scoreAnswer(2,'3',set),false);
+ assert.ok(scoreAnswer(7,['Onions','Mushrooms','Cheese'],set));assert.ok(scoreAnswer(8,['7','5','2','1'],set));
+ assert.equal(scoreAnswer(0,['Black','White','Black'],set),false);
+ assert.equal(scoreAnswer(14,['Ana','Beti','Cene','Darja','Emil'],set),false);
+});
+test('2024 placement validation enforces finite piece supplies, valid targets and selection limits',()=>{
+ const set='juniors-2024';assert.equal(validAnswer(6,['Up','Up'],set),false);assert.equal(validAnswer(6,['Right','Right','Right'],set),false);
+ assert.ok(validAnswer(6,['','Right','Right','','Up','','','','',''],set));
+ assert.equal(validAnswer(6,Array(11).fill(''),set),false);assert.equal(validAnswer(6,['Down'],set),false);
+ assert.equal(validAnswer(4,['Ship','Ship'],set),false);assert.equal(validAnswer(11,['Emma','Emma'],set),false);
+ assert.equal(validAnswer(7,['Mushrooms','Cheese','Onions','Pepper'],set),false);assert.equal(validAnswer(8,['1','1'],set),false);
+ assert.ok(validAnswer(0,['White','White','White'],set));assert.ok(validAnswer(6,[],set));
+});
+test('2024 timing and answers stay in their own sequence and support the final question',()=>{
+ const run=newRun('test',1000,'juniors-2024');const next=advance(run,{current:0,answer:['White','Black','Black'],next:17,active:true},11000);
+ assert.equal(next.current,17);assert.equal(next.activeMs['2024-01-tube'],10000);assert.deepEqual(next.answers['2024-01-tube'],['White','Black','Black']);
+ assert.equal(next.answers['01-cube'],undefined);assert.equal(results(next.answers,'juniors-2024').filter(r=>r.correct).length,1);
+});

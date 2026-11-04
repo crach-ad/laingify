@@ -6,8 +6,8 @@ import { newRun, advance, type Run } from '@/lib/bebras/state';
 import { validAnswer, results } from '@/lib/bebras/scoring';
 const json=(v:unknown,status=200)=>NextResponse.json(v,{status,headers:{'Cache-Control':'private, no-store'}});
 function response(id:string,run:Run){return {id,run,serverNow:Date.now(),results:run.finishedAt?results(run.answers,run.setId):null};}
-export async function GET(){
- try{const ctx=await bebrasAccess();if(!ctx)return json({error:'Sign in to an assigned class.'},403);
+export async function GET(req:Request){
+ try{const ctx=await bebrasAccess(new URL(req.url).searchParams.get('set'));if(!ctx)return json({error:'Sign in to an assigned class.'},403);
  const row=await prisma.learnerEvent.findFirst({where:{learnerId:ctx.session.learnerId,moduleId:ctx.assignment.moduleId,type:'bebras_session',id:{startsWith:`bebras:${ctx.session.classId}:`}},orderBy:{createdAt:'desc'}});
  return json(row?response(row.id,JSON.parse(row.meta)):null);
  }catch{return json({error:'Could not load your session. Please retry.'},503);}
@@ -15,7 +15,7 @@ export async function GET(){
 export async function POST(req:Request){
  if(req.headers.get('origin')!==new URL(req.url).origin)return json({error:'Invalid origin.'},403);
  try{
-  const ctx=await bebrasAccess();if(!ctx)return json({error:'Sign in to an assigned class.'},403);
+  const ctx=await bebrasAccess(new URL(req.url).searchParams.get('set'));if(!ctx)return json({error:'Sign in to an assigned class.'},403);
   const challenges=challengesFor(ctx.setId);
   const text=await req.text();if(text.length>5000)return json({error:'Request too large.'},413);
   let b;try{b=JSON.parse(text);}catch{return json({error:'Invalid JSON.'},400);}
