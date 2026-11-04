@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireInstructor } from "@/lib/instructor";
 import { loadClassOverviews } from "@/lib/instructor-data";
 import { bandConfig } from "@/lib/bands";
-import { slugifyTopic } from "@/lib/topics";
+import { slugifyTopic, moduleTopic } from "@/lib/topics";
 import { ConsoleHeader, ReviewQueue, RosterList } from "../../ConsoleParts";
 import Insights from "./Insights";
 import Attendance from "./Attendance";
@@ -37,8 +37,7 @@ export default async function ClassPage({
   // Group modules by topic, keeping class order.
   const topics: { name: string; modules: typeof klass.modules }[] = [];
   for (const m of klass.modules) {
-    if (["Bebras Juniors 2025", "Bebras Castors 2025"].includes(m.title) && m.topic === "Computational Thinking") continue;
-    const name = m.topic || m.title;
+    const name = moduleTopic(m);
     const t = topics.find((x) => x.name === name);
     if (t) t.modules.push(m);
     else topics.push({ name, modules: [m] });

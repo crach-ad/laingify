@@ -2,7 +2,7 @@
 
 The classroom module contains the 15 captured UK Bebras 2025 Junior challenges in their original order. Source graphics and question text are credited to UK Bebras / Raspberry Pi Foundation. The classroom player is Laingify code, with no external scripts, iframe submissions, or Bebras login dependency.
 
-Students enter through **Mouse Meadow → Bebras challenges** at `/play/mouse/bebras`. The standalone Bebras module card is hidden from learner topic lists and instructor project cards. The existing assignment remains as an internal access and reporting record, preserving all student results. Previously shared `/play/bebras` and module links redirect to the tab. They may move between questions, save and revisit answers, and submit early after confirming unanswered questions. The timer records elapsed time, without a deadline. The original choice/text/number, placement, grid-selection and road-selection interactions are supported. Placements also support selecting an item and then a destination for touch and keyboard access.
+Students enter through **Bebras challenges** on the learner dashboard. Each assigned set is a full module with its own progress, criteria and badge, visible to learners and instructors. The standalone player is `/play/bebras`; existing `/play/mouse/bebras` bookmarks redirect there. Mouse Meadow is independent. They may move between questions, save and revisit answers, and submit early after confirming unanswered questions. The timer records elapsed time, without a deadline. The original choice/text/number, placement, grid-selection and road-selection interactions are supported. Placements also support selecting an item and then a destination for touch and keyboard access.
 
 Answers are saved automatically every 15 seconds while visible, as well as on navigation and Finish. A local draft protects unsent edits; failed saves block navigation. Reload resumes the latest session. A finished session is immutable; a retake starts a separate history entry. The answer key stays server-side; answers and original explanations become available after Finish. Teacher preview is explicitly labeled and writes no learner records.
 
@@ -30,7 +30,7 @@ The protected explanation route traces `content/bebras/explanations/*.png` into 
 
 ## Castors 2025 — KCSB-3
 
-The same Mouse Meadow tab also supports the 12 Castors challenges captured from
+The standalone Bebras player also supports the 12 Castors challenges captured from
 UK Bebras review mode on 3 November 2026. The assigned module selects the question
 set; learners cannot choose a different set through request parameters. KCSB-3
 (Year 3) receives **Bebras Castors 2025**; existing Year 6 assignments and sessions
@@ -52,3 +52,9 @@ The existing instructor outcomes, per-question active time, elapsed completion
 time without cutoff, answer revisions, session history, and CSV export adapt to
 12 questions. To exercise the isolated integration test for this set, pass
 `BEBRAS_TEST_SET=castors` along with `BEBRAS_TEST_BASE_URL`.
+
+## Year 4 and future rollouts
+
+`node --env-file=/path/to/.env prisma/enable-bebras-kcsb.mjs --castors --class KCSB-4 --remove-keyboarding` previews the Year 4 rollout. Add `--apply` to assign Castors and remove only that class’s Keyboard Skills assignments. Student work and shared modules remain intact. The KCSB seed omits Letter Leaper for Year 4 so a later content refresh does not restore it.
+
+Use `--class KCSB-N` to choose an exact class for future rollouts of an existing set. Omit `--remove-keyboarding` to retain keyboard assignments. New challenge sets still require their own content and scoring definitions.
