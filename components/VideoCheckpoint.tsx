@@ -2,8 +2,12 @@
 import { useState } from 'react';
 
 type Saved = { id: string; url: string };
-export default function VideoCheckpoint({ moduleId, criterionId, savedUrl, onSaved }: { moduleId: string; criterionId: string; savedUrl: string | null; onSaved: (e: Saved) => void }) {
+export default function VideoCheckpoint({ moduleId, criterionId, savedUrl, savedVideos = [], onSaved }: { moduleId: string; criterionId: string; savedUrl: string | null; savedVideos?: { id: string; url: string; caption?: string | null }[]; onSaved: (e: Saved) => void }) {
   const [busy, setBusy] = useState(false), [progress, setProgress] = useState(0), [error, setError] = useState('');
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [newTakes, setNewTakes] = useState<{ id: string; url: string; caption: string }[]>([]);
+  const takes = [...savedVideos, ...newTakes];
+  const playbackUrl = selectedUrl ?? savedUrl;
   async function api(body: object) {
     const r = await fetch('/api/evidence/video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await r.json();
@@ -26,12 +30,15 @@ export default function VideoCheckpoint({ moduleId, criterionId, savedUrl, onSav
         x.send(file);
       });
       const done = await api({ action: 'finish', ticket: start.ticket });
+      setNewTakes(t => [...t, { ...done.evidence, caption: file.name }]);
+      setSelectedUrl(done.evidence.url);
       onSaved(done.evidence);
     } catch (e) { setError(e instanceof Error ? e.message : 'Upload failed.'); }
     finally { setBusy(false); }
   }
   return <div className="mt-4 space-y-3">
-    {savedUrl && <><video key={savedUrl} controls playsInline preload="metadata" src={savedUrl} className="w-full rounded-xl" onError={() => setError('This browser could not play the video. Try an MP4 export with H.264 video and AAC audio, or use another browser.')} /><p className="muted text-sm">Watch your pitch all the way through before continuing to your written reflection.</p></>}
+    {takes.length > 1 && <label className="block text-sm font-medium">Choose a take<select className="input mt-2 block w-full" value={playbackUrl ?? ''} onChange={e => { setSelectedUrl(e.target.value); setError(''); }}>{takes.map((take, i) => <option key={take.id} value={take.url}>{take.caption || `Take ${i + 1}`}</option>)}</select></label>}
+    {playbackUrl && <><video key={playbackUrl} controls playsInline preload="metadata" src={playbackUrl} className="w-full rounded-xl" onError={() => setError('This browser could not play the video. Try an MP4 export with H.264 video and AAC audio, or use another browser.')} /><p className="muted text-sm">Watch your pitch all the way through before continuing to your written reflection.</p></>}
     <label className="block text-sm font-medium">{savedUrl ? 'Upload another take (earlier takes stay in your portfolio)' : 'Upload your elevator pitch video'}<input className="mt-2 block w-full" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" disabled={busy} onChange={e => { const f=e.target.files?.[0]; if(f) void upload(f); e.target.value=''; }} /></label>
     <p className="muted text-sm">MP4 recommended · maximum 50 MB. Your video is available through your signed-in account and your teachers’ accounts.</p>
     {busy && <p role="status">{progress < 100 ? `Uploading… ${progress}%` : 'Saving your video…'}</p>}

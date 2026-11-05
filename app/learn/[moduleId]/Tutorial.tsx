@@ -76,6 +76,7 @@ type Step = { heading?: string; block: Block };
 type Crit = { id: string; label: string; status: string };
 type EvidenceRow = {
   id: string;
+  caption?: string | null;
   criterionId: string | null;
   type: string;
   url: string | null;
@@ -776,6 +777,10 @@ export default function Tutorial({
   const [stepRaw, setStep] = useState(() => {
     if (initialComplete || hasSubmission) return steps.length;
     if (initiallyDone.size === 0) return 0;
+    // A teacher may have supplied the recording. Show it before the pending
+    // reflection instead of treating the uploaded file as already watched.
+    const savedVideoStep = steps.findIndex(s => s.block.type === "checkpoint" && s.block.capture === "video" && initiallyDone.has(critByLabel.get(s.block.criterionLabel ?? "")?.id ?? ""));
+    if (savedVideoStep !== -1 && firstPending !== -1) return savedVideoStep;
     return firstPending === -1 ? wrapUpStep : firstPending;
   });
   // Switching tracks can shrink the step list — clamp at render time.
@@ -1232,7 +1237,7 @@ export default function Tutorial({
             </span>
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
             {current!.block.capture === "video" && currentCrit ? (
-              <VideoCheckpoint moduleId={moduleId} criterionId={currentCrit.id} savedUrl={media.get(currentCrit.id) ?? null} onSaved={e => {
+              <VideoCheckpoint key={currentCrit.id} moduleId={moduleId} criterionId={currentCrit.id} savedUrl={media.get(currentCrit.id) ?? null} savedVideos={initialEvidence.filter(e => e.criterionId === currentCrit.id && e.type === "VIDEO" && e.url).map(e => ({ id: e.id, url: e.url!, caption: e.caption }))} onSaved={e => {
                 setDone(d => new Set(d).add(currentCrit.id));
                 setMedia(m => new Map(m).set(currentCrit.id, e.url));
                 setEvidenceIds(m => new Map(m).set(currentCrit.id, e.id));
