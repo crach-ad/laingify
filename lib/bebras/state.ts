@@ -1,5 +1,5 @@
 import { challengesFor, type ChallengeSet, type Answer } from './challenges.ts';
-export type Run = {setId?:ChallengeSet;classId:string;version:number;startedAt:number;finishedAt:number|null;lastSeen:number;active:boolean;current:number;answers:Record<string,Answer>;changes:Record<string,number>;activeMs:Record<string,number>;visits:Record<string,number>};
+export type Run = {setId?:ChallengeSet;classId:string;version:number;startedAt:number;finishedAt:number|null;lastSeen:number;active:boolean;current:number;answers:Record<string,Answer>;changes:Record<string,number>;activeMs:Record<string,number>;checks?:Record<string,{answer:Answer;correct:boolean;attempts:number}>;visits:Record<string,number>};
 export function newRun(classId:string,now:number,setId:ChallengeSet='juniors'):Run{const challenges=challengesFor(setId);return {setId,classId,version:0,startedAt:now,finishedAt:null,lastSeen:now,active:true,current:0,answers:{},changes:{},activeMs:{},visits:{[challenges[0].id]:1}};}
 export function advance(run:Run,input:{current:number;answer?:Answer;next?:number;active:boolean;finish?:boolean},now:number):Run{
  if(run.finishedAt)return run;
@@ -14,4 +14,10 @@ export function advance(run:Run,input:{current:number;answer?:Answer;next?:numbe
  r.active=input.active;r.lastSeen=now;r.version++;
  if(input.finish){r.finishedAt=now;r.active=false;}
  return r;
+}
+
+// Called only after an explicit submission is graded by the server (or teacher preview).
+export function recordCheck(run:Run,index:number,answer:Answer,correct:boolean):Run{
+ const id=challengesFor(run.setId)[index].id;
+ return {...run,checks:{...run.checks,[id]:{answer:structuredClone(answer),correct,attempts:(run.checks?.[id]?.attempts??0)+1}}};
 }

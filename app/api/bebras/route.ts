@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { bebrasAccess } from '@/lib/bebras/access';
-import { challengesFor } from '@/lib/bebras/challenges';
-import { newRun, advance, type Run } from '@/lib/bebras/state';
-import { validAnswer, results } from '@/lib/bebras/scoring';
+import { challengesFor, hasAnswer } from '@/lib/bebras/challenges';
+import { newRun, advance, recordCheck, type Run } from '@/lib/bebras/state';
+import { validAnswer, results, scoreAnswer } from '@/lib/bebras/scoring';
 const json=(v:unknown,status=200)=>NextResponse.json(v,{status,headers:{'Cache-Control':'private, no-store'}});
 function response(id:string,run:Run){return {id,run,serverNow:Date.now(),results:run.finishedAt?results(run.answers,run.setId):null};}
 export async function GET(req:Request){
@@ -19,8 +19,9 @@ export async function POST(req:Request){
   const challenges=challengesFor(ctx.setId);
   const text=await req.text();if(text.length>5000)return json({error:'Request too large.'},413);
   let b;try{b=JSON.parse(text);}catch{return json({error:'Invalid JSON.'},400);}
-  if(!b||!['start','save','finish'].includes(b.action))return json({error:'Invalid action.'},400);
+  if(!b||!['start','save','submit','finish'].includes(b.action))return json({error:'Invalid action.'},400);
   if(b.action!=='start' && (typeof b.id!=='string'||!Number.isInteger(b.version)||!Number.isInteger(b.current)||b.current<0||b.current>=challenges.length||typeof b.active!=='boolean'||(b.next!==undefined&&(!Number.isInteger(b.next)||b.next<0||b.next>=challenges.length))||(b.answer!==undefined&&!validAnswer(b.current,b.answer,ctx.setId))))return json({error:'Invalid response.'},400);
+  if(b.action==='submit'&&(!hasAnswer(b.answer)||b.next!==undefined))return json({error:'Choose or enter an answer before submitting.'},400);
   const {learnerId,classId}=ctx.session;const moduleId=ctx.assignment.moduleId;
   const output=await prisma.$transaction(async tx=>{
    // Serialize all tabs for this learner and module, including double Start.
@@ -38,7 +39,8 @@ export async function POST(req:Request){
    if(current.finishedAt)return {data:response(row.id,current),status:200};
    if(current.version!==b.version)return {data:{error:'Your session changed in another tab. Reload before continuing.',...response(row.id,current)},status:409};
    if(current.current!==b.current)return {data:{error:'Reload to return to your current challenge.'},status:409};
-   const run=advance(current,{current:b.current,answer:b.answer,next:b.next,active:b.active,finish:b.action==='finish'},Date.now());
+   let run=advance(current,{current:b.current,answer:b.answer,next:b.next,active:b.active,finish:b.action==='finish'},Date.now());
+   if(b.action==='submit')run=recordCheck(run,b.current,b.answer,scoreAnswer(b.current,b.answer,ctx.setId));
    await tx.learnerEvent.update({where:{id:row.id},data:{meta:JSON.stringify(run)}});
    if(run.finishedAt){
     const scored=results(run.answers,run.setId);const activeSeconds=Math.round(Object.values(run.activeMs).reduce((a,b)=>a+b,0)/1000);

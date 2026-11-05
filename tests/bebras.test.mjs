@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {scoreAnswer,validAnswer,results} from '../lib/bebras/scoring.ts';
 import {challenges} from '../lib/bebras/challenges.ts';
-import {newRun,advance} from '../lib/bebras/state.ts';
+import {newRun,advance,recordCheck} from '../lib/bebras/state.ts';
 test('all 15 captured challenges have an answer key and reject empty answers',()=>{const expected=results({});assert.equal(expected.length,15);for(const [i,r] of expected.entries()){assert.equal(scoreAnswer(i,r.expected),true,r.title);assert.equal(scoreAnswer(i,undefined),false);assert.equal(scoreAnswer(i,''),false);assert.equal(validAnswer(i,r.expected),true);}});
 test('text answers ignore case and outer whitespace, but not incorrect content',()=>{assert.equal(scoreAnswer(2,' LIGHTHOUSE '),true);assert.equal(scoreAnswer(2,'house'),false);assert.equal(scoreAnswer(9,'3'),true);assert.equal(scoreAnswer(9,'4'),false)});
 test('Fair follows the diagram and actual heights, including the source text correction',()=>{assert.equal(scoreAnswer(4,['D · blue hat','B · yellow hat','E · purple hat','C · green hat','','A · red hat']),true);assert.equal(scoreAnswer(4,['D · blue hat','B · yellow hat','E · purple hat','','C · green hat','A · red hat']),false)});
@@ -74,4 +74,16 @@ test('Castors 2024 has 15 independently tracked puzzles with the correct interac
  assert.equal(run.activeMs[all[0].id],12000);assert.equal(run.current,14);assert.equal(results(run.answers,set).filter(r=>r.correct).length,1);assert.equal(results(run.answers,'castors').filter(r=>r.correct).length,0);
  const {access,readFile}=await import('node:fs/promises');const markup=JSON.parse(await readFile('lib/bebras/clean-questions.json','utf8'));
  for(const c of all){await access('public'+c.image);await access(`content/bebras/explanations/${c.id}-review.png`);for(const asset of [...(c.optionImages??[]),...(c.targetImages??[]),...(c.boardImage?[c.boardImage]:[])])await access('public'+asset);if(markup[c.id]){assert.doesNotMatch(markup[c.id],/<script|\son\w+=|https?:/i);for(const m of markup[c.id].matchAll(/src="([^"]+)"/g))await access('public'+m[1]);}}
+});
+
+test('explicit checks persist through autosaves without grading edits or adding attempts',()=>{
+ const start=newRun('class',0);
+ const submitted=recordCheck(advance(start,{current:0,answer:'Orange Star',active:true},1000),0,'Orange Star',false);
+ assert.equal(start.checks,undefined);
+ const saved=advance(submitted,{current:0,answer:'Purple Diamond',next:1,active:true},2000);
+ assert.deepEqual(saved.checks[challenges[0].id],{answer:'Orange Star',correct:false,attempts:1});
+ const retried=recordCheck(saved,0,'Purple Diamond',true);
+ assert.equal(retried.checks[challenges[0].id].attempts,2);
+ assert.equal(retried.checks[challenges[0].id].correct,true);
+ assert.equal(submitted.checks[challenges[0].id].correct,false);
 });

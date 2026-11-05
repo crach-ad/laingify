@@ -29,9 +29,24 @@ try{
  const [a,b]=await Promise.all([post({action:'start'}),post({action:'start'})]);assert.equal(a.status,200,JSON.stringify(a.data));assert.equal(a.data.id,b.data.id);let current=a.data;assert.equal(current.results,null);
  assert.equal((await fetch(`${base}/api/bebras/explanation?session=${current.id}&question=0`,{headers})).status,403);
  const keys=results({},setId);
+ const submit=answer=>post({action:'submit',id:current.id,version:current.run.version,current:0,answer,active:true});
+ assert.equal((await submit('')).status,400);
+ assert.equal((await submit(undefined)).status,400);
+ const wrong=Array.isArray(keys[0].expected)?['']:challenges[0].options.find(v=>v!==keys[0].expected);
+ // Use a nonempty, structurally valid incorrect arrangement for array questions.
+ const incorrect=Array.isArray(keys[0].expected)?[challenges[0].options.find(v=>v!==keys[0].expected[0])]:wrong;
+ const failed=await submit(incorrect);assert.equal(failed.status,200,JSON.stringify(failed.data));current=failed.data;
+ assert.equal(current.run.current,0);assert.equal(current.run.checks[challenges[0].id].correct,false);
+ assert.equal(current.results,null);assert.ok(!JSON.stringify(current).includes('"expected"'));
+ const passed=await submit(keys[0].expected);assert.equal(passed.status,200);current=passed.data;
+ assert.deepEqual(current.run.checks[challenges[0].id],{answer:keys[0].expected,correct:true,attempts:2});
+ assert.equal(current.results,null);
+ assert.equal((await fetch(`${base}/api/bebras/explanation?session=${current.id}&question=0`,{headers})).status,403);
+
  for(let i=0;i<count;i++){
   const saved=await post({action:'save',id:current.id,version:current.run.version,current:i,next:Math.min(i+1,count-1),answer:keys[i].expected,active:true});assert.equal(saved.status,200,JSON.stringify(saved.data));current=saved.data;
  }
+ assert.equal(current.run.checks[challenges[0].id].attempts,2);assert.equal(Object.keys(current.run.checks).length,1);
  const resumed=await (await fetch(base+'/api/bebras',{headers})).json();assert.deepEqual(resumed.run.answers,current.run.answers);assert.equal(resumed.results,null);
  const conflict=await post({action:'save',id:current.id,version:0,current:count-1,answer:keys[count-1].expected,active:true});assert.equal(conflict.status,409);
  const body={action:'finish',id:current.id,version:current.run.version,current:count-1,answer:keys[count-1].expected,active:true};const finished=await Promise.all([post(body),post(body)]);for(const r of finished){assert.equal(r.status,200);assert.equal(r.data.results.filter(a=>a.correct).length,count);}
