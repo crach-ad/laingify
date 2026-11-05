@@ -58,6 +58,7 @@ export default async function Dashboard() {
   });
 
   const mouseModule = rows.find(r => r.m.title === "Mouse Meadow" && r.m.topic === "Mouse Skills");
+  const pitchModule = isIgniteHer ? rows.find(r => r.m.title === "Elevator Pitch Analysis") : undefined;
   const inProgress = rows.filter((r) => r.started && !r.done).length;
   const completed = rows.filter((r) => r.done).length;
   const earned = rows.filter((r) => completedModuleIds.has(r.m.id));
@@ -160,6 +161,27 @@ export default async function Dashboard() {
           ))}
         </div>
       </section>
+
+      {pitchModule && (
+        <section aria-label="Featured module" className="mt-8 grid gap-3 sm:grid-cols-2">
+          <Link href={`/learn/${pitchModule.m.id}`} className="card card-interactive flex h-full flex-col gap-4 p-5">
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="tile flex h-11 w-11 shrink-0 items-center justify-center text-xl">🎬</span>
+              <span className="min-w-0 flex-1">
+                <span className="display block text-base font-semibold">Elevator Pitch Analysis</span>
+                <span className="muted mt-0.5 block text-[13px]">Watch your pitch and write your reflection.</span>
+              </span>
+              <span className={`pill shrink-0 ${pitchModule.done ? "pill-done" : pitchModule.started ? "pill-progress" : "pill-idle"}`}>
+                {pitchModule.done ? "Done" : pitchModule.started ? "In progress" : "Not started"}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="bar flex-1"><span style={{ width: `${pitchModule.pct}%`, background: "var(--accent)" }} /></span>
+              <span className="mono-label">{pitchModule.pct}%</span>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {/* One-time portfolio photo prompt (opt-out remembered) */}
       {SHOW_PROFILE_SETUP && !learner.photoUrl && !learner.photoSkipped && (
