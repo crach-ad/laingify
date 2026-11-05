@@ -1,5 +1,6 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
+import FairAnswer from './FairAnswer';
 import MatchAndRotate from './MatchAndRotate';
 import InteractiveAnswer from './InteractiveAnswer';
 import { useState } from 'react';
@@ -9,6 +10,7 @@ const roads=[ [0,6,2],[6,4,6],[4,3,1],[0,5,3],[5,3,6],[0,1,4],[1,2,2],[5,2,4],[2
 const points=[[65,210],[180,340],[420,340],[550,210],[420,65],[300,210],[180,65]];
 export default function AnswerControl({challenge:c,value,onChange,disabled=false}:{challenge:Challenge;value:Answer|undefined;onChange:(v:Answer)=>void;disabled?:boolean}){
  const [picked,setPicked]=useState('');const arr=Array.isArray(value)?value:[];
+ if(c.kind==='fair')return <FairAnswer value={value} onChange={onChange} disabled={disabled}/>;
  if(c.kind==='matching'||c.kind==='rotation')return <MatchAndRotate challenge={c} value={value} onChange={onChange} disabled={disabled}/>;
  if(['placement','multi','hotspots'].includes(c.kind))return <InteractiveAnswer challenge={c} value={value} onChange={onChange} disabled={disabled}/>;
  if(c.kind==='choice')return <div className={s.choices}>{c.options!.map((o,i)=><button type="button" key={o} disabled={disabled} aria-pressed={value===o} onClick={()=>onChange(o)} className={value===o?s.selected:''}>{c.optionImages&&<img src={c.optionImages[i]} alt={`Option ${o}`} />}<span>{o}</span></button>)}</div>;
@@ -18,8 +20,8 @@ export default function AnswerControl({challenge:c,value,onChange,disabled=false
   function place(index:number,token:string){if(disabled||!names.includes(token))return;const next=slots.map(v=>v===token?'':v);next[index]=token;onChange(next);setPicked('');}
   return <div><p className={s.hint}>Match each original plant to its painted picture. Drag a plant, or select it and then select a picture.</p><div className={s.tokens}>{names.map((name,i)=><button type="button" key={name} disabled={disabled} draggable onDragStart={e=>{e.dataTransfer.setData('text/plain',name);setPicked(name)}} onClick={()=>setPicked(name)} aria-pressed={picked===name} className={picked===name?s.selected:''}><img src={c.optionImages![i]} alt={name} width="82" height="82"/><span>{name}</span></button>)}</div><div className={s.slots}>{slots.map((v,i)=><button type="button" key={i} disabled={disabled} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();place(i,e.dataTransfer.getData('text/plain'))}} onClick={()=>{if(picked)place(i,picked);else if(v)setPicked(v)}} aria-label={`Picture ${'ABCD'[i]}: ${v||'empty'}`}><strong>Picture {'ABCD'[i]}</strong><img src={c.targetImages![i]} alt={`Painted picture ${'ABCD'[i]}`} width="82" height="82"/>{v&&<img src={c.optionImages![names.indexOf(v)]} alt={v} width="82" height="82"/>}<span>{v||'Drop here'}</span></button>)}</div><button type="button" className={s.secondary} disabled={disabled} onClick={()=>{onChange([]);setPicked('')}}>Clear matches</button></div>;
  }
- if(c.kind==='planes'||c.kind==='fair'){
-  const fair=c.kind==='fair';const names=fair?fairNames:planeNames;const count=fair?6:4;const slots=Array.from({length:count},(_,i)=>arr[i]??'');
+ if(c.kind==='planes'){
+  const fair=false;const names=fair?fairNames:planeNames;const count=fair?6:4;const slots=Array.from({length:count},(_,i)=>arr[i]??'');
   function place(index:number,token:string){if(!names.includes(token)||disabled)return;const next=slots.map(v=>v===token?'':v);next[index]=token;onChange(next);setPicked('');}
   return <div><p className={s.hint}>Drag each {fair?'beaver':'plane'} to a space, or select it and then select a space.</p><div className={s.tokens}>{names.filter(n=>!slots.includes(n)).map((n,i)=><button type="button" disabled={disabled} key={n} draggable onDragStart={e=>{e.dataTransfer.setData('text/plain',n);setPicked(n)}} onClick={()=>setPicked(n)} aria-pressed={picked===n} className={picked===n?s.selected:''}><span style={{color:['#179447','#d23d4f','#dc842c','#6b37c8','#ac32a5'][i]}}>{fair?'🦫':'✈'}</span> {n}</button>)}</div><div className={s.slots}>{slots.map((v,i)=><button type="button" disabled={disabled} key={i} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();place(i,e.dataTransfer.getData('text/plain'))}} onClick={()=>{if(picked)place(i,picked);else if(v){setPicked(v)}}} aria-label={`${fair?'Stilts '+(i+1):['10:45','10:55','11:00','11:11'][i]}: ${v||'empty'}`}><strong>{fair?`Stilts ${i+1}`:['10:45','10:55','11:00','11:11'][i]}</strong>{fair&&<small>Foot plate: {[3,4,2,7,8,1][i]} units</small>}<span>{v||'Drop here'}</span></button>)}</div>{!fair&&<p className={s.hint}>Already scheduled: blue plane 10:52 · turquoise 10:59 · purple dots 11:10.</p>}<button type="button" className={s.secondary} disabled={disabled} onClick={()=>{onChange([]);setPicked('')}}>Clear placements</button></div>;
  }

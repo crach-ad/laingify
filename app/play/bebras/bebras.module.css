@@ -7,3 +7,5 @@
 .submitRow{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin-top:24px}.correctFeedback,.incorrectFeedback{padding:12px 16px;border-radius:10px;font-weight:700;margin:0}.correctFeedback{background:#e4f5e8;color:#195b30}.incorrectFeedback{background:#fff0df;color:#853c12}
 
 .sidebar nav button .correctMarker{color:#195b30;font-size:18px;font-weight:700}.sidebar nav button .incorrectMarker{color:#853c12;font-size:18px;font-weight:700}
+
+.fairScroll{overflow-x:auto;border:1px solid #ddd5e6;border-radius:14px;background:#fff}.fairBoard{display:block;width:100%;min-width:720px;touch-action:none;user-select:none}.fairBoard [role="button"]:focus{outline:3px solid #7953b2;outline-offset:2px}
