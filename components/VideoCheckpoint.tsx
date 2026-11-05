@@ -7,6 +7,7 @@ export default function VideoCheckpoint({ moduleId, criterionId, savedUrl, saved
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [newTakes, setNewTakes] = useState<{ id: string; url: string; caption: string }[]>([]);
   const takes = [...savedVideos, ...newTakes];
+  if (savedUrl && !takes.some(t => t.url === savedUrl)) takes.push({ id: savedUrl, url: savedUrl, caption: 'Latest take' });
   const playbackUrl = selectedUrl ?? savedUrl;
   async function api(body: object) {
     const r = await fetch('/api/evidence/video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

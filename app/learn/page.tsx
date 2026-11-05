@@ -171,13 +171,13 @@ export default async function Dashboard() {
                 <span className="display block text-base font-semibold">Elevator Pitch Analysis</span>
                 <span className="muted mt-0.5 block text-[13px]">Watch your pitch and write your reflection.</span>
               </span>
-              <span className={`pill shrink-0 ${pitchModule.done ? "pill-done" : pitchModule.started ? "pill-progress" : "pill-idle"}`}>
-                {pitchModule.done ? "Done" : pitchModule.started ? "In progress" : "Not started"}
-              </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="bar flex-1"><span style={{ width: `${pitchModule.pct}%`, background: "var(--accent)" }} /></span>
               <span className="mono-label">{pitchModule.pct}%</span>
+              <span className={`pill shrink-0 ${pitchModule.done ? "pill-done" : pitchModule.started ? "pill-progress" : "pill-idle"}`}>
+                {pitchModule.done ? "Done" : pitchModule.started ? "In progress" : "Not started"}
+              </span>
             </div>
           </Link>
         </section>
