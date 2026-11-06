@@ -4,8 +4,6 @@ import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
 import { slugifyTopic, moduleTopic } from "@/lib/topics";
 import { classResources } from "@/lib/class-resources";
-import { offersLetterLeaperLink } from "@/lib/class-features";
-import { letterLeaperModuleId } from "@/lib/typing-access";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
@@ -21,9 +19,6 @@ export default async function Dashboard() {
   const band = bandConfig(klass.band);
   const isIgniteHer = (await prisma.org.findUnique({ where: { id: klass.orgId }, select: { name: true } }))?.name === "IgniteHer";
   const resources = classResources(klass.classCode);
-  // Only where the class has Letter Leaper (the game plays from that module).
-  const leaperLink = (await offersLetterLeaperLink(klass.orgId)) && (await letterLeaperModuleId(klass.id, klass.orgId)) !== null;
-
   // Modules assigned to this class, in order, with this learner's progress and
   // criteria (for per-module completion bars). Project rows are the completion
   // signal — Project.moduleId is a plain string, so they're looked up separately.
@@ -93,17 +88,6 @@ export default async function Dashboard() {
               title="Download the InspireHER PowerPoint presentation"
             >
               InspireHER <span aria-hidden>↓</span>
-            </a>
-          )}
-          {/* Class extra (lib/class-features.ts): Letter Leaper, one click from the header. */}
-          {leaperLink && (
-            // A plain link: the route redirects to the game's static page.
-            <a
-              href="/play/letter-leaper/full"
-              className="btn-ghost flex h-9 items-center gap-2 whitespace-nowrap px-3.5 text-sm"
-              title="Letter Leaper typing practice"
-            >
-              <span aria-hidden>🐒</span> Letter Leaper
             </a>
           )}
           <div className="flex items-center gap-2.5">
