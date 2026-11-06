@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
@@ -34,6 +34,7 @@ export default async function TopicPage({
   searchParams: Promise<{ board?: string }>;
 }) {
   const { slug } = await params;
+  if (["keyboard-skills", "keyboarding-skills"].includes(slug)) redirect("/learn/topic/letter-leaper");
   const { board: boardParam } = await searchParams;
   const { learner, klass } = await requireLearner();
   const band = bandConfig(klass.band);
@@ -56,7 +57,7 @@ export default async function TopicPage({
   ]);
 
   const inTopic = classModules.filter(
-    (cm) => slugifyTopic(moduleTopic(cm.module)) === slug,
+    (cm) => cm.module.title !== "Mouse Meadow" && slugifyTopic(moduleTopic(cm.module)) === slug,
   );
   if (inTopic.length === 0) notFound();
   const topicName = moduleTopic(inTopic[0].module);

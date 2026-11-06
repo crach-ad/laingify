@@ -47,7 +47,7 @@ export default async function Dashboard() {
   const completedModuleIds = new Set(projects.map((p) => p.moduleId));
   const metCriterionIds = new Set(statuses.filter((s) => s.status === "MET").map((s) => s.criterionId));
 
-  const rows = classModules.map((cm) => {
+  const rows = classModules.filter((cm) => cm.module.title !== "Mouse Meadow").map((cm) => {
     const m = cm.module;
     const done = completedModuleIds.has(m.id) || m.progress[0]?.status === "COMPLETED";
     const started = m.progress.length > 0;
@@ -57,7 +57,6 @@ export default async function Dashboard() {
     return { cm, m, done, started, pct };
   });
 
-  const mouseModule = rows.find(r => r.m.title === "Mouse Meadow" && r.m.topic === "Mouse Skills");
   const pitchModule = isIgniteHer ? rows.find(r => r.m.title === "Elevator Pitch Analysis") : undefined;
   const inProgress = rows.filter((r) => r.started && !r.done).length;
   const completed = rows.filter((r) => r.done).length;
@@ -249,14 +248,6 @@ export default async function Dashboard() {
         </div>
       </section>
 
-      {!isIgniteHer && <section aria-label="Mouse Meadow activities" className="mt-8">
-      <Link href={mouseModule ? "/play/mouse/class" : "/play/mouse"} className="card card-interactive flex items-center gap-4 p-6">
-        <span className="text-4xl">🌻</span>
-        <div><h2 className="text-lg font-semibold">Mouse Meadow</h2><p className="muted mt-1 text-sm">75 mouse-skill challenges, class scores, and a Meadow Explorer badge.</p></div>
-        <span className="ml-auto">→</span>
-      </Link>
-      </section>}
-
       {/* Resources — class-specific links (lib/class-resources.ts) */}
       {resources.length > 0 && (
         <section className="animate-fade-up mt-12" style={{ animationDelay: "0.14s" }}>
@@ -306,7 +297,7 @@ export default async function Dashboard() {
             const allDone = doneCount === total && total > 0;
             const icon = t.rows[0].m.badgeIcon;
             return (
-              <Link key={t.name} href={`/learn/topic/${slugifyTopic(t.name)}`} className="block">
+              <Link key={t.name} href={t.name === "Letter Leaper" ? "/play/letter-leaper" : `/learn/topic/${slugifyTopic(t.name)}`} className="block">
                 <div className="card card-interactive flex h-full flex-col gap-4 p-5">
                   <div className="flex items-center gap-4">
                     <span className="tile flex h-11 w-11 shrink-0 items-center justify-center text-xl">
