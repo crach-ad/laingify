@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
-import { slugifyTopic, moduleTopic } from "@/lib/topics";
+import { slugifyTopic, moduleTopic, dashboardTopicOrder, LETTER_LEAPER_PLAY_PATH } from "@/lib/topics";
 import { classResources } from "@/lib/class-resources";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
@@ -273,7 +273,7 @@ export default async function Dashboard() {
           <span className="mono-label">This term</span>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {topics.map((t) => {
+          {topics.toSorted(dashboardTopicOrder).map((t) => {
             const total = t.rows.length;
             const doneCount = t.rows.filter((r) => r.done).length;
             const startedAny = t.rows.some((r) => r.started);
@@ -281,7 +281,7 @@ export default async function Dashboard() {
             const allDone = doneCount === total && total > 0;
             const icon = t.rows[0].m.badgeIcon;
             return (
-              <Link key={t.name} href={t.name === "Letter Leaper" ? "/play/letter-leaper" : `/learn/topic/${slugifyTopic(t.name)}`} className="block">
+              <Link key={t.name} href={t.name === "Letter Leaper" ? LETTER_LEAPER_PLAY_PATH : `/learn/topic/${slugifyTopic(t.name)}`} className="block">
                 <div className="card card-interactive flex h-full flex-col gap-4 p-5">
                   <div className="flex items-center gap-4">
                     <span className="tile flex h-11 w-11 shrink-0 items-center justify-center text-xl">

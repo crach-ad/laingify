@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireInstructor } from "@/lib/instructor";
 import { loadClassOverviews } from "@/lib/instructor-data";
 import { bandConfig } from "@/lib/bands";
-import { slugifyTopic, moduleTopic } from "@/lib/topics";
+import { slugifyTopic, moduleTopic, dashboardTopicOrder } from "@/lib/topics";
 import { ConsoleHeader, ReviewQueue, RosterList } from "../../ConsoleParts";
 import Insights from "./Insights";
 import Attendance from "./Attendance";
@@ -153,7 +153,7 @@ export default async function ClassPage({
                   <h2 className="text-xl font-semibold tracking-tight">What this class is working through</h2>
                   <p className="muted mt-1.5 text-sm">One tile per component, in the order learners see them — open one for its projects.</p>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    {topics.map((t, ti) => {
+                    {topics.toSorted(dashboardTopicOrder).map((t, ti) => {
                       const n = klass.roster.length;
                       const badges = t.modules.reduce((a, m) => a + m.done, 0);
                       const active = t.modules.reduce((a, m) => a + m.inProgress, 0);

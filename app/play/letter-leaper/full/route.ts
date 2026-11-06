@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 import { practiceContext } from "@/lib/typing-access";
 import { letterLeaperPlay } from "@/lib/letter-leaper-play";
 
-// The dashboard header's Letter Leaper button: straight into the game, full
+// The standalone Letter Leaper module: straight into the game, full
 // page, with the same class settings and tracking as /play/letter-leaper.
 export async function GET(request: Request) {
   await requireLearner();

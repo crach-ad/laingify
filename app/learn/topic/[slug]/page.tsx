@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
-import { slugifyTopic, moduleTopic } from "@/lib/topics";
+import { slugifyTopic, moduleTopic, LETTER_LEAPER_PLAY_PATH } from "@/lib/topics";
 
 // One topic's project list: every module in this content area, in order, with
 // the learner's progress. Projects open the normal tutorial player.
@@ -34,7 +34,7 @@ export default async function TopicPage({
   searchParams: Promise<{ board?: string }>;
 }) {
   const { slug } = await params;
-  if (["keyboard-skills", "keyboarding-skills"].includes(slug)) redirect("/learn/topic/letter-leaper");
+  if (["keyboard-skills", "keyboarding-skills", "letter-leaper"].includes(slug)) redirect(LETTER_LEAPER_PLAY_PATH);
   const { board: boardParam } = await searchParams;
   const { learner, klass } = await requireLearner();
   const band = bandConfig(klass.band);

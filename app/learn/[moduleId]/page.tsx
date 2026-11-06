@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { bandConfig } from "@/lib/bands";
 import { requireLearner } from "@/lib/learner";
 import { evaluateModule } from "@/lib/completion";
-import { slugifyTopic, moduleTopic } from "@/lib/topics";
+import { slugifyTopic, moduleTopic, LETTER_LEAPER_PLAY_PATH } from "@/lib/topics";
 import SpriteChat from "../SpriteChat";
 import ModuleWorkspace from "./ModuleWorkspace";
 import Lesson from "./Lesson";
@@ -36,6 +36,7 @@ export default async function ModulePage({
 
   const module = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!module) notFound();
+  if (module.title === "Letter Leaper: Moonbound") redirect(LETTER_LEAPER_PLAY_PATH);
   if (["Bebras Juniors 2025", "Bebras Castors 2025", "Bebras Juniors 2024", "Bebras Castors 2024"].includes(module.title) && module.topic === "Computational Thinking") redirect(`/play/bebras?set=${setForTitle(module.title)}`);
 
   // First visit starts the clock; never downgrade a completed module.
