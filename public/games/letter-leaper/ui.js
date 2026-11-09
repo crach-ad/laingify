@@ -1,5 +1,5 @@
 'use strict';
-// The HTML around the game: stats bar, prompt, on-screen keyboard, intro
+// The HTML around the game: stats bar, prompt, keyboard guide, intro
 // form, pause/moon/finish dialogs, keyboard capture, preferences, and loading
 // a scene renderer. Everything a student or teacher operates is ordinary,
 // accessible HTML; the canvas only illustrates. Rules live in core.js.
@@ -35,7 +35,7 @@ function letterFont() { return prefs.letterCase === 'lower' ? '"Atkinson Hyperle
 function paintCase() {
   $('letter-case').value = prefs.letterCase;
   document.body.dataset.case = prefs.letterCase;
-  for (const k of document.querySelectorAll('.key')) { k.textContent = k.dataset.key === ' ' ? 'Space' : letterCase(k.dataset.key); k.setAttribute('aria-label', 'Type ' + (k.dataset.key === ' ' ? 'space' : k.dataset.key === '.' ? 'full stop' : letterCase(k.dataset.key))); }
+  for (const k of document.querySelectorAll('.key')) { k.textContent = k.dataset.key === ' ' ? 'Space' : letterCase(k.dataset.key); k.setAttribute('aria-label', 'Key ' + (k.dataset.key === ' ' ? 'space' : k.dataset.key === '.' ? 'full stop' : letterCase(k.dataset.key))); }
   const rows = { all: 'All letters', home: 'Home row · ' + letterCase('asdfghjkl'), top: 'Top row · ' + letterCase('qwerty'), bottom: 'Bottom row · ' + letterCase('zxcvbnm') };
   for (const o of $('letter-set').options) o.textContent = rows[o.value];
   document.querySelector('.word-examples').textContent = ['go', 'up', 'cat', 'sun'].map(letterCase).join(' · ');
@@ -93,7 +93,6 @@ function stats() {
   $('biome').textContent = String(terrains.indexOf(terrain) + 1).padStart(2, '0') + ' / ' + terrain.name;
   document.querySelectorAll('.key').forEach(k => {
     k.classList.toggle('active', state === 'playing' && !jumping && pace === 'easy' && k.dataset.key === target[typed]);
-    k.disabled = state !== 'playing' || jumping;
   });
   $('prompt').innerHTML = state === 'playing' ? `Type <b>${targetMarkup()}</b> to leap.`
     : state === 'paused' ? 'Take your time.'
@@ -199,9 +198,8 @@ for (const row of ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', ' .']) {
   const el = document.createElement('div');
   el.className = 'key-row';
   for (const key of row) {
-    const btn = document.createElement('button');
+    const btn = document.createElement('span');
     btn.className = 'key'; btn.dataset.key = key; if (key === ' ' || key === '.') btn.classList.add('expert-key'); if (key === ' ') btn.classList.add('space-key');
-    btn.addEventListener('click', () => { input(key, 'screen'); btn.blur(); });
     el.append(btn);
   }
   $('keyboard').append(el);
@@ -304,7 +302,7 @@ startRenderer(renderer);
 function paintPace() {
   const p = paceOf($('pace').value);
   $('pace-rule').textContent = PACE_TEXT[p];
-  document.querySelector('.start-note').textContent = p === 'expert' ? '100 leaps from words to sentences · Keyboard or tap to play' : '100 leaps to the moon · 50 more to the stars · Keyboard or tap to play';
+  document.querySelector('.start-note').textContent = p === 'expert' ? '100 leaps from words to sentences · Type on your keyboard' : '100 leaps to the moon · 50 more to the stars · Type on your keyboard';
   document.body.dataset.pace = p;
   // Words-only practice and hard climbs don't use the letter rows.
   $('letter-set').closest('label').hidden = scope === 'words' || p === 'hard' || p === 'expert';
