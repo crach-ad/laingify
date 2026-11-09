@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {FLIGHT_PATTERNS,zoneAt,earnedMissions,validFlightResult} from '../lib/ember-jet.ts';
+import {flightStep,beamCollision} from '../lib/dragon-flight.ts';
+test('three zones, twelve unique patterns, persistent mission thresholds',()=>{assert.deepEqual([zoneAt(0),zoneAt(399),zoneAt(400),zoneAt(899),zoneAt(900)],[0,0,1,1,2]);assert.equal(new Set(FLIGHT_PATTERNS.map(p=>p.name)).size,12);assert.equal(earnedMissions({distance:1500,apples:60,combo:12}).length,9);});
+test('every pattern leaves a generous altitude corridor through a full rotation',()=>{for(const p of FLIGHT_PATTERNS)for(let t=0;t<10;t+=.25){const safe=[];for(let y=1;y<=9;y+=.25)if(p.beams.every(b=>{for(let x=-5;x<=5;x+=.25)if(beamCollision(x,y,b.offset,b.y,b.angle+t*b.spin,b.length,.9))return false;return true;}))safe.push(y);assert.ok(safe.length>=6,p.name);}});
+test('long physics simulation stays finite and bounded at different frame rates',()=>{for(const dt of [1/30,1/60,1/120]){let s={y:4,velocity:0};for(let i=0;i<600/dt;i++){s=flightStep(s.y,s.velocity,s.y<4,dt);assert.ok(Number.isFinite(s.y)&&s.y>=.85&&s.y<=9.1);}}});
+test('server bounds reject impossible distance, coins, time and score',()=>{const s={distance:100,apples:12,combo:6,score:850,elapsed:15000};assert.ok(validFlightResult(s,'cruise',16000));for(const change of [{distance:100000},{apples:999},{elapsed:999999},{combo:13},{score:1}])assert.equal(validFlightResult({...s,...change},'cruise',16000),false);});

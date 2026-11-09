@@ -36,6 +36,7 @@ export default async function ModulePage({
 
   const module = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!module) notFound();
+  if (module.title === "Ember Jet: Hangar Escape") redirect("/play/dragon-drop");
   if (module.title === "Letter Leaper: Moonbound") redirect(LETTER_LEAPER_PLAY_PATH);
   if (["Bebras Juniors 2025", "Bebras Castors 2025", "Bebras Juniors 2024", "Bebras Castors 2024"].includes(module.title) && module.topic === "Computational Thinking") redirect(`/play/bebras?set=${setForTitle(module.title)}`);
 

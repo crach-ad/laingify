@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validRunnerScore,runnerPoints,rankRunnerScores,runnerRow} from '../lib/dragon-runner.ts';
+const score={id:'runner-test-001',playerId:'player-test-001',nickname:'SkyRunner',mode:'cruise',distance:500,apples:10,combo:5,score:1125,elapsed:25000};
+test('validates runner results and recomputed scores',()=>{assert.ok(validRunnerScore(score));for(const change of [{score:999999},{distance:-1},{apples:1.5},{combo:11},{elapsed:0},{mode:'explore'},{playerId:undefined},{nickname:'<script>'}])assert.equal(validRunnerScore({...score,...change}),false);assert.equal(runnerPoints(500,10,5),1125);});
+test('best score per player; distance and time break ties',()=>{const rows=[score,{...score,id:'second-run',score:1200},{...score,playerId:'player-test-002',score:1200,distance:600},{...score,playerId:'player-test-003',score:1200,distance:600,elapsed:20000}];assert.deepEqual(rankRunnerScores(rows).map(r=>r.playerId),['player-test-003','player-test-002','player-test-001']);});
+test('every obstacle pattern has a safe lane; introductory rows have one obstacle',()=>{for(let row=0;row<100;row++)for(const random of [0,.2,.4,.8,.999]){const pattern=runnerRow(row,random);assert.ok(!pattern.blocked.includes(pattern.safe));assert.ok(pattern.blocked.length>=1&&pattern.blocked.length<=2);if(row<5)assert.equal(pattern.blocked.length,1);}});
