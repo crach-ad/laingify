@@ -40,7 +40,7 @@ function JoinForm() {
   const [klass, setKlass] = useState<ClassInfo | null>(null);
   const [roster, setRoster] = useState<RosterName[]>([]);
   const [learnerId, setLearnerId] = useState("");
-  const [pin, setPin] = useState("");
+  const [registering, setRegistering] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | boolean>(!!linked);
@@ -111,7 +111,7 @@ function JoinForm() {
       const res = await fetch("/api/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classCode: code.trim(), learnerId, pin }),
+        body: JSON.stringify({ classCode: code.trim(), learnerId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not sign you in.");
@@ -152,7 +152,7 @@ function JoinForm() {
             {busy ? "Looking…" : "Find my class"}
           </button>
         </form>
-      ) : klass.selfRegister ? (
+      ) : klass.selfRegister && registering ? (
         <div className="animate-fade-up card flex flex-col gap-5 p-6">
           <div className="tile p-4 text-center">
             <p className="mono-label">{klass.orgName}</p>
@@ -202,8 +202,7 @@ function JoinForm() {
           <button
             type="button"
             onClick={() => {
-              setKlass(null);
-              setRoster([]);
+              setRegistering(false);
               setName("");
               setError("");
             }}
@@ -247,18 +246,7 @@ function JoinForm() {
             {roster.length === 0 && <p className="text-sm muted">No one is on this roster yet.</p>}
           </div>
 
-          {klass.minAuthTier >= 1 && (
-            <label className="flex flex-col gap-2">
-              <span className="mono-label">Your PIN</span>
-              <input
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                inputMode="numeric"
-                placeholder="••••"
-                className="field w-36 px-4 py-3 text-center text-lg tracking-[0.5em]"
-              />
-            </label>
-          )}
+          {klass.selfRegister && <button type="button" onClick={() => { setRegistering(true); setError(""); }} className="btn-ghost h-12 text-sm">My name is not here — add my name</button>}
 
           {error && <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
 
@@ -269,7 +257,7 @@ function JoinForm() {
                 setKlass(null);
                 setRoster([]);
                 setLearnerId("");
-                setPin("");
+                setRegistering(false);
                 setError("");
               }}
               className="muted rounded-xl px-4 py-3 font-medium transition-colors hover:text-[var(--text)]"

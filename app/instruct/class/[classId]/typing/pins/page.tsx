@@ -4,15 +4,14 @@ import { prisma } from "@/lib/db";
 import { requireInstructorClass } from "@/lib/typing-access";
 import PrintButton from "@/components/PrintButton";
 
-// Printable sign-in cards: class code, entry link, and each student's PIN.
-// PINs are shown only to instructors who can see this class.
+// Printable sign-in cards: class code, entry link, and student name.
 export default async function TypingPinCards({ params }: { params: Promise<{ classId: string }> }) {
   const { classId } = await params;
   const ctx = await requireInstructorClass(classId);
   const { klass } = ctx;
   const roster = await prisma.rosterEntry.findMany({
     where: { classId },
-    include: { learner: { select: { id: true, displayName: true, pin: true } } },
+    include: { learner: { select: { id: true, displayName: true } } },
     orderBy: { learner: { displayName: "asc" } },
   });
   const h = await headers();
@@ -30,8 +29,7 @@ export default async function TypingPinCards({ params }: { params: Promise<{ cla
       </div>
       <h1 className="mt-6 text-2xl font-semibold tracking-tight">{klass.name} · sign-in cards</h1>
       <p className="muted mt-1 text-sm">
-        Go to <span className="font-medium">{entry}</span>, tap your name, and type your PIN.
-        {klass.minAuthTier < 1 && <span style={{ color: "var(--warn)" }}> PIN sign-in is off for this class — turn it on from the typing page first.</span>}
+        Go to <span className="font-medium">{entry}</span>, and select your name. No PIN is needed.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {roster.map((r) => (
@@ -39,8 +37,7 @@ export default async function TypingPinCards({ params }: { params: Promise<{ cla
             <div className="display text-base font-semibold">{r.learner.displayName}</div>
             <div className="mono-label mt-2">Class code</div>
             <div className="text-lg font-semibold tracking-[0.15em]">{klass.classCode}</div>
-            <div className="mono-label mt-2">PIN</div>
-            <div className="text-2xl font-semibold tracking-[0.3em]" style={{ color: "var(--accent)" }}>{r.learner.pin ?? "—"}</div>
+            <p className="muted mt-2 text-sm">Select your name to sign in.</p>
           </div>
         ))}
       </div>

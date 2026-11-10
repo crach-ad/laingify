@@ -10,7 +10,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/typing/session/
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   // A name-only sign-in proves nothing about who is reading.
-  if (!verifiedSignIn(session)) return NextResponse.json({ error: "Sign in with your PIN." }, { status: 403 });
+  if (!verifiedSignIn(session)) return NextResponse.json({ error: "Sign in to your class again." }, { status: 403 });
   const { sessionId } = await ctx.params;
   const row = await prisma.typingSession.findUnique({ where: { id: sessionId } });
   const onRoster = await prisma.rosterEntry.findUnique({ where: { classId_learnerId: { classId: session.classId, learnerId: session.learnerId } } });

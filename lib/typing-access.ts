@@ -61,7 +61,7 @@ export type PracticeContext = {
   classId: string;
   orgId: string;
   moduleId: string;
-  // False for name-only sign-ins: they can play, but nothing is recorded.
+  // True for recognized student sessions, including name and roster sign-in.
   verified: boolean;
   session: Session;
 };

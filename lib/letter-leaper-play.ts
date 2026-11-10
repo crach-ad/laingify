@@ -6,15 +6,12 @@ import { encodeCfg } from "@/lib/typing-format";
 
 
 // What class play needs: the teacher's practice settings, this learner's own
-// recent progress, and the game's address. Every player on the roster gets the
-// teacher's settings; only verified sign-ins (PIN, NFC tag, or the device they
-// registered on — see lib/session.ts) also get tracking credentials, so
-// name-only players follow the practice but nothing is recorded or shown.
+// recent progress, and the game's address. Recognized student sessions,
+// including name and roster sign-ins, receive tracking credentials.
 export async function letterLeaperPlay(ctx: PracticeContext) {
   const settings = await teacherSettings(ctx.classId);
 
-  // Progress is only shown to verified sign-ins: anyone can type a classmate's
-  // name in an open class.
+  // Progress belongs to the learner and class in the signed session.
   const rows = !ctx.verified ? [] : (
     await prisma.typingSession.findMany({
       where: { learnerId: ctx.learnerId, classId: ctx.classId },

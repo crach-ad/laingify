@@ -3,9 +3,8 @@
 // Both cookies are HMAC-signed (lib/signed-token.ts), so their ids can't be
 // forged or edited client-side. Unsigned cookies from before signing are
 // ignored — those users sign in once more. The learner session also records
-// how the learner signed in: name-only sign-in (open classes) proves less than
-// a PIN or NFC tag, and Letter Leaper only saves progress for verified methods
-// (see verifiedSignIn).
+// how the learner signed in. Class-code/name and roster sign-ins are valid
+// student sessions and can save progress, just like NFC and registration.
 
 import { cookies } from "next/headers";
 import { signToken, verifyToken } from "@/lib/signed-token";
@@ -13,20 +12,21 @@ import { signToken, verifyToken } from "@/lib/signed-token";
 const COOKIE = "ll_session";
 const INSTRUCTOR_COOKIE = "ll_instructor";
 
-// pin      — roster pick + matching PIN (tier 1+)
+// pin      — legacy session issued before PIN-free student sign-in
 // nfc      — per-enrollment NFC tag token
 // register — created their profile on this device (open classes)
 // name     — typed an existing name (open classes): anyone can do this
-// roster   — picked a name from the roster with no PIN (tier 2 placeholder)
+// roster   — selected a name on the class roster
 export type SignInMethod = "pin" | "nfc" | "register" | "name" | "roster";
 export type Session = { learnerId: string; classId: string; via?: SignInMethod };
 export type InstructorSession = { instructorId: string };
 
 const COOKIE_OPTIONS = { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 } as const;
 
-// A sign-in that a display name alone can't produce.
+// Recognized student sign-in eligible to save progress. Callers still check
+// roster membership and assignment; the session cookie remains HMAC-signed.
 export function verifiedSignIn(session: Session | null): boolean {
-  return !!session && (session.via === "pin" || session.via === "nfc" || session.via === "register");
+  return !!session && (session.via === "pin" || session.via === "nfc" || session.via === "register" || session.via === "name" || session.via === "roster");
 }
 
 export async function getSession(): Promise<Session | null> {

@@ -2,14 +2,13 @@ import { NextResponse } from "next/server";
 import { getInstructor } from "@/lib/instructor";
 import { instructorClass } from "@/lib/typing-access";
 import { BANDS } from "@/lib/bands";
-import { addStudents, assignLetterLeaper, createTypingClass, enablePins, parseNames, parseSettings, saveSettings } from "@/lib/typing-admin";
+import { addStudents, assignLetterLeaper, createTypingClass, parseNames, parseSettings, saveSettings } from "@/lib/typing-admin";
 import { prisma } from "@/lib/db";
 
 // Instructor actions for Letter Leaper classrooms, one POST with an `action`:
 //   create-class  { orgId, name, band, students, settings }
 //   assign        { classId }                — enable in an existing class
 //   settings      { classId, settings }
-//   enable-pins   { classId }
 //   add-students  { classId, students }
 // Every class action re-checks that the class is in one of this instructor's orgs.
 const fail = (status: number, error: string) => NextResponse.json({ error }, { status });
@@ -59,8 +58,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
     case "enable-pins":
-      await enablePins(klass.id);
-      return NextResponse.json({ ok: true });
+      return fail(400, "Student PINs are no longer used. Students sign in with their class code and name.");
     case "add-students": {
       const result = await addStudents(klass, body.students);
       return result.ok ? NextResponse.json(result) : fail(400, result.error);

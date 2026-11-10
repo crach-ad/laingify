@@ -42,9 +42,9 @@ async function teacher(email, pin) {
   assert.equal(r.status, 200, r.text);
   return c;
 }
-async function student(classCode, learnerId, pin) {
+async function student(classCode, learnerId) {
   const c = client();
-  const r = await c.call('/api/join', { method: 'POST', body: { classCode, learnerId, pin } });
+  const r = await c.call('/api/join', { method: 'POST', body: { classCode, learnerId } });
   assert.equal(r.status, 200, r.text);
   return c;
 }
@@ -81,7 +81,7 @@ after(async () => { await prisma?.$disconnect(); });
 
 let klass, ann, bo, annC, boC, annTicket, boTicket, teacherAC;
 
-it('a teacher creates a classroom with Letter Leaper assigned and PINs issued', async () => {
+it('a teacher creates a classroom with Letter Leaper assigned and a name-selection roster', async () => {
   teacherAC = await teacher(teacherA.email, PIN_A);
   const r = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: {
     action: 'create-class', orgId: orgA.id, name: `Typing ${tag}`, band: 'YOUTH', students: 'Ann T\nBo T',
@@ -92,7 +92,7 @@ it('a teacher creates a classroom with Letter Leaper assigned and PINs issued', 
   assert.equal(klass.minAuthTier, 1);
   assert.equal(klass.modules[0].module.title, 'Letter Leaper: Moonbound');
   assert.equal(klass.typingAssignment.pace, 'medium');
-  assert.ok(klass.roster.every((r) => /^\d{4}$/.test(r.learner.pin)));
+  assert.ok(klass.roster.every((r) => r.learner.pin === null));
   ann = klass.roster.find((r) => r.learner.displayName === 'Ann T').learner;
   bo = klass.roster.find((r) => r.learner.displayName === 'Bo T').learner;
   // Another org's instructor cannot create classes in org A.
@@ -101,7 +101,7 @@ it('a teacher creates a classroom with Letter Leaper assigned and PINs issued', 
   assert.equal(denied.status, 403);
 });
 
-it('students sign in with PINs and receive a practice ticket with the teacher settings', async () => {
+it('students sign in by selecting their names and receive a practice ticket with the teacher settings', async () => {
   annC = await student(klass.classCode, ann.id, ann.pin);
   boC = await student(klass.classCode, bo.id, bo.pin);
   const cfgA = await ticketFor(annC);
@@ -218,36 +218,23 @@ it('forged or legacy unsigned cookies are ignored', async () => {
   assert.equal(r.json.code, 'signed-out');
 });
 
-it('name-only sign-in can play but does not record; PINs fix it', async () => {
+it('open-class name sign-in saves progress and PINs cannot be re-enabled', async () => {
   const open = await prisma.class.create({ data: { orgId: orgA.id, name: `Open ${tag}`, classCode: `OPEN-${tag}`.toUpperCase(), minAuthTier: 0 } });
-  const assign = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'assign' } });
-  assert.equal(assign.status, 200, assign.text);
-  // Registers on this device (verified), then a classmate signs in by typing the same name.
+  assert.equal((await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'assign' } })).status, 200);
   const reg = client();
   assert.equal((await reg.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Cy Open', create: true } })).status, 200);
-  const regCfg = await ticketFor(reg);
-  assert.ok(regCfg, 'registering on this device is a verified sign-in');
-  const impostor = client();
-  assert.equal((await impostor.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Cy Open' } })).status, 200);
-  const impostorCfg = await ticketFor(impostor);
-  assert.deepEqual(Object.keys(impostorCfg), ['settings'], 'a name-only sign-in gets the practice settings but no ticket, key, or resume');
-  const sneaky = await upload(impostor, batch(regCfg.ticket, session(), events([['session_start', { leap: 0, resumed: false }]])));
-  assert.equal(sneaky.status, 403, 'a stolen ticket does not help a name-only sign-in');
-  // Teacher turns on PINs: the class becomes PIN-only and everyone has one.
-  assert.equal((await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'enable-pins' } })).status, 200);
-  const after = await prisma.class.findUnique({ where: { id: open.id }, include: { roster: { include: { learner: true } } } });
-  assert.equal(after.minAuthTier, 1);
-  assert.ok(after.roster.every((r) => r.learner.pin));
-  const byName = await client().call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Cy Open' } });
-  assert.notEqual(byName.status, 200, 'name-only sign-in is no longer accepted');
+  const returning = client();
+  assert.equal((await returning.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Cy Open' } })).status, 200);
+  const cfg = await ticketFor(returning);
+  assert.ok(cfg.ticket && cfg.k);
+  assert.equal((await upload(returning, batch(cfg.ticket, session(), events([['session_start', { leap: 0, resumed: false }]])))).status, 200);
+  assert.equal((await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'enable-pins' } })).status, 400);
 });
 
-it('repeated wrong PINs lock that learner out for a while', async () => {
-  const c = client();
-  const wrong = ann.pin === '0000' ? '1111' : '0000';
-  for (let i = 0; i < 5; i++) assert.equal((await c.call('/api/join', { method: 'POST', body: { classCode: klass.classCode, learnerId: ann.id, pin: wrong } })).status, 401);
-  const locked = await c.call('/api/join', { method: 'POST', body: { classCode: klass.classCode, learnerId: ann.id, pin: ann.pin } });
-  assert.equal(locked.status, 429);
+it('old PIN failures do not lock students out of name selection', async () => {
+  for (let i = 0; i < 6; i++) await prisma.signInFailure.create({ data: { learnerId: ann.id } });
+  const c = await student(klass.classCode, ann.id);
+  assert.ok((await ticketFor(c)).ticket);
   await prisma.signInFailure.deleteMany({ where: { learnerId: ann.id } });
 });
 
@@ -277,17 +264,7 @@ it('a resumed session reports its real last-activity time, not start + session c
   assert.match(page.text, /in progress/);
 });
 
-it('parallel PIN guesses cannot get past the lockout', async () => {
-  const wrong = bo.pin === '0000' ? '1111' : '0000';
-  const tries = await Promise.all(Array.from({ length: 15 }, () =>
-    client().call('/api/join', { method: 'POST', body: { classCode: klass.classCode, learnerId: bo.id, pin: wrong } })));
-  const checked = tries.filter((r) => r.status === 401).length;
-  assert.ok(checked <= 5, `${checked} guesses were checked`);
-  assert.equal(tries.filter((r) => r.status === 429).length, 15 - checked);
-  await prisma.signInFailure.deleteMany({ where: { learnerId: bo.id } });
-});
-
-it('a name-only sign-in cannot read the typing record it signed in as', async () => {
+it('a returning name-selection session can read its own typing progress', async () => {
   const open = await prisma.class.findFirst({ where: { classCode: `OPEN-${tag}`.toUpperCase() } });
   await prisma.class.update({ where: { id: open.id }, data: { minAuthTier: 0 } });
   const reg = client();
@@ -297,8 +274,7 @@ it('a name-only sign-in cannot read the typing record it signed in as', async ()
   assert.equal((await upload(reg, batch(cfg.ticket, s, events([['session_start', { leap: 0, resumed: false }]])))).status, 200);
   const byName = client();
   assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Dee Open' } })).status, 200);
-  assert.equal((await byName.call(`/api/typing/session/${s.id}`)).status, 403);
-  assert.doesNotMatch((await byName.call('/play/letter-leaper')).text, /reached leap/);
+  assert.equal((await byName.call(`/api/typing/session/${s.id}`)).status, 200);
   assert.equal((await reg.call(`/api/typing/session/${s.id}`)).status, 200);
 });
 
@@ -311,7 +287,7 @@ async function cfgOf(c) {
   return { page, cfg: m ? JSON.parse(Buffer.from(m[1], 'base64url').toString()) : null };
 }
 
-it('name-only players get the teacher settings but no tracking credentials', async () => {
+it('name-only players receive teacher settings and tracking credentials', async () => {
   const open = await prisma.class.create({ data: { orgId: orgA.id, name: `Words ${tag}`, classCode: `WRD-${tag}`.toUpperCase(), minAuthTier: 0 } });
   const set = await teacherAC.call('/api/instruct/typing', { method: 'POST', body: { classId: open.id, action: 'settings', settings: { letterSet: 'top', pace: 'hard', scope: 'words' } } });
   assert.equal(set.status, 200, set.text);
@@ -321,20 +297,19 @@ it('name-only players get the teacher settings but no tracking credentials', asy
   assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: open.classCode, name: 'Eli Words' } })).status, 200);
 
   const nameOnly = await cfgOf(byName);
-  assert.deepEqual(nameOnly.cfg, { settings: { letterSet: 'top', pace: 'hard', scope: 'words' } }, 'settings only: no ticket, key, or resume');
-  assert.match(nameOnly.page.text, /Words to the stars \(50\)/);
-  assert.match(nameOnly.page.text, /set by your teacher/);
-  assert.match(nameOnly.page.text, /Sign in with your PIN to see your saved progress/);
+  assert.deepEqual(nameOnly.cfg.settings, { letterSet: 'top', pace: 'hard', scope: 'words' });
+  assert.ok(nameOnly.cfg.ticket && nameOnly.cfg.k);
+  assert.doesNotMatch(nameOnly.page.text, /Sign in with your PIN/);
 
   const verified = await cfgOf(reg);
   assert.deepEqual(verified.cfg.settings, { letterSet: 'top', pace: 'hard', scope: 'words' });
   assert.ok(verified.cfg.ticket && verified.cfg.k, 'verified players keep recording');
-  // The name-only player can't use the verified player's ticket either.
+  // Both sessions belong to the same learner and class.
   const r = await upload(byName, batch(verified.cfg.ticket, session({ letterSet: 'top', pace: 'hard', scope: 'words' }), events([['session_start', { leap: 100, resumed: false }]])));
-  assert.equal(r.status, 403);
+  assert.equal(r.status, 200);
 });
 
-it('classes without teacher settings let players choose (no config for name-only players)', async () => {
+it('classes without teacher settings let players choose and save progress', async () => {
   const free = await prisma.class.create({ data: { orgId: orgA.id, name: `Free ${tag}`, classCode: `FRE-${tag}`.toUpperCase(), minAuthTier: 0 } });
   const mod = await prisma.module.findFirst({ where: { orgId: orgA.id, title: 'Letter Leaper: Moonbound' } });
   await prisma.classModule.create({ data: { classId: free.id, moduleId: mod.id } }); // assigned the Windsor way: no TypingAssignment
@@ -343,8 +318,8 @@ it('classes without teacher settings let players choose (no config for name-only
   const byName = client();
   assert.equal((await byName.call('/api/join', { method: 'POST', body: { classCode: free.classCode, name: 'Fay Free' } })).status, 200);
   const nameOnly = await cfgOf(byName);
-  assert.equal(nameOnly.cfg, null, 'unchanged from before: the game alone, players choose');
-  assert.match(nameOnly.page.text, /Choose your letters and difficulty in the game/);
+  assert.equal(nameOnly.cfg.settings, null);
+  assert.ok(nameOnly.cfg.ticket);
   const verified = await cfgOf(reg);
   assert.equal(verified.cfg.settings, null);
   assert.ok(verified.cfg.ticket);

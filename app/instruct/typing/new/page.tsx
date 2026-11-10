@@ -16,7 +16,7 @@ export default async function NewTypingClassPage() {
         <div className="overline mb-3">Keyboard skills</div>
         <h1 className="text-3xl font-semibold tracking-tight">New typing classroom</h1>
         <p className="muted mt-1.5 text-sm">
-          Creates a class with Letter Leaper assigned, a class code, and a 4-digit PIN for each student, so every practice session is
+          Creates a class with Letter Leaper assigned, a class code, and a name-selection roster, so every practice session is
           saved to that student&apos;s record. To add Letter Leaper to an existing class instead, open the class and choose ⌨️ Typing.
         </p>
       </section>

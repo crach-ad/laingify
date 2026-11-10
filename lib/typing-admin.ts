@@ -35,7 +35,6 @@ export function parseNames(text: unknown, existing: string[] = []): { ok: true; 
   return { ok: true, names };
 }
 
-export const newPin = () => String(randomInt(0, 10_000)).padStart(4, "0");
 
 async function newClassCode(tx: Tx) {
   for (let i = 0; i < 20; i++) {
@@ -76,14 +75,14 @@ async function assignInTx(tx: Tx, classId: string, orgId: string, teacher: strin
 
 async function addLearners(tx: Tx, classId: string, band: string, names: string[]) {
   for (const displayName of names) {
-    await tx.learner.create({ data: { displayName, band, pin: newPin(), roster: { create: { classId } } } });
+    await tx.learner.create({ data: { displayName, band, roster: { create: { classId } } } });
   }
 }
 
 export async function createTypingClass(input: { orgId: string; name: string; band: string; names: string[]; settings: PracticeSettings; teacher: string }) {
   return prisma.$transaction(async (tx) => {
     const klass = await tx.class.create({
-      // PIN sign-in from the start, so every student's progress is recorded.
+      // Teacher-managed roster; students select their name without a PIN.
       data: { orgId: input.orgId, name: input.name, band: input.band, classCode: await newClassCode(tx), minAuthTier: 1 },
     });
     await assignInTx(tx, klass.id, input.orgId, input.teacher, input.settings);
@@ -98,16 +97,6 @@ export async function assignLetterLeaper(klass: { id: string; orgId: string }, t
 
 export async function saveSettings(classId: string, settings: PracticeSettings) {
   return prisma.typingAssignment.update({ where: { classId }, data: settings });
-}
-
-// Switch an open (name-only) class to PIN sign-in: give every learner without
-// a PIN a new one. Self-registration stops; the teacher adds new students.
-export async function enablePins(classId: string) {
-  return prisma.$transaction(async (tx) => {
-    const roster = await tx.rosterEntry.findMany({ where: { classId }, include: { learner: { select: { id: true, pin: true } } } });
-    for (const r of roster) if (!r.learner.pin) await tx.learner.update({ where: { id: r.learner.id }, data: { pin: newPin() } });
-    await tx.class.update({ where: { id: classId }, data: { minAuthTier: 1 } });
-  }, { timeout: 30_000 });
 }
 
 export async function addStudents(klass: { id: string; band: string }, text: unknown) {

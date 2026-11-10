@@ -84,7 +84,6 @@ export default function TypingSetup(props: {
     );
   }
 
-  const pinsOn = props.minAuthTier >= 1;
   return (
     <div className="mt-6 grid gap-3 lg:grid-cols-2">
       <div className="card p-5">
@@ -107,23 +106,7 @@ export default function TypingSetup(props: {
           Class code <span className="display font-semibold" style={{ color: "var(--accent)" }}>{props.classCode}</span> · entry link{" "}
           <Link href={props.entryPath} className="underline">{props.entryPath}</Link>
         </p>
-        {pinsOn ? (
-          <p className="muted mt-2 text-sm">
-            PIN sign-in is on, so every student&apos;s practice is saved to their record.{" "}
-            {props.withoutPin > 0 && <span style={{ color: "var(--warn)" }}>{props.withoutPin} student(s) have no PIN yet. </span>}
-            <Link href={`/instruct/class/${props.classId}/typing/pins`} className="underline">Print PIN cards</Link>
-          </p>
-        ) : (
-          <>
-            <p className="mt-2 text-sm" style={{ color: "var(--warn)" }}>
-              This class signs in by name only, so typing progress isn&apos;t saved — anyone could type a classmate&apos;s name.
-            </p>
-            <p className="muted mt-1 text-xs">Turning on PINs gives each student a 4-digit PIN. Students then pick their name and enter their PIN; new students are added by you below instead of self-registering. Existing work is unchanged.</p>
-            <button disabled={!!busy} onClick={() => run("pins", { action: "enable-pins" }, "PIN sign-in is on. Print the PIN cards for your students.")} className="btn-primary mt-3 h-10 px-4 text-sm">
-              {busy === "pins" ? "Turning on…" : "Turn on PIN sign-in"}
-            </button>
-          </>
-        )}
+        <p className="muted mt-2 text-sm">Students enter the class code and select their name. No PIN is needed, and their practice is saved. <Link href={`/instruct/class/${props.classId}/typing/pins`} className="underline">Print sign-in cards</Link></p>
         <label className="mt-4 flex flex-col gap-1">
           <span className="mono-label">Add students (one name per line)</span>
           <textarea value={students} onChange={(e) => setStudents(e.target.value)} rows={3} className="field px-3 py-2 text-sm" placeholder={"Maya B\nLeo K"} />
@@ -131,7 +114,7 @@ export default function TypingSetup(props: {
         <button
           disabled={!!busy || !students.trim()}
           onClick={async () => {
-            if (await run("add", { action: "add-students", students }, "Students added — they each have a PIN.")) setStudents("");
+            if (await run("add", { action: "add-students", students }, "Students added — they can select their names to sign in.")) setStudents("");
           }}
           className="btn-ghost mt-2 h-10 px-4 text-sm"
         >
