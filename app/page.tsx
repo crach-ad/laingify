@@ -51,43 +51,6 @@ export default async function Home() {
           <span>📖 Portfolios built automatically</span>
         </div>
 
-        {/* Free resources — playable without an account */}
-        <section className="mt-20 w-full max-w-3xl">
-          <div className="overline mb-3">Free resources · no account needed</div>
-          <div className="grid gap-4 text-left sm:grid-cols-1">
-            <Link href="/play/mouse" className="card card-interactive flex items-center gap-5 p-6">
-              <span className="text-4xl">🌻</span>
-              <span><span className="display block text-lg font-semibold">Mouse Meadow</span><span className="muted mt-1 block text-sm">75 playful levels of pointing, clicking, and drag-and-drop puzzles. Play free or join your class for scores, progress, and a Mouse Skills module.</span></span>
-              <span className="ml-auto">→</span>
-            </Link>
-            <Link href="/play/blocks" className="block">
-              <div className="card card-interactive flex items-center gap-5 p-6">
-                <span className="tile flex h-14 w-14 shrink-0 items-center justify-center text-3xl">🧩</span>
-                <span className="min-w-0 flex-1">
-                  <span className="display block text-lg font-semibold">Blockly Maze</span>
-                  <span className="muted mt-1 block text-sm">
-                    Program a robot through a maze with drag-and-drop code blocks — sequences, turns, and your
-                    first loop. Three levels, right in the browser.
-                  </span>
-                </span>
-                <span className="btn-ghost hidden h-11 shrink-0 items-center px-5 text-sm sm:flex">Play →</span>
-              </div>
-            </Link>
-            <Link href="/play/typing" className="block">
-              <div className="card card-interactive flex items-center gap-5 p-6">
-                <span className="tile flex h-14 w-14 shrink-0 items-center justify-center text-3xl">🐒</span>
-                <span className="min-w-0 flex-1">
-                  <span className="display block text-lg font-semibold">Letter Leaper</span>
-                  <span className="muted mt-1 block text-sm">
-                    Help Milo leap through six terrains — 100 letters to the moon, then 50 words to the
-                    stars. Typing practice for brave little fingers.
-                  </span>
-                </span>
-                <span className="btn-ghost hidden h-11 shrink-0 items-center px-5 text-sm sm:flex">Start typing →</span>
-              </div>
-            </Link>
-          </div>
-        </section>
       </div>
     </main>
   );
