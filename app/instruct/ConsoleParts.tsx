@@ -3,7 +3,6 @@
 
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import LogoutButton from "./LogoutButton";
 import type { QueueItem, RosterRow } from "@/lib/instructor-data";
 
 export function ConsoleHeader({ orgLabel, instructorName }: { orgLabel: string; instructorName: string }) {
@@ -22,7 +21,6 @@ export function ConsoleHeader({ orgLabel, instructorName }: { orgLabel: string; 
         <span className="text-sm font-medium" style={{ color: "var(--body)" }}>
           {instructorName}
         </span>
-        <LogoutButton />
       </div>
     </header>
   );

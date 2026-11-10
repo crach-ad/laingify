@@ -7,7 +7,6 @@ import { classResources } from "@/lib/class-resources";
 import Logo from "@/components/Logo";
 import SpriteChat from "./SpriteChat";
 import SpriteCustomizer from "./SpriteCustomizer";
-import LogoutButton from "./LogoutButton";
 import PhotoCapture from "./PhotoCapture";
 
 // Vaulted for now: the selfie prompt and the Sprite customizer card. Flip to
@@ -110,7 +109,6 @@ export default async function Dashboard() {
               {learner.displayName}
             </span>
           </div>
-          <LogoutButton />
         </div>
       </header>
 
