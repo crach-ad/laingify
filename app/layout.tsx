@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "../public/session-bar.css";
+import SessionBar from "@/components/SessionBar";
 
 const grotesk = Space_Grotesk({
   variable: "--font-grotesk",
@@ -35,7 +37,7 @@ export default function RootLayout({
       lang="en"
       className={`dark ${grotesk.variable} ${jakarta.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><SessionBar />{children}</body>
     </html>
   );
 }
