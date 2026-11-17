@@ -5,6 +5,7 @@ import { requireInstructor } from "@/lib/instructor";
 import { evaluateModule } from "@/lib/completion";
 import CriterionDecision from "./CriterionDecision";
 import { authorizedRewriteClass } from "@/lib/reflection-rewrite";
+import DeletePhoto from "./DeletePhoto";
 import ReopenReflection from "./ReopenReflection";
 import ReplyBox from "./ReplyBox";
 
@@ -212,6 +213,7 @@ export default async function ReviewPage({
                   </a>
                 )}
                 {e.caption && <p className="muted mt-1 text-[13px]">{e.caption}</p>}
+                {rewriteClass && e.type === "PHOTO" && <DeletePhoto learnerId={learnerId} moduleId={moduleId} evidenceId={e.id} />}
 
               </div>
             </div>

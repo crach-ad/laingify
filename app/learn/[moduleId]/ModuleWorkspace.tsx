@@ -302,7 +302,7 @@ export default function ModuleWorkspace({
       </section>
 
       {/* Written answer + auto-feedback */}
-      {(hasTextCriteria || rewriteId) && (
+      {(allowReflectionFormats || hasTextCriteria || rewriteId) && (
         <section>
           <h2 className="text-lg font-semibold">{rewriteId ? "Rewrite your reflection" : "Show what you know"}</h2>
           <p className="muted text-sm">Record or type your reflection.</p>

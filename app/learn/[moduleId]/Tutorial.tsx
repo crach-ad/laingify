@@ -572,16 +572,17 @@ export default function Tutorial({
   const initiallyDone = new Set(
     initialEvidence.filter((e) => e.criterionId && e.criterionId !== resetCriterionId).map((e) => e.criterionId as string),
   );
+  const latestCheckpointEvidence = [...new Map(initialEvidence.filter(e => e.criterionId).map(e => [e.criterionId, e])).values()];
   const savedMedia = new Map(
-    initialEvidence
+    latestCheckpointEvidence
       .filter((e) => e.criterionId && e.url)
       .map((e) => [e.criterionId as string, e.url as string]),
   );
   const savedEvidenceIds = new Map(
-    initialEvidence.filter((e) => e.criterionId).map((e) => [e.criterionId as string, e.id]),
+    latestCheckpointEvidence.filter((e) => e.criterionId).map((e) => [e.criterionId as string, e.id]),
   );
   const savedTextAnswers = new Map(
-    initialEvidence
+    latestCheckpointEvidence
       .filter((e) => e.criterionId && e.type === "TEXT" && e.text)
       .map((e) => [e.criterionId as string, e.text as string]),
   );
@@ -650,6 +651,7 @@ export default function Tutorial({
   const [reflection, setReflection] = useState("");
   const [reflectionAudio, setReflectionAudio] = useState<string | null>(null);
   const [reflectionMode, setReflectionMode] = useState<"type" | "record">("type");
+  const [editingCheckpoint, setEditingCheckpoint] = useState<string | null>(null);
   const [checkpointMode, setCheckpointMode] = useState<"type" | "record">("record");
   const [complete, setComplete] = useState(initialComplete);
   const [finished, setFinished] = useState(resetStep < 0 && !rewriteRequestId && (initialComplete || (hasSubmission && firstPending === -1)));
@@ -681,10 +683,12 @@ export default function Tutorial({
         type: String(payload.type ?? ""),
       });
       setDone((d) => new Set(d).add(criterionId));
+      setEditingCheckpoint(null);
       if (typeof payload.dataUrl === "string") {
         setMedia((m) => new Map(m).set(criterionId, payload.dataUrl as string));
       }
       if (payload.type === "TEXT" && typeof payload.text === "string") {
+        setMedia(m => { const next = new Map(m); next.delete(criterionId); return next; });
         setTextAnswers((m) => new Map(m).set(criterionId, payload.text as string));
       }
       if (data.evidence?.id) {
@@ -839,6 +843,7 @@ export default function Tutorial({
                 : "Your work is in — a few checks are still finishing up.")}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {allowReflectionFormats && <button type="button" className="btn-primary h-12 px-6 text-sm" onClick={() => { setStep(steps.length); setFinished(false); }}>Add or update reflection — record or type</button>}
             <a href={`/learn/${moduleId}/portfolio`} className="btn-primary h-12 px-6 text-sm">
               📖 View your portfolio
             </a>
@@ -855,7 +860,7 @@ export default function Tutorial({
   // Modules whose every criterion is evidence-based (e.g. Early-band voice +
   // photo modules) are already complete by now — no typing, just a big
   // finish button.
-  if (atFinish && complete && !rewriteRequestId) {
+  if (atFinish && complete && !rewriteRequestId && !allowReflectionFormats) {
     return (
       <div className="animate-fade-up mt-8 flex flex-col gap-4">
         <div className="flex items-center gap-3">
@@ -1069,16 +1074,16 @@ export default function Tutorial({
               }} />
             ) : current!.block.capture === "audio" || current!.block.capture === "text" ? (
               <div>
-                {allowReflectionFormats && !currentDone && <div className="my-3 flex gap-2" role="group" aria-label="Reflection format">
-                  <button type="button" className="btn-ghost px-4 py-2" aria-pressed={checkpointMode === "record"} disabled={busy} onClick={() => setCheckpointMode("record")}>Record</button>
-                  <button type="button" className="btn-ghost px-4 py-2" aria-pressed={checkpointMode === "type"} disabled={busy} onClick={() => setCheckpointMode("type")}>Type</button>
+                {allowReflectionFormats && <div className="my-3 flex gap-2" role="group" aria-label="Reflection format">
+                  <button type="button" className="btn-ghost px-4 py-2" aria-pressed={checkpointMode === "record"} disabled={busy} onClick={() => { setCheckpointMode("record"); setEditingCheckpoint(currentCrit?.id ?? null); }}>Record</button>
+                  <button type="button" className="btn-ghost px-4 py-2" aria-pressed={checkpointMode === "type"} disabled={busy} onClick={() => { setCheckpointMode("type"); setEditingCheckpoint(currentCrit?.id ?? null); }}>Type</button>
                 </div>}
-                {(currentDone ? !!(currentCrit && media.get(currentCrit.id)) : allowReflectionFormats ? checkpointMode === "record" : current!.block.capture === "audio") ? <AudioCheckpoint
-                  done={currentDone}
+                {(currentDone && editingCheckpoint !== currentCrit?.id ? !!(currentCrit && media.get(currentCrit.id)) : allowReflectionFormats ? checkpointMode === "record" : current!.block.capture === "audio") ? <AudioCheckpoint
+                  done={currentDone && editingCheckpoint !== currentCrit?.id}
                   savedUrl={currentCrit ? (media.get(currentCrit.id) ?? null) : null}
                   busy={busy}
                   onRecorded={onAudio}
-                /> : <TextCheckpoint done={currentDone} savedText={currentCrit ? (textAnswers.get(currentCrit.id) ?? null) : null} busy={busy} onSubmit={onText} />}
+                /> : <TextCheckpoint done={currentDone && editingCheckpoint !== currentCrit?.id} savedText={currentCrit ? (textAnswers.get(currentCrit.id) ?? null) : null} busy={busy} onSubmit={onText} />}
               </div>
             ) : current!.block.capture === "choice" && current!.block.options?.length ? (
               <ChoiceCheckpoint

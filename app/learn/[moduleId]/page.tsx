@@ -121,7 +121,7 @@ export default async function ModulePage({
           allowReflectionFormats={klass.classCode.startsWith("WSR-")}
           key={rewrite?.id ?? "reflection"}
           rewriteRequestId={rewrite?.id ?? null}
-          resetCriterionId={criteria.find(c => c.status === "NOT_STARTED" && c.decidedBy === "instructor" && ["AUDIO", "TEXT"].includes(c.requiresEvidenceType ?? ""))?.id ?? null}
+          resetCriterionId={criteria.find(c => c.status === "NOT_STARTED" && c.decidedBy === "instructor" && ["AUDIO", "TEXT", "PHOTO"].includes(c.requiresEvidenceType ?? ""))?.id ?? null}
           moduleId={moduleId}
           badge={{ name: module.badgeName, icon: module.badgeIcon }}
           blocks={blocks}

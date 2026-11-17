@@ -39,3 +39,17 @@ for(const format of ['audio','written'])test('instructor sees a separate '+forma
 
 test('audio submissions remain disabled outside WSR',async()=>{const {state,post}=fixture();state.classCode='OTHER';assert.equal((await post({audioUrl:'data:audio/webm;base64,YWJj'})).status,403);assert.equal(state.saved,null);});
 test('non-WSR text inputs do not offer a recording option',()=>{const html=renderToStaticMarkup(createElement(input,{value:'',onChange:()=>{},audioUrl:null,onAudio:()=>{},mode:'type',onMode:()=>{},busy:false,allowRecording:false}));assert.doesNotMatch(html,/>Record</);assert.match(html,/textarea/);});
+
+const workspace=load('app/learn/[moduleId]/ModuleWorkspace.tsx',{'@/components/ReflectionInput':{default:input},'@/app/learn/CameraPhotoButton':{default:()=>null}}).default;
+test('Windsor modules without written criteria still offer both reflection formats',()=>{
+ const html=renderToStaticMarkup(createElement(workspace,{moduleId:'module',allowReflectionFormats:true,badge:{name:'Maker',icon:'*',description:''},spriteName:'Helper',initialCriteria:[],initialEvidence:[],initialFeedback:null,initialThreads:[],initialComplete:true,initialProject:null}));
+ assert.match(html,/>Record</);assert.match(html,/>Type</);
+});
+const tutorialDeps={'@/components/ReflectionInput':{default:input},'@/components/AudioCheckpoint':audio,'@/lib/track':{track(){},flushEvents(){}},'@/lib/client-image':{},'motion/react':{motion:{div:'div'}}};
+for(const name of ['VideoCheckpoint','SlideShow','ScratchBlocks','CircuitSim','MicrobitSim','KnexViewer','StlViewer'])tutorialDeps['@/components/'+name]={default:()=>null};
+tutorialDeps['@/app/learn/CameraPhotoButton']={default:()=>null};
+const tutorial=load('app/learn/[moduleId]/Tutorial.tsx',tutorialDeps).default;
+const baseTutorial={moduleId:'module',badge:{name:'Maker',icon:'*'},blocks:[{type:'checkpoint',capture:'audio',criterionLabel:'Reflection',text:'Tell me what you made.'}],criteria:[{id:'voice',label:'Reflection',status:'MET'}],evidence:[{id:'audio',criterionId:'voice',type:'AUDIO',url:'data:audio/webm;base64,YWJj'}],initialComplete:true,hasSubmission:false,allowReflectionFormats:true};
+test('completed Windsor tutorials offer a route back to record or type',()=>{const html=renderToStaticMarkup(createElement(tutorial,baseTutorial));assert.match(html,/Add or update reflection — record or type/);});
+test('reset photo checkpoint opens even when the module was previously complete',()=>{const html=renderToStaticMarkup(createElement(tutorial,{...baseTutorial,blocks:[{type:'checkpoint',capture:'photo',criterionLabel:'Photo',text:'Upload a photo.'}],criteria:[{id:'photo',label:'Photo',status:'NOT_STARTED'}],evidence:[],resetCriterionId:'photo'}));assert.match(html,/Upload a photo/);assert.doesNotMatch(html,/You earned the/);});
+test('saved Windsor reflection checkpoints still show both format controls',()=>{const html=renderToStaticMarkup(createElement(tutorial,{...baseTutorial,initialComplete:false,hasSubmission:false,resetCriterionId:'voice'}));assert.match(html,/>Record</);assert.match(html,/>Type</);});
