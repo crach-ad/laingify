@@ -4,6 +4,7 @@
 // in sync after evidence/submissions, and assembles the Project (+ awards the
 // completion badge) the moment all required criteria are met.
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 export type CritView = {
@@ -22,8 +23,9 @@ export async function setStatus(
   criterionId: string,
   status: string,
   decidedBy: string,
+  db: Prisma.TransactionClient = prisma,
 ) {
-  await prisma.criterionStatus.upsert({
+  await db.criterionStatus.upsert({
     where: { learnerId_criterionId: { learnerId, criterionId } },
     create: { learnerId, criterionId, status, decidedBy },
     update: { status, decidedBy },
@@ -56,17 +58,18 @@ export async function applyFeedbackToCriteria(
   learnerId: string,
   metIds: string[],
   allCriteria: { id: string; checkType: string; requiresEvidenceType: string | null }[],
+  db: Prisma.TransactionClient = prisma,
 ) {
   const metSet = new Set(metIds);
   for (const c of allCriteria) {
     if (c.requiresEvidenceType) continue; // handled by evidence
     if (c.checkType === "RUBRIC") continue; // instructor only
     if (c.checkType === "AUTO") {
-      if (metSet.has(c.id)) await setStatus(learnerId, c.id, "MET", "system");
-      else await setStatus(learnerId, c.id, "IN_PROGRESS", "system");
+      if (metSet.has(c.id)) await setStatus(learnerId, c.id, "MET", "system", db);
+      else await setStatus(learnerId, c.id, "IN_PROGRESS", "system", db);
     } else if (c.checkType === "HYBRID") {
       // Auto pre-screen: passing means "awaiting instructor confirmation".
-      await setStatus(learnerId, c.id, metSet.has(c.id) ? "IN_PROGRESS" : "NOT_STARTED", "system");
+      await setStatus(learnerId, c.id, metSet.has(c.id) ? "IN_PROGRESS" : "NOT_STARTED", "system", db);
     }
   }
 }
@@ -96,7 +99,8 @@ export async function evaluateModule(learnerId: string, moduleId: string) {
     };
   });
 
-  const complete = view.filter((c) => c.required).every((c) => c.status === "MET");
+  const rewrite = await prisma.reflectionRewriteRequest.findFirst({ where: { learnerId, moduleId, fulfilledAt: null }, select: { id: true } });
+  const complete = !rewrite && view.filter((c) => c.required).every((c) => c.status === "MET");
   return { criteria: view, complete };
 }
 
@@ -109,11 +113,17 @@ export async function assembleProjectIfComplete(learnerId: string, moduleId: str
     where: { learnerId_moduleId: { learnerId, moduleId } },
   });
 
+  // Preserve the original completion date when a completed module is rewritten.
+  const progress = await prisma.moduleProgress.findUnique({
+    where: { learnerId_moduleId: { learnerId, moduleId } },
+    select: { completedAt: true },
+  });
+  const completedAt = progress?.completedAt ?? new Date();
   // Mark module progress completed regardless (badge award).
   await prisma.moduleProgress.upsert({
     where: { learnerId_moduleId: { learnerId, moduleId } },
-    create: { learnerId, moduleId, status: "COMPLETED", completedAt: new Date() },
-    update: { status: "COMPLETED", completedAt: new Date() },
+    create: { learnerId, moduleId, status: "COMPLETED", completedAt },
+    update: { status: "COMPLETED", completedAt },
   });
 
   if (existing) return { complete: true as const, project: existing };

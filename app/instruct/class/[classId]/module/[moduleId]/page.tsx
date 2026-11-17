@@ -163,10 +163,11 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
   if (!klass || !orgIds.includes(klass.orgId) || !mod || !orgIds.includes(mod.orgId) || klass.modules.length === 0) notFound();
 
   const learnerIds = klass.roster.map((r) => r.learnerId);
-  const [progress, projects, analytics] = await Promise.all([
+  const [progress, projects, analytics, rewrites] = await Promise.all([
     prisma.moduleProgress.findMany({ where: { moduleId, learnerId: { in: learnerIds } } }),
     prisma.project.findMany({ where: { moduleId, learnerId: { in: learnerIds } } }),
     stepAnalytics(classId, moduleId),
+    prisma.reflectionRewriteRequest.findMany({ where: { moduleId, learnerId: { in: learnerIds }, fulfilledAt: null } }),
   ]);
   const doneIds = new Set([...projects.map((p) => p.learnerId), ...progress.filter((p) => p.status === "COMPLETED").map((p) => p.learnerId)]);
   const activeIds = new Set(progress.map((p) => p.learnerId).filter((id) => !doneIds.has(id)));
@@ -233,6 +234,7 @@ export default async function ModulePreviewPage({ params }: { params: Promise<{ 
             <span className="display ml-5 text-2xl font-semibold">{klass.roster.length - done.length - active.length}</span>
             <span className="mono-label ml-2">not started</span>
           </p>
+          {rewrites.length > 0 && <div className="mt-3"><p className="text-sm font-semibold">Awaiting rewritten reflection</p>{rewrites.map(r => <Link key={r.id} className="mr-3 text-sm underline" href={`/instruct/review/${r.learnerId}/${moduleId}`}>{klass.roster.find(e => e.learnerId === r.learnerId)?.learner.displayName}</Link>)}</div>}
           {(done.length > 0 || active.length > 0) && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {done.map((r) => (

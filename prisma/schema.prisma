@@ -449,3 +449,19 @@ model SignInFailure {
 
   @@index([learnerId, createdAt])
 }
+
+// One audit record per removed module-level reflection. The removed submission
+// ID intentionally has no FK: the content and its feedback are deleted.
+model ReflectionRewriteRequest {
+  id                      String   @id @default(cuid())
+  learnerId               String
+  moduleId                String
+  classId                 String
+  instructorId            String
+  removedSubmissionId     String   @unique
+  createdAt               DateTime @default(now())
+  fulfilledAt             DateTime?
+  replacementSubmissionId String?
+
+  @@index([learnerId, moduleId, fulfilledAt])
+}

@@ -46,6 +46,9 @@ export default async function LearnerProfilePage({
       prisma.spriteInteraction.findMany({ where: { learnerId }, orderBy: { createdAt: "desc" } }),
     ]);
 
+  const rewrites = await prisma.reflectionRewriteRequest.findMany({ where: { learnerId, fulfilledAt: null } });
+  const rewriting = new Set(rewrites.map(r => r.moduleId));
+
   const progressByModule = new Map(progress.map((p) => [p.moduleId, p]));
   const statusByCriterion = new Map(statuses.map((s) => [s.criterionId, s]));
   const projectByModule = new Map(projects.map((p) => [p.moduleId, p]));
@@ -314,7 +317,7 @@ export default async function LearnerProfilePage({
                   </span>
                 </span>
                 <span className={`pill shrink-0 ${done ? "pill-done" : started ? "pill-progress" : "pill-idle"}`}>
-                  {done ? "Done" : started ? "In progress" : "Not started"}
+                  {rewriting.has(m.id) ? "Awaiting rewritten reflection" : done ? "Done" : started ? "In progress" : "Not started"}
                 </span>
               </div>
             );

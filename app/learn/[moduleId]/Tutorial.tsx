@@ -711,6 +711,7 @@ export default function Tutorial({
   evidence: initialEvidence,
   initialComplete,
   hasSubmission,
+  rewriteRequestId = null,
 }: {
   moduleId: string;
   badge: { name: string; icon: string };
@@ -719,6 +720,7 @@ export default function Tutorial({
   evidence: EvidenceRow[];
   initialComplete: boolean;
   hasSubmission: boolean;
+  rewriteRequestId?: string | null;
 }) {
   // Track choice reshapes the tutorial: blocks tagged for another track are
   // filtered out entirely, so learners only ever see their own path.
@@ -775,6 +777,7 @@ export default function Tutorial({
   const wrapUpStep =
     steps[steps.length - 1]?.block.type === "prompt" ? steps.length - 1 : steps.length;
   const [stepRaw, setStep] = useState(() => {
+    if (rewriteRequestId) return steps.length;
     if (initialComplete || hasSubmission) return steps.length;
     if (initiallyDone.size === 0) return 0;
     // A teacher may have supplied the recording. Show it before the pending
@@ -821,7 +824,7 @@ export default function Tutorial({
   const [error, setError] = useState("");
   const [reflection, setReflection] = useState("");
   const [complete, setComplete] = useState(initialComplete);
-  const [finished, setFinished] = useState(initialComplete || hasSubmission);
+  const [finished, setFinished] = useState(!rewriteRequestId && (initialComplete || hasSubmission));
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const atFinish = step >= steps.length;
@@ -969,7 +972,7 @@ export default function Tutorial({
       const res = await fetch("/api/submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moduleId, content: reflection }),
+        body: JSON.stringify({ moduleId, content: reflection, rewriteRequestId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not submit — try again.");
@@ -1024,7 +1027,7 @@ export default function Tutorial({
   // Modules whose every criterion is evidence-based (e.g. Early-band voice +
   // photo modules) are already complete by now — no typing, just a big
   // finish button.
-  if (atFinish && complete) {
+  if (atFinish && complete && !rewriteRequestId) {
     return (
       <div className="animate-fade-up mt-8 flex flex-col gap-4">
         <div className="flex items-center gap-3">
@@ -1068,7 +1071,7 @@ export default function Tutorial({
           <span className="mono-label shrink-0">Last step</span>
         </div>
         <form onSubmit={submitReflection} className="card p-6">
-          <h2 className="text-xl font-semibold">One last thing</h2>
+          <h2 className="text-xl font-semibold">{rewriteRequestId ? "Rewrite your reflection" : "One last thing"}</h2>
           <p className="muted mt-1.5 text-sm">
             Tell us about today: what did you make, and what was the trickiest part?
           </p>
