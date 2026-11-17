@@ -1,1 +1,1 @@
-ALTER TABLE "Submission" ADD COLUMN "audioUrl" TEXT;
+ALTER TABLE "Submission" ADD COLUMN IF NOT EXISTS "audioUrl" TEXT;

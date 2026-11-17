@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "node scripts/ensure-reflection-audio.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "assets:leaper3d": "node scripts/build-leaper-3d-assets.mjs",
