@@ -57,7 +57,7 @@ export default async function ModulePage({
       orderBy: { createdAt: "asc" },
     }),
     prisma.submission.findFirst({
-      where: { learnerId: learner.id, moduleId, feedback: { isNot: null } },
+      where: { learnerId: learner.id, moduleId, criterionId: null, feedback: { isNot: null } },
       orderBy: { createdAt: "desc" },
       include: { feedback: true },
     }),
@@ -76,13 +76,15 @@ export default async function ModulePage({
     }),
   ]);
 
+  const rewrite = await prisma.reflectionRewriteRequest.findFirst({ where: { learnerId: learner.id, moduleId, fulfilledAt: null } });
+
   const blocks: Block[] = JSON.parse(module.contentJson || "[]");
   // Checkpoint modules (camp format) use the gated step-by-step Tutorial
   // instead of the read-then-workspace Lesson flow.
   const isTutorial = blocks.some((b) => b.type === "checkpoint");
   // Returning learners (anyone with prior work) skip straight to the activity.
   const hasActivity = complete || evidence.length > 0 || !!lastSubmission || threads.length > 0;
-  const fb = lastSubmission?.feedback;
+  const fb = rewrite ? null : lastSubmission?.feedback;
   const initialFeedback = fb
     ? {
         summary: fb.summary,
@@ -116,17 +118,21 @@ export default async function ModulePage({
 
       {isTutorial ? (
         <Tutorial
+          key={rewrite?.id ?? "reflection"}
+          rewriteRequestId={rewrite?.id ?? null}
           moduleId={moduleId}
           badge={{ name: module.badgeName, icon: module.badgeIcon }}
           blocks={blocks}
           criteria={criteria.map((c) => ({ id: c.id, label: c.label, status: c.status }))}
           evidence={evidence.map((e) => ({ id: e.id, criterionId: e.criterionId, type: e.type, url: e.url, text: e.text, caption: e.caption }))}
           initialComplete={complete}
-          hasSubmission={!!lastSubmission}
+          hasSubmission={!rewrite && !!lastSubmission}
         />
       ) : (
         <Lesson blocks={blocks} startRevealed={hasActivity}>
           <ModuleWorkspace
+            key={rewrite?.id ?? "reflection"}
+            rewriteRequestId={rewrite?.id ?? null}
             moduleId={moduleId}
             badge={{ name: module.badgeName, icon: module.badgeIcon, description: module.badgeDescription }}
             spriteName={sprite.name}

@@ -64,6 +64,7 @@ export default function ModuleWorkspace({
   initialThreads,
   initialComplete,
   initialProject,
+  rewriteRequestId = null,
 }: {
   moduleId: string;
   badge: Badge;
@@ -74,6 +75,7 @@ export default function ModuleWorkspace({
   initialThreads: Thread[];
   initialComplete: boolean;
   initialProject: { summary: string } | null;
+  rewriteRequestId?: string | null;
 }) {
   const [criteria, setCriteria] = useState(initialCriteria);
   const [evidence, setEvidence] = useState(initialEvidence);
@@ -82,6 +84,8 @@ export default function ModuleWorkspace({
   const [complete, setComplete] = useState(initialComplete);
   const [project, setProject] = useState(initialProject);
 
+  const [rewriteId, setRewriteId] = useState(rewriteRequestId);
+  const [saved, setSaved] = useState(false);
   const [answer, setAnswer] = useState("");
   const [evidenceText, setEvidenceText] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -105,11 +109,13 @@ export default function ModuleWorkspace({
       const res = await fetch("/api/submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moduleId, content: answer }),
+        body: JSON.stringify({ moduleId, content: answer, rewriteRequestId: rewriteId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not submit.");
       setFeedback(data.feedback);
+      setRewriteId(null);
+      setSaved(true);
       applyResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -290,9 +296,9 @@ export default function ModuleWorkspace({
       </section>
 
       {/* Written answer + auto-feedback */}
-      {hasTextCriteria && (
+      {(hasTextCriteria || rewriteId) && (
         <section>
-          <h2 className="text-lg font-semibold">Show what you know</h2>
+          <h2 className="text-lg font-semibold">{rewriteId ? "Rewrite your reflection" : "Show what you know"}</h2>
           <p className="muted text-sm">Write your response and get instant, friendly feedback.</p>
           <textarea
             value={answer}
@@ -309,6 +315,7 @@ export default function ModuleWorkspace({
             {busy === "answer" ? "Checking…" : "Get feedback"}
           </button>
 
+          {saved && <p role="status" className="mt-2 text-sm">Reflection saved. Your instructor can now review it.</p>}
           {feedback && (
             <div
               className="card animate-fade-up mt-4 border-l-2 p-4"

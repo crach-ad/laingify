@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { requireInstructor } from "@/lib/instructor";
 import { evaluateModule } from "@/lib/completion";
 import CriterionDecision from "./CriterionDecision";
+import { authorizedRewriteClass } from "@/lib/reflection-rewrite";
+import ReopenReflection from "./ReopenReflection";
 import ReplyBox from "./ReplyBox";
 
 // One learner × one module: everything an instructor needs to decide —
@@ -32,7 +34,7 @@ export default async function ReviewPage({
     evaluateModule(learnerId, moduleId),
     prisma.submission.findMany({
       where: { learnerId, moduleId },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       include: { feedback: true },
     }),
     prisma.evidence.findMany({ where: { learnerId, moduleId }, orderBy: { createdAt: "asc" } }),
@@ -44,7 +46,12 @@ export default async function ReviewPage({
     prisma.project.findUnique({ where: { learnerId_moduleId: { learnerId, moduleId } } }),
   ]);
 
-  const latest = submissions[0];
+  const [rewriteClass, rewrite] = await Promise.all([
+    authorizedRewriteClass(prisma, orgIds, learnerId, moduleId),
+    prisma.reflectionRewriteRequest.findFirst({ where: { learnerId, moduleId, fulfilledAt: null } }),
+  ]);
+  const reflection = submissions.find(s => s.criterionId === null && s.content.trim());
+  const latest = rewrite ? null : reflection ?? submissions[0];
   const critLabel = new Map(criteria.map((c) => [c.id, c.label]));
 
   return (
@@ -76,7 +83,7 @@ export default async function ReviewPage({
           </Link>
         </div>
         <span className={`pill mt-1 shrink-0 ${complete ? "pill-done" : "pill-progress"}`}>
-          {complete ? "Complete" : "In progress"}
+          {rewrite ? "Awaiting rewritten reflection" : complete ? "Complete" : "In progress"}
         </span>
       </header>
 
@@ -132,7 +139,9 @@ export default async function ReviewPage({
 
       {/* Latest submission + auto-feedback */}
       <section className="animate-fade-up mt-10" style={{ animationDelay: "0.1s" }}>
-        <h2 className="text-base font-semibold">Submission</h2>
+        <h2 className="text-base font-semibold">Reflection</h2>
+        {rewrite && <p role="status" className="card mt-4 p-4 text-sm">Awaiting rewritten reflection. The learner can now submit a replacement; their evidence and lesson progress are preserved.</p>}
+        {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={!rewrite && reflection ? reflection.id : null} />}
         {latest ? (
           <div className="card mt-4 p-5">
             {latest.criterionId && (
@@ -159,7 +168,7 @@ export default async function ReviewPage({
             )}
           </div>
         ) : (
-          <p className="muted mt-4 text-sm">No written submission yet.</p>
+          <p className="muted mt-4 text-sm">{rewrite ? "The replacement will appear here after submission." : "No written submission yet."}</p>
         )}
       </section>
 

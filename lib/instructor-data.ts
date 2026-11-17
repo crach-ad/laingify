@@ -66,11 +66,13 @@ export async function loadClassOverviews(orgIds: string[], classId?: string): Pr
   });
 
   const learnerIds = [...new Set(classes.flatMap((c) => c.roster.map((r) => r.learnerId)))];
-  const [progress, statuses, projects] = await Promise.all([
+  const [progress, statuses, projects, rewrites] = await Promise.all([
     prisma.moduleProgress.findMany({ where: { learnerId: { in: learnerIds } } }),
     prisma.criterionStatus.findMany({ where: { learnerId: { in: learnerIds } } }),
     prisma.project.findMany({ where: { learnerId: { in: learnerIds } } }),
+    prisma.reflectionRewriteRequest.findMany({ where: { learnerId: { in: learnerIds }, fulfilledAt: null } }),
   ]);
+  const rewriting = new Set(rewrites.map(r => `${r.learnerId}:${r.moduleId}`));
   const started = new Set(progress.map((p) => `${p.learnerId}:${p.moduleId}`));
   const completed = new Set(
     projects
@@ -102,7 +104,7 @@ export async function loadClassOverviews(orgIds: string[], classId?: string): Pr
     for (const entry of klass.roster) {
       for (const cm of klass.modules) {
         const m = cm.module;
-        if (!started.has(`${entry.learnerId}:${m.id}`)) continue;
+        if (!started.has(`${entry.learnerId}:${m.id}`) && !rewriting.has(`${entry.learnerId}:${m.id}`)) continue;
         const pending = m.criteria
           .filter((c) => {
             const s = statusMap.get(`${entry.learnerId}:${c.id}`)?.status ?? "NOT_STARTED";
@@ -111,6 +113,7 @@ export async function loadClassOverviews(orgIds: string[], classId?: string): Pr
             return false;
           })
           .map((c) => c.label);
+        if (rewriting.has(`${entry.learnerId}:${m.id}`)) pending.unshift("Awaiting rewritten reflection");
         if (pending.length > 0) {
           queue.push({
             learnerId: entry.learnerId,
