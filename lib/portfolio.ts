@@ -54,6 +54,8 @@ export async function buildPortfolio(
         id: s.id,
         kind: "submission" as const,
         text: s.content,
+        url: s.audioUrl,
+        type: s.audioUrl ? "AUDIO" : "TEXT",
         feedbackSummary: s.feedback?.summary ?? null,
         createdAt: s.createdAt,
       })),
@@ -64,7 +66,7 @@ export async function buildPortfolio(
   const metCount = requiredCriteria.filter((c) => c.status === "MET").length;
 
   const photoCount = evidence.filter((e) => e.type === "PHOTO").length;
-  const audioCount = evidence.filter((e) => e.type === "AUDIO").length;
+  const audioCount = evidence.filter((e) => e.type === "AUDIO").length + submissions.filter(s => s.audioUrl).length;
   const wordCount = submissions.reduce((n, s) => n + s.content.split(/\s+/).filter(Boolean).length, 0);
   const dates = [...evidence.map((e) => e.createdAt), ...submissions.map((s) => s.createdAt)];
 

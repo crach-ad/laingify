@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { autoFeedback, type Band } from "@/lib/gemini";
+import { autoFeedback, transcribeAudio, type Band } from "@/lib/gemini";
 import { applyFeedbackToCriteria, evaluateModule, assembleProjectIfComplete } from "@/lib/completion";
 
 import { lockReflection, reflectionSnapshot, ReflectionConflict } from "@/lib/reflection-rewrite";
@@ -16,9 +16,11 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid submission." }, { status: 400 });
   const moduleId = String(body.moduleId || "");
-  const content = String(body.content || "").trim();
+  let content = String(body.content || "").trim();
+  const audioUrl = typeof body.audioUrl === "string" ? body.audioUrl : null;
+  if (audioUrl && (audioUrl.length > 4_000_000 || !/^data:audio\/(?:mp4|webm|ogg|mpeg|wav)(?:;codecs=[^;,]+)?;base64,[A-Za-z0-9+/=]+$/.test(audioUrl))) return NextResponse.json({ error: "Invalid or oversized audio recording." }, { status: 400 });
   if (!moduleId) return NextResponse.json({ error: "Missing module." }, { status: 400 });
-  if (!content) return NextResponse.json({ error: "Empty submission." }, { status: 400 });
+  if (!content && !audioUrl) return NextResponse.json({ error: "Empty submission." }, { status: 400 });
 
   const [klass, learner, module, allCriteria] = await Promise.all([
     prisma.class.findUnique({ where: { id: session.classId } }),
@@ -31,6 +33,14 @@ export async function POST(req: Request) {
   const assignment = await prisma.classModule.findUnique({ where: { classId_moduleId: { classId: session.classId, moduleId } } });
   const enrollment = await prisma.rosterEntry.findUnique({ where: { classId_learnerId: { classId: session.classId, learnerId: session.learnerId } } });
   if (!klass || !learner || !assignment || !enrollment || module.orgId !== klass.orgId) return NextResponse.json({ error: "Module not assigned to your class." }, { status: 403 });
+  if (audioUrl) {
+    const comma = audioUrl.indexOf(',');
+    const mimeType = audioUrl.slice(5, audioUrl.indexOf(';base64,'));
+    try {
+      const result = await transcribeAudio(audioUrl.slice(comma + 1), mimeType);
+      content = result.transcript?.trim() || '';
+    } catch { content = ''; }
+  }
   const before = await prisma.$transaction(async db => {
     await lockReflection(db, session.learnerId, moduleId);
     return reflectionSnapshot(db, session.learnerId, moduleId);
@@ -44,7 +54,7 @@ export async function POST(req: Request) {
     (c) => !c.requiresEvidenceType && c.checkType !== "RUBRIC",
   );
 
-  const fb = await autoFeedback({
+  const fb = audioUrl && !content ? { summary: "Your recording is saved for your instructor to listen to.", metIds: [] as string[], missingIds: [] as string[], nextSteps: "", aiUsed: false } : await autoFeedback({
     band,
     moduleTitle: module.title,
     moduleSummary: module.summary,
@@ -60,9 +70,9 @@ export async function POST(req: Request) {
       if ((current.latest?.id ?? null) !== (before.latest?.id ?? null) || (current.pending?.id ?? null) !== (before.pending?.id ?? null)) {
         throw new ReflectionConflict("Your reflection changed while feedback was being prepared. Refresh the page before submitting again.");
       }
-      const saved = await db.submission.create({ data: { learnerId: session.learnerId, moduleId, content } });
+      const saved = await db.submission.create({ data: { learnerId: session.learnerId, moduleId, content: content || "Audio reflection", audioUrl } });
       await db.autoFeedback.create({ data: { submissionId: saved.id, summary: fb.summary, metJson: JSON.stringify(fb.metIds), missingJson: JSON.stringify(fb.missingIds), nextSteps: fb.nextSteps } });
-      await applyFeedbackToCriteria(session.learnerId, fb.metIds, allCriteria, db);
+      if (!audioUrl || content) await applyFeedbackToCriteria(session.learnerId, fb.metIds, allCriteria, db);
       if (current.pending) await db.reflectionRewriteRequest.update({ where: { id: current.pending.id }, data: { fulfilledAt: new Date(), replacementSubmissionId: saved.id } });
       return saved;
     });

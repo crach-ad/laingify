@@ -61,7 +61,7 @@ export default async function InstructorPortfolioPage({
           Review reflection and feedback →
         </Link>
         {pending && <p role="status" className="mt-3 text-sm">Awaiting rewritten reflection</p>}
-        {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={!pending && latest?.content.trim() ? latest.id : null} />}
+        {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={!pending && latest?.content.trim() ? latest.id : null} format={latest?.audioUrl ? "audio" : "written"} />}
       </section>
       <PortfolioView data={data} />
     </main>

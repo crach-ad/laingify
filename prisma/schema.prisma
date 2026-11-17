@@ -228,6 +228,7 @@ model Submission {
   moduleId   String
   criterionId String?
   content    String
+  audioUrl   String?
   createdAt  DateTime @default(now())
   feedback   AutoFeedback?
 }

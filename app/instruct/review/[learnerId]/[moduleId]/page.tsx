@@ -52,6 +52,11 @@ export default async function ReviewPage({
   ]);
   const reflection = submissions.find(s => s.criterionId === null && s.content.trim());
   const latest = rewrite ? null : reflection ?? submissions[0];
+  const checkpointReflections = evidence.filter(e =>
+    ["AUDIO", "TEXT"].includes(e.type) && e.criterionId &&
+    criteria.some(c => c.id === e.criterionId && ["AUDIO", "TEXT"].includes(c.requiresEvidenceType ?? "")) &&
+    !evidence.some(other => other.criterionId === e.criterionId && other.type === e.type && (other.createdAt > e.createdAt || (other.createdAt.getTime() === e.createdAt.getTime() && other.id > e.id)))
+  );
   const critLabel = new Map(criteria.map((c) => [c.id, c.label]));
 
   return (
@@ -140,14 +145,21 @@ export default async function ReviewPage({
       {/* Latest submission + auto-feedback */}
       <section className="animate-fade-up mt-10" style={{ animationDelay: "0.1s" }}>
         <h2 className="text-base font-semibold">Reflection</h2>
+        {checkpointReflections.map(e => <div key={e.id} className="card mt-4 p-5">
+          <h3 className="font-semibold">{e.type === "AUDIO" ? "Audio reflection" : "Written reflection"}</h3>
+          {e.type === "AUDIO" && e.url && <audio controls preload="metadata" src={e.url} className="mt-3 w-full" />}
+          {e.text && <p className="mt-3 whitespace-pre-wrap text-sm">{e.text}</p>}
+          {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={null} evidenceId={e.id} format={e.type === "AUDIO" ? "audio" : "written"} />}
+        </div>)}
         {rewrite && <p role="status" className="card mt-4 p-4 text-sm">Awaiting rewritten reflection. The learner can now submit a replacement; their evidence and lesson progress are preserved.</p>}
-        {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={!rewrite && reflection ? reflection.id : null} />}
+        {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={!rewrite && reflection ? reflection.id : null} format={reflection?.audioUrl ? "audio" : "written"} />}
         {latest ? (
           <div className="card mt-4 p-5">
             {latest.criterionId && (
               <div className="mono-label mb-2">{critLabel.get(latest.criterionId) ?? "Submission"}</div>
             )}
             <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--body)" }}>
+              {latest.audioUrl && <audio controls preload="metadata" src={latest.audioUrl} className="mb-3 w-full" />}
               {latest.content}
             </p>
             {latest.feedback && (
@@ -168,7 +180,7 @@ export default async function ReviewPage({
             )}
           </div>
         ) : (
-          <p className="muted mt-4 text-sm">{rewrite ? "The replacement will appear here after submission." : "No written submission yet."}</p>
+          <p className="muted mt-4 text-sm">{rewrite ? "The replacement will appear here after submission." : checkpointReflections.length ? "" : "No reflection submitted yet."}</p>
         )}
       </section>
 
@@ -191,14 +203,16 @@ export default async function ReviewPage({
                     className="mb-2 max-h-64 rounded-lg border border-[var(--border-soft)]"
                   />
                 )}
+                {e.url && e.type === "AUDIO" && <audio controls preload="metadata" src={e.url} className="mb-2 w-full" />}
                 {e.url && e.type === "VIDEO" && <video controls playsInline preload="metadata" src={e.url} className="mb-2 w-full rounded-lg" />}
                 {e.text && <p className="whitespace-pre-wrap leading-relaxed">{e.text}</p>}
-                {e.url && e.type !== "PHOTO" && e.type !== "VIDEO" && (
+                {e.url && e.type !== "PHOTO" && e.type !== "VIDEO" && e.type !== "AUDIO" && (
                   <a href={e.url} className="underline" style={{ color: "var(--info-text)" }}>
                     {e.url}
                   </a>
                 )}
                 {e.caption && <p className="muted mt-1 text-[13px]">{e.caption}</p>}
+
               </div>
             </div>
           ))}

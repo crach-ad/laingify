@@ -1,5 +1,6 @@
 "use client";
 
+import ReflectionInput from "@/components/ReflectionInput";
 import { useState } from "react";
 import CameraPhotoButton from "@/app/learn/CameraPhotoButton";
 
@@ -101,15 +102,18 @@ export default function ModuleWorkspace({
     if (data.project) setProject(data.project);
   }
 
+  const [answerAudio, setAnswerAudio] = useState<string | null>(null);
+  const [answerMode, setAnswerMode] = useState<"type" | "record">("type");
+
   async function submitAnswer() {
-    if (!answer.trim()) return;
+    if (answerMode === "record" ? !answerAudio : !answer.trim()) return;
     setBusy("answer");
     setError("");
     try {
       const res = await fetch("/api/submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moduleId, content: answer, rewriteRequestId: rewriteId }),
+        body: JSON.stringify({ moduleId, content: answerMode === "type" ? answer : "", audioUrl: answerMode === "record" ? answerAudio : null, rewriteRequestId: rewriteId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not submit.");
@@ -299,17 +303,11 @@ export default function ModuleWorkspace({
       {(hasTextCriteria || rewriteId) && (
         <section>
           <h2 className="text-lg font-semibold">{rewriteId ? "Rewrite your reflection" : "Show what you know"}</h2>
-          <p className="muted text-sm">Write your response and get instant, friendly feedback.</p>
-          <textarea
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            rows={5}
-            placeholder="Type your answer here…"
-            className="field mt-3 w-full px-4 py-3"
-          />
+          <p className="muted text-sm">Record or type your reflection.</p>
+          <ReflectionInput value={answer} onChange={setAnswer} audioUrl={answerAudio} onAudio={setAnswerAudio} mode={answerMode} onMode={setAnswerMode} busy={busy === "answer"} />
           <button
             onClick={submitAnswer}
-            disabled={busy === "answer" || !answer.trim()}
+            disabled={busy === "answer" || (answerMode === "record" ? !answerAudio : !answer.trim())}
             className="btn-primary mt-2 px-5 py-2.5 text-sm"
           >
             {busy === "answer" ? "Checking…" : "Get feedback"}

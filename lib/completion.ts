@@ -47,7 +47,7 @@ export async function recomputeEvidenceCriteria(learnerId: string, moduleId: str
   for (const c of criteria) {
     const met = evidence.some(
       (e) =>
-        e.type === c.requiresEvidenceType && (!e.criterionId || e.criterionId === c.id),
+        (e.type === c.requiresEvidenceType || (e.criterionId === c.id && ["AUDIO", "TEXT"].includes(e.type) && ["AUDIO", "TEXT"].includes(c.requiresEvidenceType ?? ""))) && (!e.criterionId || e.criterionId === c.id),
     );
     await setStatus(learnerId, c.id, met ? "MET" : "NOT_STARTED", "system");
   }

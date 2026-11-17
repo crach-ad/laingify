@@ -41,6 +41,7 @@ function ItemBody({ item }: { item: PortfolioItem }) {
   if (item.kind === "submission") {
     return (
       <>
+        {item.type === "AUDIO" && item.url && <audio controls src={item.url} className="w-full" />}
         <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--body)" }}>
           {item.text}
         </p>
@@ -110,7 +111,7 @@ function ItemBody({ item }: { item: PortfolioItem }) {
 
 const KIND_LABEL = (item: PortfolioItem) =>
   item.kind === "submission"
-    ? "✍️ Writing"
+    ? item.type === "AUDIO" ? "🎙️ Audio reflection" : "✍️ Writing"
     : item.type === "VIDEO"
       ? "🎬 Video"
       : item.type === "PHOTO"
