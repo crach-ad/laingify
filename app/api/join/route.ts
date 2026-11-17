@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { allowsSelfRegistration } from "@/lib/class-registration";
 import { setSession } from "@/lib/session";
 
 // Class code and name selection sign students in without a PIN.
-// minAuthTier only controls whether a class permits self-registration.
+// Registration policy controls whether a class permits new profiles.
 export async function POST(req: Request) {
   const body = await req.json();
   const { classCode, learnerId } = body;
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
   });
   if (!klass) return NextResponse.json({ error: "Unknown class code." }, { status: 404 });
 
-  if (klass.minAuthTier === 0 && !learnerId) {
+  if (allowsSelfRegistration(klass) && !learnerId) {
     const name = String(body.name || "").trim().replace(/\s+/g, " ");
     if (name.length < 2 || name.length > 40) {
       return NextResponse.json({ error: "Please type your name (2–40 letters)." }, { status: 400 });

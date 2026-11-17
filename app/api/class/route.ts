@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { allowsSelfRegistration } from "@/lib/class-registration";
 
 // Class lookup for the join screen: given a class code, return the public
 // info the learner needs to pick their name. Student sign-in never needs a PIN.
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
 
   // Open classes may still add a new name. All classes show their roster
   // so returning students select their existing profile.
-  const selfRegister = klass.minAuthTier === 0;
+  const selfRegister = allowsSelfRegistration(klass);
 
   return NextResponse.json({
     class: {
