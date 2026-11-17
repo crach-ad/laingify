@@ -33,6 +33,7 @@ export async function POST(req: Request) {
   const assignment = await prisma.classModule.findUnique({ where: { classId_moduleId: { classId: session.classId, moduleId } } });
   const enrollment = await prisma.rosterEntry.findUnique({ where: { classId_learnerId: { classId: session.classId, learnerId: session.learnerId } } });
   if (!klass || !learner || !assignment || !enrollment || module.orgId !== klass.orgId) return NextResponse.json({ error: "Module not assigned to your class." }, { status: 403 });
+  if (audioUrl && !klass.classCode.startsWith("WSR-")) return NextResponse.json({ error: "Audio reflections are not enabled for this class." }, { status: 403 });
   if (audioUrl) {
     const comma = audioUrl.indexOf(',');
     const mimeType = audioUrl.slice(5, audioUrl.indexOf(';base64,'));

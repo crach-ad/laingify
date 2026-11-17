@@ -12,10 +12,10 @@ function load(path,deps={}) {
  const exports={};vm.runInNewContext(code,{exports,require:id=>deps[id]??require(id),Response,URL,Date,console});return exports;
 }
 function fixture() {
- const state={saved:null,graded:false,transcript:'',feedback:null};
+ const state={saved:null,graded:false,transcript:'',feedback:null,classCode:'WSR-4E'};
  const snapshot={latest:null,pending:null};
  const db={
- class:{findUnique:async()=>({orgId:'school',band:'EARLY'})},learner:{findUnique:async()=>({})},module:{findUnique:async()=>({orgId:'school',title:'Reflection'})},criterion:{findMany:async()=>[]},classModule:{findUnique:async()=>({})},rosterEntry:{findUnique:async()=>({})},
+ class:{findUnique:async()=>({orgId:'school',band:'EARLY',classCode:state.classCode})},learner:{findUnique:async()=>({})},module:{findUnique:async()=>({orgId:'school',title:'Reflection'})},criterion:{findMany:async()=>[]},classModule:{findUnique:async()=>({})},rosterEntry:{findUnique:async()=>({})},
  submission:{create:async({data})=>{state.saved=data;return{id:'saved'};}},autoFeedback:{create:async({data})=>state.feedback=data},
  };db.$transaction=async fn=>fn(db);
  const api=load('app/api/submission/route.ts',{
@@ -36,3 +36,6 @@ const input=load('components/ReflectionInput.tsx',{'./AudioCheckpoint':audio}).d
 for(const mode of ['record','type'])test('learner can select '+mode,()=>{const html=renderToStaticMarkup(createElement(input,{value:'',onChange:()=>{},audioUrl:null,onAudio:()=>{},mode,onMode:()=>{},busy:false}));assert.match(html,/>Record</);assert.match(html,/>Type</);assert.match(html,mode==='type'?/textarea/:/Record your answer/);});
 const reset=load('app/instruct/review/[learnerId]/[moduleId]/ReopenReflection.tsx',{'next/navigation':{useRouter:()=>({refresh(){}})}}).default;
 for(const format of ['audio','written'])test('instructor sees a separate '+format+' reset label',()=>{const html=renderToStaticMarkup(createElement(reset,{learnerId:'student',moduleId:'module',submissionId:null,evidenceId:'evidence',format}));assert.match(html,new RegExp('Reset '+format+' reflection'));});
+
+test('audio submissions remain disabled outside WSR',async()=>{const {state,post}=fixture();state.classCode='OTHER';assert.equal((await post({audioUrl:'data:audio/webm;base64,YWJj'})).status,403);assert.equal(state.saved,null);});
+test('non-WSR text inputs do not offer a recording option',()=>{const html=renderToStaticMarkup(createElement(input,{value:'',onChange:()=>{},audioUrl:null,onAudio:()=>{},mode:'type',onMode:()=>{},busy:false,allowRecording:false}));assert.doesNotMatch(html,/>Record</);assert.match(html,/textarea/);});

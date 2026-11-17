@@ -524,6 +524,7 @@ function ModelAttach({ moduleId }: { moduleId: string }) {
 
 export default function Tutorial({
   moduleId,
+  allowReflectionFormats = false,
   badge,
   blocks,
   criteria: initialCriteria,
@@ -534,6 +535,7 @@ export default function Tutorial({
   resetCriterionId = null,
 }: {
   moduleId: string;
+  allowReflectionFormats?: boolean;
   badge: { name: string; icon: string };
   blocks: Block[];
   criteria: Crit[];
@@ -901,7 +903,7 @@ export default function Tutorial({
           <p className="muted mt-1.5 text-sm">
             Tell us about today: what did you make, and what was the trickiest part?
           </p>
-          <ReflectionInput value={reflection} onChange={setReflection} audioUrl={reflectionAudio} onAudio={setReflectionAudio} mode={reflectionMode} onMode={setReflectionMode} busy={busy} />
+          <ReflectionInput allowRecording={allowReflectionFormats} value={reflection} onChange={setReflection} audioUrl={reflectionAudio} onAudio={setReflectionAudio} mode={reflectionMode} onMode={setReflectionMode} busy={busy} />
           {error && (
             <p className="mt-2 text-sm" style={{ color: "var(--danger)" }}>
               {error}
@@ -1067,11 +1069,11 @@ export default function Tutorial({
               }} />
             ) : current!.block.capture === "audio" || current!.block.capture === "text" ? (
               <div>
-                {!currentDone && <div className="my-3 flex gap-2" role="group" aria-label="Reflection format">
+                {allowReflectionFormats && !currentDone && <div className="my-3 flex gap-2" role="group" aria-label="Reflection format">
                   <button type="button" className="btn-ghost px-4 py-2" aria-pressed={checkpointMode === "record"} disabled={busy} onClick={() => setCheckpointMode("record")}>Record</button>
                   <button type="button" className="btn-ghost px-4 py-2" aria-pressed={checkpointMode === "type"} disabled={busy} onClick={() => setCheckpointMode("type")}>Type</button>
                 </div>}
-                {(currentDone ? !!(currentCrit && media.get(currentCrit.id)) : checkpointMode === "record") ? <AudioCheckpoint
+                {(currentDone ? !!(currentCrit && media.get(currentCrit.id)) : allowReflectionFormats ? checkpointMode === "record" : current!.block.capture === "audio") ? <AudioCheckpoint
                   done={currentDone}
                   savedUrl={currentCrit ? (media.get(currentCrit.id) ?? null) : null}
                   busy={busy}
@@ -1114,7 +1116,7 @@ export default function Tutorial({
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{current!.block.text}</p>
             {isFinalPrompt && (
               <form onSubmit={submitReflection} className="mt-4">
-                <ReflectionInput value={reflection} onChange={setReflection} audioUrl={reflectionAudio} onAudio={setReflectionAudio} mode={reflectionMode} onMode={setReflectionMode} busy={busy} />
+                <ReflectionInput allowRecording={allowReflectionFormats} value={reflection} onChange={setReflection} audioUrl={reflectionAudio} onAudio={setReflectionAudio} mode={reflectionMode} onMode={setReflectionMode} busy={busy} />
                 {error && (
                   <p className="mt-2 text-sm" style={{ color: "var(--danger)" }}>
                     {error}

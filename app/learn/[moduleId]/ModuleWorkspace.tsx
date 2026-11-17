@@ -57,6 +57,7 @@ function readDataUrl(file: File): Promise<string> {
 
 export default function ModuleWorkspace({
   moduleId,
+  allowReflectionFormats = false,
   badge,
   spriteName,
   initialCriteria,
@@ -68,6 +69,7 @@ export default function ModuleWorkspace({
   rewriteRequestId = null,
 }: {
   moduleId: string;
+  allowReflectionFormats?: boolean;
   badge: Badge;
   spriteName: string;
   initialCriteria: Crit[];
@@ -304,7 +306,7 @@ export default function ModuleWorkspace({
         <section>
           <h2 className="text-lg font-semibold">{rewriteId ? "Rewrite your reflection" : "Show what you know"}</h2>
           <p className="muted text-sm">Record or type your reflection.</p>
-          <ReflectionInput value={answer} onChange={setAnswer} audioUrl={answerAudio} onAudio={setAnswerAudio} mode={answerMode} onMode={setAnswerMode} busy={busy === "answer"} />
+          <ReflectionInput allowRecording={allowReflectionFormats} value={answer} onChange={setAnswer} audioUrl={answerAudio} onAudio={setAnswerAudio} mode={answerMode} onMode={setAnswerMode} busy={busy === "answer"} />
           <button
             onClick={submitAnswer}
             disabled={busy === "answer" || (answerMode === "record" ? !answerAudio : !answer.trim())}

@@ -118,6 +118,7 @@ export default async function ModulePage({
 
       {isTutorial ? (
         <Tutorial
+          allowReflectionFormats={klass.classCode.startsWith("WSR-")}
           key={rewrite?.id ?? "reflection"}
           rewriteRequestId={rewrite?.id ?? null}
           resetCriterionId={criteria.find(c => c.status === "NOT_STARTED" && c.decidedBy === "instructor" && ["AUDIO", "TEXT"].includes(c.requiresEvidenceType ?? ""))?.id ?? null}
@@ -132,6 +133,7 @@ export default async function ModulePage({
       ) : (
         <Lesson blocks={blocks} startRevealed={hasActivity}>
           <ModuleWorkspace
+            allowReflectionFormats={klass.classCode.startsWith("WSR-")}
             key={rewrite?.id ?? "reflection"}
             rewriteRequestId={rewrite?.id ?? null}
             moduleId={moduleId}
