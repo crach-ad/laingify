@@ -5,6 +5,8 @@ import { requireInstructor } from "@/lib/instructor";
 import { buildPortfolio } from "@/lib/portfolio";
 import PortfolioView from "@/components/PortfolioView";
 import PrintButton from "@/components/PrintButton";
+import { authorizedRewriteClass, reflectionSnapshot } from "@/lib/reflection-rewrite";
+import ReopenReflection from "@/app/instruct/review/[learnerId]/[moduleId]/ReopenReflection";
 
 // Instructor's copy of a learner's portfolio (e.g., to print handouts for
 // parents). Same renderer as the learner view.
@@ -28,6 +30,10 @@ export default async function InstructorPortfolioPage({
 
   const data = await buildPortfolio(learnerId, moduleId);
   if (!data) notFound();
+  const [rewriteClass, { latest, pending }] = await Promise.all([
+    authorizedRewriteClass(prisma, orgIds, learnerId, moduleId),
+    reflectionSnapshot(prisma, learnerId, moduleId),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
@@ -49,6 +55,14 @@ export default async function InstructorPortfolioPage({
           <PrintButton />
         </div>
       </div>
+      <section className="portfolio-chrome card mb-6 p-5" aria-label="Instructor reflection review">
+        <h2 className="text-base font-semibold">Reflection review</h2>
+        <Link href={`/instruct/review/${learnerId}/${moduleId}`} className="mt-2 inline-block text-sm underline">
+          Review reflection and feedback →
+        </Link>
+        {pending && <p role="status" className="mt-3 text-sm">Awaiting rewritten reflection</p>}
+        {rewriteClass && <ReopenReflection learnerId={learnerId} moduleId={moduleId} submissionId={!pending && latest?.content.trim() ? latest.id : null} />}
+      </section>
       <PortfolioView data={data} />
     </main>
   );
