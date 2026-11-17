@@ -23,7 +23,7 @@ export default function ReopenReflection({ learnerId, moduleId, submissionId }: 
     finally { active.current = false; setBusy(false); }
   }
   return <div className="mt-4">
-    {submissionId && <button type="button" className="btn-ghost min-h-11 px-5 py-2 text-sm" disabled={busy} onClick={() => confirmation.current?.showModal()}>{busy ? 'Reopening…' : 'Reopen reflection'}</button>}
+    {submissionId && <button type="button" className="btn-primary min-h-11 px-5 py-2 text-sm" disabled={busy} onClick={() => confirmation.current?.showModal()}>{busy ? 'Reopening…' : 'Reopen reflection'}</button>}
     <dialog ref={confirmation} aria-labelledby="reopen-title" aria-describedby="reopen-description" className="m-auto max-w-lg rounded-xl border border-[var(--border-soft)] bg-[var(--card)] p-6 text-[var(--text)] backdrop:bg-black/60">
       <h2 id="reopen-title" className="text-xl font-semibold">Reopen reflection?</h2>
       <p id="reopen-description" className="mt-3 text-sm leading-relaxed">The current written reflection and its automated feedback will be removed so the learner can rewrite it. Uploaded evidence, lesson progress, and other submissions will be preserved.</p>

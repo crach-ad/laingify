@@ -41,9 +41,14 @@ test('server rejects anonymous, student, unauthorized org, non-WSR, unassigned m
 
 test('completed tutorial: reopen, rewrite, and review replacement; preserve all other work', async () => {
   const before = await preserve(f.learners.Avery.id, f.module.id);
+  const portfolioPath = `/instruct/learner/${f.learners.Avery.id}/portfolio/${f.module.id}`;
+  assert.match(await html(portfolioPath, teacher), /<button[^>]*>Reopen reflection<\/button>/);
   assert.match(await html(`/instruct/review/${f.learners.Avery.id}/${f.module.id}`, teacher), /Reopen reflection/);
   const opened = await reopen(input()); assert.equal(opened.status, 200, JSON.stringify(opened));
   assert.equal(opened.body.awaitingRewrite, true);
+  const pendingPortfolio = await html(portfolioPath, teacher);
+  assert.match(pendingPortfolio, /Awaiting rewritten reflection/);
+  assert.doesNotMatch(pendingPortfolio, /<button[^>]*>Reopen reflection<\/button>/);
   assert.equal(await db.submission.findUnique({ where: { id: input().submissionId } }), null);
   assert.equal(await db.autoFeedback.findUnique({ where: { submissionId: input().submissionId } }), null);
   assert.deepEqual(await preserve(f.learners.Avery.id, f.module.id), before);
@@ -61,6 +66,10 @@ test('completed tutorial: reopen, rewrite, and review replacement; preserve all 
   assert.deepEqual(await db.evidence.findMany({ where: { learnerId: f.learners.Avery.id, moduleId: f.module.id }, orderBy: { id: 'asc' } }), before.evidence);
   const updated = await db.reflectionRewriteRequest.findUnique({ where: { id: request.id } });
   assert.ok(updated.fulfilledAt); assert.equal(updated.replacementSubmissionId, result.body.submissionId);
+  const replacementPortfolio = await html(portfolioPath, teacher);
+  assert.match(replacementPortfolio, /<button[^>]*>Reopen reflection<\/button>/);
+  assert.match(replacementPortfolio, /I rewrote my reflection/);
+  assert.doesNotMatch(replacementPortfolio, /Awaiting rewritten reflection/);
   const page = await html(`/instruct/review/${f.learners.Avery.id}/${f.module.id}`, teacher);
   assert.match(page, /I rewrote my reflection/); assert.doesNotMatch(page, /Awaiting rewritten reflection/);
   const stale = await reopen(input()); assert.equal(stale.status, 200); assert.equal(stale.body.awaitingRewrite, false);
