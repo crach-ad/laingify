@@ -5,6 +5,7 @@ import { requireInstructor } from "@/lib/instructor";
 import { stepAnalytics } from "@/lib/insights";
 import { slugifyTopic } from "@/lib/topics";
 import ScratchBlocks from "@/components/ScratchBlocks";
+import AssemblyStep from "@/components/AssemblyStep";
 import { ConsoleHeader } from "../../../../ConsoleParts";
 
 // Instructor preview of one module as assigned to one class: every step card
@@ -16,6 +17,9 @@ type Block = {
   text?: string;
   url?: string;
   urls?: string[];
+  materials?: string[];
+  sourcePages?: number[];
+  sourceUrl?: string;
   kind?: string;
   minutes?: number;
   actions?: string[];
@@ -104,6 +108,9 @@ function StepCard({ b }: { b: Block }) {
         {b.text && <p className="muted mt-3 text-[13px]">{b.text}</p>}
       </div>
     );
+  }
+  if (b.type === "assembly" && b.urls?.length) {
+    return <div className="card p-5"><AssemblyStep text={b.text} materials={b.materials} urls={b.urls} sourcePages={b.sourcePages} sourceUrl={b.sourceUrl} />{b.actions?.length ? <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm">{b.actions.map((action,i) => <li key={i}>{action}</li>)}</ol> : null}{b.warn && <p className="mt-4 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-soft)] p-3 text-sm">{b.warn}</p>}{b.tip && <p className="muted mt-3 text-sm">{b.tip}</p>}</div>;
   }
   if (b.type === "slides") {
     return (

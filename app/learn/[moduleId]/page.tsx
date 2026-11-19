@@ -82,6 +82,15 @@ export default async function ModulePage({
   // Checkpoint modules (camp format) use the gated step-by-step Tutorial
   // instead of the read-then-workspace Lesson flow.
   const isTutorial = blocks.some((b) => b.type === "checkpoint");
+  // Physical builds resume at their recorded construction card, not an upload.
+  let initialStep: number | undefined;
+  if (blocks.some(b => b.type === "assembly")) {
+    const lastView = await prisma.learnerEvent.findFirst({ where: { learnerId: learner.id, moduleId, type: "step_view" }, orderBy: { createdAt: "desc" }, select: { meta: true } });
+    try {
+      const value = lastView ? JSON.parse(lastView.meta).step : undefined;
+      if (Number.isInteger(value) && value >= 0) initialStep = value;
+    } catch { /* Missing or invalid history starts at the first construction card. */ }
+  }
   // Returning learners (anyone with prior work) skip straight to the activity.
   const hasActivity = complete || evidence.length > 0 || !!lastSubmission || threads.length > 0;
   const fb = rewrite ? null : lastSubmission?.feedback;
@@ -127,6 +136,7 @@ export default async function ModulePage({
           blocks={blocks}
           criteria={criteria.map((c) => ({ id: c.id, label: c.label, status: c.status }))}
           evidence={evidence.map((e) => ({ id: e.id, criterionId: e.criterionId, type: e.type, url: e.url, text: e.text, caption: e.caption }))}
+          initialStep={initialStep}
           initialComplete={complete}
           hasSubmission={!rewrite && !!lastSubmission}
         />

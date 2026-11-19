@@ -6,6 +6,7 @@ import AudioCheckpoint from "@/components/AudioCheckpoint";
 import ReflectionInput from "@/components/ReflectionInput";
 import VideoCheckpoint from "@/components/VideoCheckpoint";
 import SlideShow from "@/components/SlideShow";
+import AssemblyStep from "@/components/AssemblyStep";
 import ScratchBlocks from "@/components/ScratchBlocks";
 import { track as logEvent, flushEvents } from "@/lib/track";
 import CircuitSim, { type BuildStep, type CircuitPart, type CircuitWire } from "@/components/CircuitSim";
@@ -27,6 +28,9 @@ type Block = {
   text?: string;
   url?: string;
   urls?: string[];
+  materials?: string[];
+  sourcePages?: number[];
+  sourceUrl?: string;
   // --- circuit blocks: an in-page Arduino simulator running an authored sketch ---
   // --- microbit blocks: an in-page micro:bit simulator running one canned,
   // authored behavior (`program`) — same "one fixed program per block" model
@@ -533,7 +537,9 @@ export default function Tutorial({
   hasSubmission,
   rewriteRequestId = null,
   resetCriterionId = null,
+  initialStep,
 }: {
+  initialStep?: number;
   moduleId: string;
   allowReflectionFormats?: boolean;
   badge: { name: string; icon: string };
@@ -605,6 +611,10 @@ export default function Tutorial({
     if (resetStep >= 0) return resetStep;
     if (rewriteRequestId) return steps.length;
     if (initialComplete || (hasSubmission && firstPending === -1)) return steps.length;
+    if (blocks.some(b => b.type === "assembly")) {
+      const lastSafe = firstPending === -1 ? wrapUpStep : firstPending;
+      return Number.isInteger(initialStep) && initialStep! >= 0 ? Math.min(initialStep!, lastSafe) : 0;
+    }
     if (initiallyDone.size === 0) return 0;
     // A teacher may have supplied the recording. Show it before the pending
     // reflection instead of treating the uploaded file as already watched.
@@ -1208,6 +1218,8 @@ export default function Tutorial({
           </pre>
         ) : current!.block.type === "video" && current!.block.url ? (
           <video controls src={current!.block.url} className="w-full rounded-xl" />
+        ) : current!.block.type === "assembly" && current!.block.urls?.length ? (
+          <AssemblyStep key={`assembly-${step}`} text={current!.block.text} materials={current!.block.materials} urls={current!.block.urls} sourcePages={current!.block.sourcePages} sourceUrl={current!.block.sourceUrl} />
         ) : current!.block.type === "slides" && current!.block.urls?.length ? (
           <SlideShow urls={current!.block.urls} caption={current!.block.text} />
         ) : current!.block.type === "model" && current!.block.url ? (
